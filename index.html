@@ -135,6 +135,64 @@
 
 
     
+      <article id="post-intel-pml" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/20170821/intel-pml/">Intel VT 页面修改记录(PML)</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/20170821/intel-pml/" class="article-date">
+  <time datetime="2017-08-21T12:03:06.000Z" itemprop="datePublished">2017-08-21</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/硬件虚拟化/">硬件虚拟化</a>
+  </div>
+
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><a href="http://weibo.com/diting0x" target="_blank" rel="external">diting0x</a></p>
+<p>Intel VT 2015年推出page-modification logging(PML),<br>VMM可以利用EPT监控虚拟机在运行期间物理页面的修改。</p>
+<p>在没有PML前，VMM要监控xu虚拟机中物理页面的修改，需要将EPT的页面结构设置为not-present或者read-only，这样会触发许多EPT violations,开销非常大。</p>
+<p>PML建立在CPU对EPT中的accessed与dirty标志位支持上。<br>当启用PML时，对EPT中设置了dirty标志位的写操作都会产生一条in-memory记录，报告写操作的虚拟机物理地址，当记录写满时，触发一次VM Exit，然后VMM就可以监控被修改的页面。</p>
+<p><a href="http://www.spinics.net/lists/kvm/msg112904.html" target="_blank" rel="external">这是</a>KVM 对支持PML的patch </p>
+<p><a href="https://lists.xen.org/archives/html/xen-devel/2015-11/msg03138.html" target="_blank" rel="external">这是</a>XEN支持PML的patch</p>
+<p>VMWare 也对PML开始有了<a href="http://www.itdirection.net/it-news-0036/051116-01001-it-news.shtml" target="_blank" rel="external">支持</a> </p>
+<h3 id="参考来源"><a href="#参考来源" class="headerlink" title="参考来源"></a>参考来源</h3><p><a href="https://www.intel.com/content/dam/www/public/us/en/documents/white-papers/page-modification-logging-vmm-white-paper.pdf" target="_blank" rel="external">Page Modification Logging for Virtual Machine Monitor White Paper</a></p>
+
+      
+    </div>
+    
+    
+      <footer class="article-footer">
+        
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/EPT/">EPT</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Virtualization/">Virtualization</a></li></ul>
+
+      </footer>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+
+    
       <article id="post-cachekit" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-inner">
     

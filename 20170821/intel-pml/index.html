@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Intel VT 页面修改记录(PML) - 善守者</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="diting0x Intel VT 2015年推出page-modification logging(PML),VMM可以利用EPT监控虚拟机在运行期间物理页面的修改。 在没有PML前，VMM要监控xu虚拟机中物理页面的修改，需要将EPT的页面结构设置为not-present或者read-only，这样会触发许多EPT violations,开销非常大。 PML建立在CPU对EPT中的access">
+<meta name="keywords" content="Virtualization,EPT">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Intel VT 页面修改记录(PML)">
+<meta property="og:url" content="https://diting0x.github.io/20170821/intel-pml/index.html">
+<meta property="og:site_name" content="善守者">
+<meta property="og:description" content="diting0x Intel VT 2015年推出page-modification logging(PML),VMM可以利用EPT监控虚拟机在运行期间物理页面的修改。 在没有PML前，VMM要监控xu虚拟机中物理页面的修改，需要将EPT的页面结构设置为not-present或者read-only，这样会触发许多EPT violations,开销非常大。 PML建立在CPU对EPT中的access">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2017-08-26T11:00:23.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Intel VT 页面修改记录(PML)">
+<meta name="twitter:description" content="diting0x Intel VT 2015年推出page-modification logging(PML),VMM可以利用EPT监控虚拟机在运行期间物理页面的修改。 在没有PML前，VMM要监控xu虚拟机中物理页面的修改，需要将EPT的页面结构设置为not-present或者read-only，这样会触发许多EPT violations,开销非常大。 PML建立在CPU对EPT中的access">
+  
+  
+  <link href="/webfonts/ptserif/main.css" rel='stylesheet' type='text/css'>
+  <link href="/webfonts/source-code-pro/main.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <header id="header">
+  <div id="header-outer" class="outer">
+    <div id="header-inner" class="inner">
+      <a id="main-nav-toggle" class="nav-icon" href="javascript:;"></a>
+      <a id="logo" class="logo logo-text" href="/">谛听</a>
+      <nav id="main-nav">
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+          <a class="main-nav-link" href="/timeline">Timeline</a>
+        
+          <a class="main-nav-link" href="/about">About</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        <div id="search-form-wrap">
+          <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://diting0x.github.io"></form>
+        </div>
+      </nav>
+    </div>
+  </div>
+</header>
+    <section id="main" class="outer"><article id="post-intel-pml" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Intel VT 页面修改记录(PML)
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/20170821/intel-pml/" class="article-date">
+  <time datetime="2017-08-21T12:03:06.000Z" itemprop="datePublished">2017-08-21</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/硬件虚拟化/">硬件虚拟化</a>
+  </div>
+
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><a href="http://weibo.com/diting0x" target="_blank" rel="external">diting0x</a></p>
+<p>Intel VT 2015年推出page-modification logging(PML),<br>VMM可以利用EPT监控虚拟机在运行期间物理页面的修改。</p>
+<p>在没有PML前，VMM要监控xu虚拟机中物理页面的修改，需要将EPT的页面结构设置为not-present或者read-only，这样会触发许多EPT violations,开销非常大。</p>
+<p>PML建立在CPU对EPT中的accessed与dirty标志位支持上。<br>当启用PML时，对EPT中设置了dirty标志位的写操作都会产生一条in-memory记录，报告写操作的虚拟机物理地址，当记录写满时，触发一次VM Exit，然后VMM就可以监控被修改的页面。</p>
+<p><a href="http://www.spinics.net/lists/kvm/msg112904.html" target="_blank" rel="external">这是</a>KVM 对支持PML的patch </p>
+<p><a href="https://lists.xen.org/archives/html/xen-devel/2015-11/msg03138.html" target="_blank" rel="external">这是</a>XEN支持PML的patch</p>
+<p>VMWare 也对PML开始有了<a href="http://www.itdirection.net/it-news-0036/051116-01001-it-news.shtml" target="_blank" rel="external">支持</a> </p>
+<h3 id="参考来源"><a href="#参考来源" class="headerlink" title="参考来源"></a>参考来源</h3><p><a href="https://www.intel.com/content/dam/www/public/us/en/documents/white-papers/page-modification-logging-vmm-white-paper.pdf" target="_blank" rel="external">Page Modification Logging for Virtual Machine Monitor White Paper</a></p>
+
+      
+    </div>
+    
+    
+      <footer class="article-footer">
+        
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/EPT/">EPT</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Virtualization/">Virtualization</a></li></ul>
+
+      </footer>
+    
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/20170822/rop-attack-defense/" id="article-nav-newer" class="article-nav-link-wrap">
+      <div class="article-nav-title"><span>&lt;</span>&nbsp;
+        
+          ROP攻与防
+        
+      </div>
+    </a>
+  
+  
+    <a href="/20170819/cachekit/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">CacheKit 利用cache不一致性绕过内存监控&nbsp;<span>&gt;</span></div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+
+
+<div class="share_addthis">
+  <div class="sharing addthis_toolbox share">
+    <a class="addthis_button_facebook_like"></a>
+    <a class="addthis_button_tweet"></a>
+    <a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-560c64c35486b3d4" async="async"></script>
+</div>
+
+
+
+
+
+</section>
+    <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2017 Diting0x&nbsp;
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>, theme by <a href="http://github.com/ppoffice">PPOffice</a>
+    </div>
+  </div>
+</footer>
+    
+
+<script src="/js/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+  </div>
+</body>
+</html>
