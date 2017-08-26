@@ -49,56 +49,6 @@
   </div>
 </header>
     <section id="main" class="outer">
-      <article id="post-hello-world" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/20170826/hello-world/">Hello World</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-meta">
-      <a href="/20170826/hello-world/" class="article-date">
-  <time datetime="2017-08-26T03:01:48.000Z" itemprop="datePublished">2017-08-26</time>
-</a>
-      
-      
-    </div>
-    <div class="article-entry" itemprop="articleBody">
-      
-        <a id="more"></a>
-<p>Welcome to <a href="https://hexo.io/" target="_blank" rel="external">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="external">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="external">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="external">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo new <span class="string">"My New Post"</span></div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="external">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo server</div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="external">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo generate</div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="external">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo deploy</div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/deployment.html" target="_blank" rel="external">Deployment</a></p>
-
-      
-    </div>
-    
-    
-  </div>
-  
-</article>
-
-
-
-
-
-
-
-
-    
       <article id="post-rop-attack-defense" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -421,8 +371,85 @@
 
 
     
+      <article id="post-kernelmalware" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/20170330/kernelmalware/">内核层恶意代码分析</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/20170330/kernelmalware/" class="article-date">
+  <time datetime="2017-03-30T06:13:41.000Z" itemprop="datePublished">2017-03-30</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/恶意代码/">恶意代码</a>
+  </div>
+
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <hr>
+<p>作者：<a href="http://weibo.com/diting0x/profile?rightmod=1&amp;wvr=6&amp;mod=personinfo&amp;is_all=1" target="_blank" rel="external">Diting0x</a></p>
+<p><strong>转载本文请务必注明</strong>，文章出处：《<a href="http://www.csyssec.org/20170330/kernelmalware" target="_blank" rel="external">内核层恶意代码分析</a>》与作者信息：<a href="http://www.csyssec.org/about/" target="_blank" rel="external">CSysSec出品</a></p>
+<hr>
+<p>本文旨在收集Linux下内核层恶意代码并进行分析，持续更新。</p>
+<ul>
+<li>来源于论文<a href="https://www.cerias.purdue.edu/assets/pdf/bibtex_archive/2010-02.pdf" target="_blank" rel="external">LiveDM: Temporal Mapping of Dynamic Kernel Memory for Dynamic Kernel Malware Analysis and Debugging, </a>rootkit操纵内核动态对象的分析结果：</li>
+</ul>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/livedm1.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/livedm1.png" width="450"></a><br>    <figcaption></figcaption><br></figure>
+
+<ul>
+<li>来源于论文<a href="http://friends.cs.purdue.edu/pubs/eurosys09.pdf" target="_blank" rel="external">Multi-Aspect Profiling of Kernel Rootkit Behavior, EuroSys’09</a>中PoKeR系统对rootkit行为的分析结果：</li>
+</ul>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/pokerresult.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/pokerresult.png" width="450"></a><br>    <figcaption></figcaption><br></figure>
+
+<ul>
+<li>来源于论文<a href="http://www.cs.umd.edu/~mwh/papers/sbcfi.pdf" target="_blank" rel="external">Automated Detection of Persistent Kernel<br>Control-Flow Attacks,CCS’07</a>对内核层恶意代码的行为以及利用的机制分析结果：</li>
+</ul>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/sbcfi.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/sbcfi.png" width="450"></a><br>    <figcaption></figcaption><br></figure>
+
+
+<ul>
+<li>部分用于研究目的的内核层恶意代码源码分享，可以参考<a href="https://github.com/chonghw/research-malware" target="_blank" rel="external">这里</a></li>
+</ul>
+<hr>
+<p>作者：<a href="http://weibo.com/diting0x/profile?rightmod=1&amp;wvr=6&amp;mod=personinfo&amp;is_all=1" target="_blank" rel="external">Diting0x</a></p>
+<p><strong>转载本文请务必注明</strong>，文章出处：《<a href="http://www.csyssec.org/20170330/kernelmalware" target="_blank" rel="external">内核层恶意代码分析</a>》与作者信息：<a href="http://www.csyssec.org/about/" target="_blank" rel="external">CSysSec出品</a></p>
+
+      
+    </div>
+    
+    
+      <footer class="article-footer">
+        
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Malware/">Malware</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Rootkit/">Rootkit</a></li></ul>
+
+      </footer>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+
+    
       <nav id="page-nav">
-        <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="page-number" href="/page/3/">3</a><a class="extend next" rel="next" href="/page/2/">下一页 &raquo;</a>
+        <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/">下一页 &raquo;</a>
       </nav>
     </section>
     <footer id="footer">
