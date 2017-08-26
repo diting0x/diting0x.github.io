@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>系统安全浅薄知识系列(一)-ASLR - 善守者</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="作者：@Diting0x转载请注明：作者信息以及来源《CSysSec:系统安全浅薄知识系列(一)-ASLR》  ASLR全称是Address Space Layout Randomization，翻译成中文就是地址空间布局随机化。 怎么做？ 随机化程序的关键数据在内存中的位置，这些数据包括程序的数据段、堆、栈以及共享库。见下图：（图来源于CCS’15）           这些数据为什么没有包括代">
+<meta name="keywords" content="Security,System,ASLR">
+<meta property="og:type" content="article">
+<meta property="og:title" content="系统安全浅薄知识系列(一)-ASLR">
+<meta property="og:url" content="http://yoursite.com/20170508/intro-aslr/index.html">
+<meta property="og:site_name" content="善守者">
+<meta property="og:description" content="作者：@Diting0x转载请注明：作者信息以及来源《CSysSec:系统安全浅薄知识系列(一)-ASLR》  ASLR全称是Address Space Layout Randomization，翻译成中文就是地址空间布局随机化。 怎么做？ 随机化程序的关键数据在内存中的位置，这些数据包括程序的数据段、堆、栈以及共享库。见下图：（图来源于CCS’15）           这些数据为什么没有包括代">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://7xppf1.com1.z0.glb.clouddn.com/aslr1.png">
+<meta property="og:image" content="http://7xppf1.com1.z0.glb.clouddn.com/aslr2.png">
+<meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/aslrhistory.jpeg">
+<meta property="og:image" content="http://7xppf1.com1.z0.glb.clouddn.com/aslr3.png">
+<meta property="og:updated_time" content="2017-08-26T03:10:28.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="系统安全浅薄知识系列(一)-ASLR">
+<meta name="twitter:description" content="作者：@Diting0x转载请注明：作者信息以及来源《CSysSec:系统安全浅薄知识系列(一)-ASLR》  ASLR全称是Address Space Layout Randomization，翻译成中文就是地址空间布局随机化。 怎么做？ 随机化程序的关键数据在内存中的位置，这些数据包括程序的数据段、堆、栈以及共享库。见下图：（图来源于CCS’15）           这些数据为什么没有包括代">
+<meta name="twitter:image" content="http://7xppf1.com1.z0.glb.clouddn.com/aslr1.png">
+  
+  
+  <link href="/webfonts/ptserif/main.css" rel='stylesheet' type='text/css'>
+  <link href="/webfonts/source-code-pro/main.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <header id="header">
+  <div id="header-outer" class="outer">
+    <div id="header-inner" class="inner">
+      <a id="main-nav-toggle" class="nav-icon" href="javascript:;"></a>
+      <a id="logo" class="logo" href="/"></a>
+      <nav id="main-nav">
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+          <a class="main-nav-link" href="/categories">Categories</a>
+        
+          <a class="main-nav-link" href="/tags">Tags</a>
+        
+          <a class="main-nav-link" href="/about">About</a>
+        
+          <a class="main-nav-link" href="/atom.xml">Rss</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        <div id="search-form-wrap">
+          <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+        </div>
+      </nav>
+    </div>
+  </div>
+</header>
+    <section id="main" class="outer"><article id="post-intro-aslr" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      系统安全浅薄知识系列(一)-ASLR
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/20170508/intro-aslr/" class="article-date">
+  <time datetime="2017-05-08T12:59:01.000Z" itemprop="datePublished">2017-05-08</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/系统安全科普/">系统安全科普</a>
+  </div>
+
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>作者：<a href="http://weibo.com/diting0x" target="_blank" rel="external">@Diting0x</a><br>转载请注明：作者信息以及来源<a href="http://www.csyssec.org/20170508/intro-aslr/" target="_blank" rel="external">《CSysSec:系统安全浅薄知识系列(一)-ASLR》</a></p>
+<hr>
+<p>ASLR全称是Address Space Layout Randomization，翻译成中文就是地址空间布局随机化。</p>
+<p><strong>怎么做？</strong></p>
+<p>随机化程序的关键数据在内存中的位置，这些数据包括程序的数据段、堆、栈以及共享库。见下图：（图来源于CCS’15）</p>
+<figure><br>    <a href="http://7xppf1.com1.z0.glb.clouddn.com/aslr1.png" target="_blank" rel="external"><img src="http://7xppf1.com1.z0.glb.clouddn.com/aslr1.png" width="450"></a><br>    <figcaption></figcaption><br></figure>
+
+<p>这些数据为什么没有包括代码段？ 下文会继续讨论。</p>
+<p><strong>干嘛用的？</strong> </p>
+<p>ASLR是一种保护缓冲区溢出攻击的防御技术，通过增加内存攻击(如return-into-libc或ROP)预测目标地址的难度阻碍其实施攻击。见下图：(图来源于CODASPY’16)</p>
+<figure><br>    <a href="http://7xppf1.com1.z0.glb.clouddn.com/aslr2.png" target="_blank" rel="external"><img src="http://7xppf1.com1.z0.glb.clouddn.com/aslr2.png" width="450"></a><br>    <figcaption></figcaption><br></figure>
+
+<p>攻击者欲跳转到目标地址0xbfffd5d8的shellcode中，但在执行时其地址被随机化到了0xbfffe3f8中，此时跳转到0xbfffd5d8会导致内存奔溃。</p>
+<p><strong>ASLR历史</strong></p>
+<p>请看下图：（图来源于Abusing Performance Optimization Weaknesses to Bypass ASLR， 2014 BlackHat USA）</p>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/aslrhistory.jpeg" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/aslrhistory.jpeg" width="450"></a><br>    <figcaption></figcaption><br></figure>
+
+
+<p><strong>如何开启或关闭ASLR?</strong> </p>
+<p>以Linux系统为例，通过配置<code>/proc/sys/kernel/randomize_va_space</code>中的值来开启或关闭ASLR.<br>运行<code>cat /proc/sys/kernel/randomize_va_space</code>命令，若输出为0，表示没有随机化，所有都是静态的；若输出为1，表示保守随机化，共享库、栈、mmap()，VDSO以及堆都被随机化；若输出为2，表示全随机化，在1的基础上，增加了通过brk()方式内存管理的随机化。<br>下图为Ubuntu14.04的结果</p>
+<p><img src="http://7xppf1.com1.z0.glb.clouddn.com/aslr3.png" alt="aslr3"></p>
+<p>关闭ASLR,可以运行<code>echo 0 /proc/sys/kernel/randomize_va_space</code></p>
+<p>Windows和Linux在ASLR机制上有所不同，想了解详情可以参考<a href="http://www.freebuf.com/articles/system/29392.html" target="_blank" rel="external">这里</a></p>
+<p><strong>编译成PIE?</strong></p>
+<p>说到这里，还遗留了一个问题，那就是随机化的数据为什么没有包括代码段？ 要想让ASLR机制有效，就必须保证程序在内存空间的所有区域都是随机化的。有任何一部分没有被随机化，都有可能被攻击者利用来定位有效的gadgets来实施攻击。实际上，ASLR对代码段(.text)是不作随机化的，只有当可执行文件在编译成PIE(Position Independent Executable，位置依赖可执行文件)时，代码段才会被随机化。</p>
+<p>对于non-PIE(也就是没有添加编译选项PIE),尽管ASLR的级别设置为2，攻击者仍然能利用程序的.text段以及GOT/PLT(全局偏移表/过程连接表)实施攻击(比如return-to-got/plt、ROP)。</p>
+<p>既然non-PIE的可执行文件不能享受ASLR机制带来的安全性，那ASLR又有何意义? 是不是可以把所有的程序在编译时都加上PIE选项？ 对Linux系统来说，是有选择性的编译PIE，所有的库文件都是默认编译成PIE的，而大部分程序默认是不会被编译成PIE的。详情可以参考这篇论文的发现<a href="http://e-collection.library.ethz.ch/eserv/eth:5699/eth-5699-01.pdf?pid=eth:5699&amp;dsID=eth-5699-01.pdf" target="_blank" rel="external">Too much PIE is bad for performance</a>。</p>
+<p>说了这么多，PIE的原理是什么？文章提到的这么多专有名词，ROP, Return-to-libc,Return-to-GOT/PIT, gadgets都又是什么呢？有机会再谈。</p>
+<h3 id="References"><a href="#References" class="headerlink" title="References"></a>References</h3><p>Lu et al,”ASLR-Guard: Stopping Address Space Leakage for Code Reuse Attacks”,CODASPY’16<br>Gu et al, “Derandomizing Kernel Address Space Layout for Memory Introspection and Forensics”, CCS’15<br><a href="http://www.freebuf.com/articles/system/29392.html" target="_blank" rel="external">ASLR在Windows与Linux系统之间的差别</a><br><a href="https://pax.grsecurity.net/docs/aslr.txt" target="_blank" rel="external">PAX/ASLR</a><br><a href="https://securityetalii.es/2013/02/03/how-effective-is-aslr-on-linux-systems/" target="_blank" rel="external">How Effective is ASLR on Linux Systems?</a></p>
+<hr>
+<p>转载请注明：作者信息以及来源<a href="http://www.csyssec.org/20170508/intro-aslr/" target="_blank" rel="external">《CSysSec:系统安全浅薄知识系列(一)-ASLR》</a></p>
+
+      
+    </div>
+    
+    
+      <footer class="article-footer">
+        
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/ASLR/">ASLR</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Security/">Security</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/System/">System</a></li></ul>
+
+      </footer>
+    
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/20170819/cachekit/" id="article-nav-newer" class="article-nav-link-wrap">
+      <div class="article-nav-title"><span>&lt;</span>&nbsp;
+        
+          CacheKit 利用cache不一致性绕过内存监控
+        
+      </div>
+    </a>
+  
+  
+    <a href="/20170504/kvm-migration/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">KVM迁移中脏页位图机制源码分析&nbsp;<span>&gt;</span></div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+
+
+<div class="share_addthis">
+  <div class="sharing addthis_toolbox share">
+    <a class="addthis_button_facebook_like"></a>
+    <a class="addthis_button_tweet"></a>
+    <a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-560c64c35486b3d4" async="async"></script>
+</div>
+
+
+
+
+
+</section>
+    <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2017 Diting0x&nbsp;
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>, theme by <a href="http://github.com/ppoffice">PPOffice</a>
+    </div>
+  </div>
+</footer>
+    
+
+<script src="/js/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+  </div>
+</body>
+</html>

