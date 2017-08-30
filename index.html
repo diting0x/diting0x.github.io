@@ -1719,7 +1719,7 @@ sudo update-alternatives --config gcc
 <li>system@PLT并没有出现在我们的可执行文件’vuln’中</li>
 <li>字符串”sh”也没有出现在我们的可执行文件’vuln’中</li>
 </ul>
-<h3 id="0X01-什么是GOT覆盖"><a href="#0X01-什么是GOT覆盖" class="headerlink" title="0X01 什么是GOT覆盖"></a>0X01 什么是GOT覆盖</h3><p>这项技术可以帮助攻击者利用另一个libc函数的地址来覆盖一个特定libc函数的GOT表项。举个例子，GOT[getuid]含有getuid的函数地址(在第一次调用之后)，当偏移差(offset difference)添加到GOT[getuid]表项时，它可以被execve的函数地址覆盖。我们已经<a href="http://www.csyssec.org/20161231/returntolibc/" target="_blank" rel="external">知道</a>，在共享库中，函数从基地址的偏移总是一个常量。因此，如果我们将两个libc函数（execve与getuid）的偏移差添加到getuid的GOT表项中，我们就可以获取execve函数的地址。之后，就可以通过调用getuid来滴啊用execve!!</p>
+<h3 id="0X01-什么是GOT覆盖"><a href="#0X01-什么是GOT覆盖" class="headerlink" title="0X01 什么是GOT覆盖"></a>0X01 什么是GOT覆盖</h3><p>这项技术可以帮助攻击者利用另一个libc函数的地址来覆盖一个特定libc函数的GOT表项。举个例子，GOT[getuid]含有getuid的函数地址(在第一次调用之后)，当偏移差(offset difference)添加到GOT[getuid]表项时，它可以被execve的函数地址覆盖。我们已经<a href="http://www.csyssec.org/20161231/returntolibc/" target="_blank" rel="external">知道</a>，在共享库中，函数从基地址的偏移总是一个常量。因此，如果我们将两个libc函数（execve与getuid）的偏移差添加到getuid的GOT表项中，我们就可以获取execve函数的地址。之后，就可以通过调用getuid来调用execve!!</p>
 <pre><code>offset_diff = execve_addr - getuid_addr
 GOT[execve] = GOT[getuid] + offset_diff
 </code></pre><h3 id="0X02-什么是GOT解引用"><a href="#0X02-什么是GOT解引用" class="headerlink" title="0X02 什么是GOT解引用"></a>0X02 什么是GOT解引用</h3><p>这和GOT覆盖技术类似，但并不是覆盖一个特定libc函数的GOT表项，而是将GOT表项中的值拷贝到一个寄存器中并将偏移差添加到寄存器的内容中。因此现在寄存器就有了必需的libc函数地址。举个例子，GOT[getuid]含有getuid的函数地址，函数地址被拷贝到一个寄存器中。两个libc函数（execve与getuid）的偏移差添加到寄存器的内容中。现在可以跳转到寄存器的值中来调用execve!</p>

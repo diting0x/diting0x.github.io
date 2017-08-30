@@ -15,7 +15,7 @@
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/alsrgotgor1.png">
 <meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/aslrgotgor2.png">
-<meta property="og:updated_time" content="2017-08-28T07:15:24.000Z">
+<meta property="og:updated_time" content="2017-08-30T14:12:54.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="绕过ASLR-第三篇章(GOT覆盖与GOT解引用)">
 <meta name="twitter:description" content="CSysSec注： 本系列文章译自安全自由工作者Sploitfun的漏洞利用系列博客，从经典栈缓冲区漏洞利用堆漏洞利用，循序渐进，是初学者不可多得的好材料，本系列所有文章涉及的源码可以在这里找到。CSysSec计划在原基础上不断添加相关漏洞利用技术以及相应的Mitigation方法，欢迎推荐或自荐文章。转载本文请务必注明，文章出处：《Linux(X86)漏洞利用系列-绕过ASLR-第三篇章(GO">
@@ -109,7 +109,7 @@
 <li>system@PLT并没有出现在我们的可执行文件’vuln’中</li>
 <li>字符串”sh”也没有出现在我们的可执行文件’vuln’中</li>
 </ul>
-<h3 id="0X01-什么是GOT覆盖"><a href="#0X01-什么是GOT覆盖" class="headerlink" title="0X01 什么是GOT覆盖"></a>0X01 什么是GOT覆盖</h3><p>这项技术可以帮助攻击者利用另一个libc函数的地址来覆盖一个特定libc函数的GOT表项。举个例子，GOT[getuid]含有getuid的函数地址(在第一次调用之后)，当偏移差(offset difference)添加到GOT[getuid]表项时，它可以被execve的函数地址覆盖。我们已经<a href="http://www.csyssec.org/20161231/returntolibc/" target="_blank" rel="external">知道</a>，在共享库中，函数从基地址的偏移总是一个常量。因此，如果我们将两个libc函数（execve与getuid）的偏移差添加到getuid的GOT表项中，我们就可以获取execve函数的地址。之后，就可以通过调用getuid来滴啊用execve!!</p>
+<h3 id="0X01-什么是GOT覆盖"><a href="#0X01-什么是GOT覆盖" class="headerlink" title="0X01 什么是GOT覆盖"></a>0X01 什么是GOT覆盖</h3><p>这项技术可以帮助攻击者利用另一个libc函数的地址来覆盖一个特定libc函数的GOT表项。举个例子，GOT[getuid]含有getuid的函数地址(在第一次调用之后)，当偏移差(offset difference)添加到GOT[getuid]表项时，它可以被execve的函数地址覆盖。我们已经<a href="http://www.csyssec.org/20161231/returntolibc/" target="_blank" rel="external">知道</a>，在共享库中，函数从基地址的偏移总是一个常量。因此，如果我们将两个libc函数（execve与getuid）的偏移差添加到getuid的GOT表项中，我们就可以获取execve函数的地址。之后，就可以通过调用getuid来调用execve!!</p>
 <pre><code>offset_diff = execve_addr - getuid_addr
 GOT[execve] = GOT[getuid] + offset_diff
 </code></pre><h3 id="0X02-什么是GOT解引用"><a href="#0X02-什么是GOT解引用" class="headerlink" title="0X02 什么是GOT解引用"></a>0X02 什么是GOT解引用</h3><p>这和GOT覆盖技术类似，但并不是覆盖一个特定libc函数的GOT表项，而是将GOT表项中的值拷贝到一个寄存器中并将偏移差添加到寄存器的内容中。因此现在寄存器就有了必需的libc函数地址。举个例子，GOT[getuid]含有getuid的函数地址，函数地址被拷贝到一个寄存器中。两个libc函数（execve与getuid）的偏移差添加到寄存器的内容中。现在可以跳转到寄存器的值中来调用execve!</p>
