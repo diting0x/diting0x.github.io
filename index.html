@@ -92,6 +92,85 @@
 
 
     
+      <article id="post-virtulization-vul" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/20170830/virtulization-vul/">虚拟化漏洞总结</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/20170830/virtulization-vul/" class="article-date">
+  <time datetime="2017-08-30T11:06:12.000Z" itemprop="datePublished">2017-08-30</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/虚拟化安全/">虚拟化安全</a>
+  </div>
+
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><a href="http://weibo.com/diting0x" target="_blank" rel="external">diting0x</a></p>
+<p>在这里收集虚拟化相关漏洞，持续更新。</p>
+<p>CVE-2015-7504 By 360云安全</p>
+<ul>
+<li>QEMU中pcnet网卡模拟组件中的一个缓冲区溢出漏洞 </li>
+<li>漏洞发生在pcnet网卡使用loopback/looptest模式接收数据时，会在接收到的数据尾部增加一个CRC校验码(长度4个字节)，当发送包的大小刚好符合接收包设定的最大缓冲区大小(4096字节)时。在intel X86-64体系下附加的CRC校验码会覆盖掉所在的PCNetStae_st结构体后面的中断处理指针irq中的后4个字节，攻击者可以构造特定的CRC校验码来实现进一步的攻击利用<br><a href="http://www.freebuf.com/vuls/87673.html" target="_blank" rel="external">链接</a></li>
+</ul>
+<p>CVE-2015-5279 By 360 Marvel Team</p>
+<ul>
+<li>qemu虚拟化环境中rtl8029网卡设备存在一处堆溢出类型漏洞</li>
+<li>该漏洞发生在ne2000网卡模块的接收数据包的过程,被qemu官方安全团队定义为高危漏洞，一旦被黑客恶意利用，可以实现拒绝服务攻击，虚拟机逃逸攻击。在成功利用该漏洞之后，黑客进而可以控制宿主机以及该宿主机上的其他虚拟机，进而造成企业的敏感信息泄露，内网被渗透的可怕后果。<br><a href="http://www.freebuf.com/articles/79897.html" target="_blank" rel="external">链接</a></li>
+</ul>
+<p>CVE-2015-8567 By 360 Marvel Team</p>
+<ul>
+<li>qemu中的内存泄露漏洞，虚拟机授权用户利用该漏洞可以泄露宿主机内存，导致拒绝服务。该漏洞存在于xen和kvm系统的qemu模块中的vmxnet3网卡组件，黑客在一台虚拟机中利用该漏洞，可以导致同一宿主机上的其他虚拟机崩溃。<br><a href="http://www.freebuf.com/vuls/91603.html" target="_blank" rel="external">链接</a></li>
+</ul>
+<p>CVE-2015-7835/XSA-148 By Alibaba Cloud</p>
+<ul>
+<li>该漏洞存在于Xen Hypervisor的内存管理机制中。基于安全的考虑，Xen将PV DomU的页表页面映射为“不可写”，因此PV DomU无法直接修改其页表，只能通过调用相关的Hypercalls向Xen Hypervisor发起页表修改请求，Xen Hypervisor检查通过后代替PV DomU进行修改。然而，为了优化检查步骤，提高运行速度，Xen Hypervisor在提供了快速更新的选择，即如果Xen Hypervisor认为本次页表更新是安全的，就不必再走严格的检查流程。问题在于，Xen Hypervisor在更新Page Directory Table（PDT）中的页面项时，快速更新逻辑会允许新的Page Driectory Table Entry（PDE）携带_PAGE_PSE和_PAGE_RW标志。PDE的_PAGE_PSE标志会导致MMU允许使用2M页面。对于PDE更新请求，是否执行快速更新操作是由Xen的l2e_has_changed(ol2e, nl2e, _PAGE_PRESENT)例程决定的。该函数会检查ol2e与nl2e中的物理页帧号、_PAGE_PRESENT标志位是否一致，如果一致，则直接使用nl2e更新该PDE。此时，如果nl2e中设置了_PAGE_PSE标志位，可以通过构造虚拟地址访问nl2e中页帧号指示的2M大小的物理内存，即真正允许访问到的物理内存不是Xen假定的4K大小，而是真实的连续的2M大小，而扩增的这部分物理内存，有可能是不属于当前虚拟机的。同时，如果nl2e包含了_PAGE_RW，这2M内存可以任意写。从漏洞利用的角度，既然通过设置PDE的_PAGE_PSE和_PAGE_RW位可以突破对4K内存的访问限制，访问到连续的2M大小的物理内存，如果事先将一个Page Table置于这2M物理内存空间内，这样就可以通过恶意的nl2e读写该Page Table，从而突破了Xen对虚拟机只能以只读权限拥有Page Tables的限制，实现了任意物理内存读写，最终可以绕过软硬件上的所有安全机制的限制在Xen Hypervisor上下文环境和Dom0上下文环境执行任意代码。<br><a href="http://www.freebuf.com/vuls/83403.html" target="_blank" rel="external">链接</a><br><a href="http://bobao.360.cn/learning/detail/2932.html" target="_blank" rel="external">链接2</a> <a href="https://blog.quarkslab.com/xen-exploitation-part-2-xsa-148-from-guest-to-host.html" target="_blank" rel="external">code</a></li>
+</ul>
+<p>CVE-2015-5165 By Alibaba Cloud</p>
+<ul>
+<li>支持RTL8139仿真的Qemu在RTL8139处理器的C+操作模式下处理网络报文时，存在信息泄露漏洞，客户端用户利用此漏洞可读取未初始化的Qemu堆内存。<br><a href="https://mp.weixin.qq.com/s/i8StsVvyhCf2uTWqpuMSRg" target="_blank" rel="external">链接</a></li>
+</ul>
+<p>CVE-2014-7155/XSA-105</p>
+<ul>
+<li>该漏洞位于对 hlt,lgdt,lidt 和 lmsw 指令的仿真.<br>对HLT,LGDT,LIDT 和 LMSW指令的仿真未能正确执行特权模式权限检查,一个非特权代码(3环)可能运行这些指令。在存在漏洞的这几个指令中,只有两个可能导致潜在的提权:lgdt 和 lidt。它们分别允许改变全局描述符表寄存器(GDTR)和中断描述符表寄存器的值(IDRT)。GDTR 和 IDTR 格式相同:高位包含基址,低位定义长度[10]。这些值定义全局描述符表(GDT)和中断描述符表(IDT)地址。根据Intel 手册,不允许非特权代码执行这些指令(lgdt,lidt)。若用户可以加载自己的 GDT 或 IDT,将导致任意代码执行和特权提升.<br><a href="http://bobao.360.cn/learning/detail/2931.html" target="_blank" rel="external">链接</a></li>
+</ul>
+<p>还可以参考phrack的一篇有关CVE-2015-5165和CVE-2015-7504分析<a href="http://phrack.org/papers/vm-escape-qemu-case-study.html" target="_blank" rel="external">文章</a></p>
+
+      
+    </div>
+    
+    
+      <footer class="article-footer">
+        
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Security/">Security</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Virtulization/">Virtulization</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Vulnerability/">Vulnerability</a></li></ul>
+
+      </footer>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+
+    
       <article id="post-rop-attack-defense" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-inner">
     
