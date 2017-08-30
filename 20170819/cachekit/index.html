@@ -6,7 +6,7 @@
   <title>CacheKit 利用cache不一致性绕过内存监控 - 善守者</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="description" content="diting0x 听了Prof Kun Sun的报告，略作总结。 CacheKit核心思想：利用Trustzone的cahce不一致性，将恶意代码加载一块系统预留的I/O空间重定向的cache中，绕过安全世界和正常世界的监控。             几个发现 1),安全世界可以访问正常世界的内存、CPU寄存器，反之则不行。但是，安全世界无法访问正常世界的cache内容 2),内存空间：0x800">
-<meta name="keywords" content="Security,Cache,TrustZong">
+<meta name="keywords" content="Security,Cache,TrustZone">
 <meta property="og:type" content="article">
 <meta property="og:title" content="CacheKit 利用cache不一致性绕过内存监控">
 <meta property="og:url" content="https://diting0x.github.io/20170819/cachekit/index.html">
@@ -14,7 +14,7 @@
 <meta property="og:description" content="diting0x 听了Prof Kun Sun的报告，略作总结。 CacheKit核心思想：利用Trustzone的cahce不一致性，将恶意代码加载一块系统预留的I/O空间重定向的cache中，绕过安全世界和正常世界的监控。             几个发现 1),安全世界可以访问正常世界的内存、CPU寄存器，反之则不行。但是，安全世界无法访问正常世界的cache内容 2),内存空间：0x800">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/cachekit2">
-<meta property="og:updated_time" content="2017-08-26T03:08:02.000Z">
+<meta property="og:updated_time" content="2017-08-30T11:41:31.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="CacheKit 利用cache不一致性绕过内存监控">
 <meta name="twitter:description" content="diting0x 听了Prof Kun Sun的报告，略作总结。 CacheKit核心思想：利用Trustzone的cahce不一致性，将恶意代码加载一块系统预留的I/O空间重定向的cache中，绕过安全世界和正常世界的监控。             几个发现 1),安全世界可以访问正常世界的内存、CPU寄存器，反之则不行。但是，安全世界无法访问正常世界的cache内容 2),内存空间：0x800">
@@ -122,7 +122,7 @@
     
       <footer class="article-footer">
         
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Cache/">Cache</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Security/">Security</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/TrustZong/">TrustZong</a></li></ul>
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Cache/">Cache</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Security/">Security</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/TrustZone/">TrustZone</a></li></ul>
 
       </footer>
     
