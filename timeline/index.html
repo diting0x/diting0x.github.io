@@ -5,17 +5,17 @@
   
   <title>BE A GOOD GUY - 善守者</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="&amp;gt;&amp;gt; 2017-08-30 02:17 AM  二十有六，离十年计划还剩最后一年，博士生涯也即将结束。这一年除了对自己这几年做过的工作收尾总结，也在思考下一步的职场规划，还有未来的下一个五年计划，辗转难眠。  &amp;gt;&amp;gt; 2017-08-28 15:25 PM  今天和朋友聊起安全界，说起国内的一些大佬，说来说去就那么些人。其实目前国内安全圈子还很小，虽然从斯诺登事件开始炒热，但实际上国内安">
+  <meta name="description" content="&amp;gt;&amp;gt; 2017-08-31 12:45 PM Stalling Live Migrations on the Cloud验证了上述论文中的可能性，并设计了一种攻击方式来拖延或暂停虚拟机活迁移以击败上述两篇论文中的防御。 &amp;gt;&amp;gt; 2017-08-31 12:40 PM 最近几年的论文利用虚拟机活迁移来防御侧信道攻击Nomad: Mitigating arbitrary cloud side">
 <meta property="og:type" content="website">
 <meta property="og:title" content="BE A GOOD GUY">
 <meta property="og:url" content="https://diting0x.github.io/timeline/index.html">
 <meta property="og:site_name" content="善守者">
-<meta property="og:description" content="&amp;gt;&amp;gt; 2017-08-30 02:17 AM  二十有六，离十年计划还剩最后一年，博士生涯也即将结束。这一年除了对自己这几年做过的工作收尾总结，也在思考下一步的职场规划，还有未来的下一个五年计划，辗转难眠。  &amp;gt;&amp;gt; 2017-08-28 15:25 PM  今天和朋友聊起安全界，说起国内的一些大佬，说来说去就那么些人。其实目前国内安全圈子还很小，虽然从斯诺登事件开始炒热，但实际上国内安">
+<meta property="og:description" content="&amp;gt;&amp;gt; 2017-08-31 12:45 PM Stalling Live Migrations on the Cloud验证了上述论文中的可能性，并设计了一种攻击方式来拖延或暂停虚拟机活迁移以击败上述两篇论文中的防御。 &amp;gt;&amp;gt; 2017-08-31 12:40 PM 最近几年的论文利用虚拟机活迁移来防御侧信道攻击Nomad: Mitigating arbitrary cloud side">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2017-08-29T18:21:09.000Z">
+<meta property="og:updated_time" content="2017-08-31T04:15:46.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="BE A GOOD GUY">
-<meta name="twitter:description" content="&amp;gt;&amp;gt; 2017-08-30 02:17 AM  二十有六，离十年计划还剩最后一年，博士生涯也即将结束。这一年除了对自己这几年做过的工作收尾总结，也在思考下一步的职场规划，还有未来的下一个五年计划，辗转难眠。  &amp;gt;&amp;gt; 2017-08-28 15:25 PM  今天和朋友聊起安全界，说起国内的一些大佬，说来说去就那么些人。其实目前国内安全圈子还很小，虽然从斯诺登事件开始炒热，但实际上国内安">
+<meta name="twitter:description" content="&amp;gt;&amp;gt; 2017-08-31 12:45 PM Stalling Live Migrations on the Cloud验证了上述论文中的可能性，并设计了一种攻击方式来拖延或暂停虚拟机活迁移以击败上述两篇论文中的防御。 &amp;gt;&amp;gt; 2017-08-31 12:40 PM 最近几年的论文利用虚拟机活迁移来防御侧信道攻击Nomad: Mitigating arbitrary cloud side">
   
   
   <link href="/webfonts/ptserif/main.css" rel='stylesheet' type='text/css'>
@@ -67,7 +67,13 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>>&gt; 2017-08-30 02:17 AM</p>
+        <p>>&gt; 2017-08-31 12:45 PM</p>
+<p><a href="https://www.usenix.org/system/files/conference/woot17/woot17-paper-atya.pdf" target="_blank" rel="external">Stalling Live Migrations on the Cloud</a>验证了上述论文中的可能性，并设计了一种攻击方式来拖延或暂停虚拟机活迁移以击败上述两篇论文中的防御。</p>
+<p>>&gt; 2017-08-31 12:40 PM</p>
+<p>最近几年的论文利用虚拟机活迁移来防御侧信道攻击<a href="https://users.ece.cmu.edu/~vsekar/papers/ccs15_nomad.pdf" target="_blank" rel="external">Nomad: Mitigating arbitrary cloud side channels<br>via provider-assisted migration</a>,<a href="http://www.patrickmcdaniel.org/pubs/infocom17b.pdf" target="_blank" rel="external">Malicous co-residency on the cloud:<br>Attacks and defense</a>。具体来说，大部分侧信道攻击通过攻击虚拟机与受害虚拟机共处同一台物理机中，来获取受害虚拟机中的秘密信息泄露(登陆密码，已加密的key，会话token),从而获取受害虚拟机的权限。这两篇论文通过虚拟机活迁移来减少攻击虚拟机和受害虚拟机共处时间，来减少侧信道攻击的可能性。</p>
+<p>>&gt; 2017-08-31 12:14 PM</p>
+<p>利用信息泄露来实现云上的侧信道攻击,<a href="https://www.usenix.org/sites/default/files/conference/protected-files/sec14_slides_yarom.pdf" target="_blank" rel="external">Flush+Reload</a></p>
+<p>>&gt; 2017-08-30 02:17 AM</p>
 <ul>
 <li>二十有六，离十年计划还剩最后一年，博士生涯也即将结束。这一年除了对自己这几年做过的工作收尾总结，也在思考下一步的职场规划，还有未来的下一个五年计划，辗转难眠。</li>
 </ul>
