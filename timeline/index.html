@@ -5,17 +5,17 @@
   
   <title>BE A GOOD GUY - 善守者</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="&amp;gt;&amp;gt; 2017-08-31 12:45 PM Stalling Live Migrations on the Cloud验证了上述论文中的可能性，并设计了一种攻击方式来拖延或暂停虚拟机活迁移以击败上述两篇论文中的防御。 &amp;gt;&amp;gt; 2017-08-31 12:40 PM 最近几年的论文利用虚拟机活迁移来防御侧信道攻击Nomad: Mitigating arbitrary cloud side">
+  <meta name="description" content="&amp;gt;&amp;gt; 2017-08-31 12:45 PM Stalling Live Migrations on the Cloud验证了上述论文中的可能性，并设计了一种攻击方式来拖延或暂停虚拟机活迁移以击败上述两篇论文中的防御。具体来说，其利用一个hypervisor漏洞，使得攻击虚拟机能拖延虚拟机活迁移的同时，又能利用Flush+Reload信息泄露实施云上侧信道攻击 &amp;gt;&amp;gt; 2017-08-3">
 <meta property="og:type" content="website">
 <meta property="og:title" content="BE A GOOD GUY">
 <meta property="og:url" content="https://diting0x.github.io/timeline/index.html">
 <meta property="og:site_name" content="善守者">
-<meta property="og:description" content="&amp;gt;&amp;gt; 2017-08-31 12:45 PM Stalling Live Migrations on the Cloud验证了上述论文中的可能性，并设计了一种攻击方式来拖延或暂停虚拟机活迁移以击败上述两篇论文中的防御。 &amp;gt;&amp;gt; 2017-08-31 12:40 PM 最近几年的论文利用虚拟机活迁移来防御侧信道攻击Nomad: Mitigating arbitrary cloud side">
+<meta property="og:description" content="&amp;gt;&amp;gt; 2017-08-31 12:45 PM Stalling Live Migrations on the Cloud验证了上述论文中的可能性，并设计了一种攻击方式来拖延或暂停虚拟机活迁移以击败上述两篇论文中的防御。具体来说，其利用一个hypervisor漏洞，使得攻击虚拟机能拖延虚拟机活迁移的同时，又能利用Flush+Reload信息泄露实施云上侧信道攻击 &amp;gt;&amp;gt; 2017-08-3">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2017-08-31T04:15:46.000Z">
+<meta property="og:updated_time" content="2017-08-31T04:18:34.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="BE A GOOD GUY">
-<meta name="twitter:description" content="&amp;gt;&amp;gt; 2017-08-31 12:45 PM Stalling Live Migrations on the Cloud验证了上述论文中的可能性，并设计了一种攻击方式来拖延或暂停虚拟机活迁移以击败上述两篇论文中的防御。 &amp;gt;&amp;gt; 2017-08-31 12:40 PM 最近几年的论文利用虚拟机活迁移来防御侧信道攻击Nomad: Mitigating arbitrary cloud side">
+<meta name="twitter:description" content="&amp;gt;&amp;gt; 2017-08-31 12:45 PM Stalling Live Migrations on the Cloud验证了上述论文中的可能性，并设计了一种攻击方式来拖延或暂停虚拟机活迁移以击败上述两篇论文中的防御。具体来说，其利用一个hypervisor漏洞，使得攻击虚拟机能拖延虚拟机活迁移的同时，又能利用Flush+Reload信息泄露实施云上侧信道攻击 &amp;gt;&amp;gt; 2017-08-3">
   
   
   <link href="/webfonts/ptserif/main.css" rel='stylesheet' type='text/css'>
@@ -68,7 +68,7 @@
     <div class="article-entry" itemprop="articleBody">
       
         <p>>&gt; 2017-08-31 12:45 PM</p>
-<p><a href="https://www.usenix.org/system/files/conference/woot17/woot17-paper-atya.pdf" target="_blank" rel="external">Stalling Live Migrations on the Cloud</a>验证了上述论文中的可能性，并设计了一种攻击方式来拖延或暂停虚拟机活迁移以击败上述两篇论文中的防御。</p>
+<p><a href="https://www.usenix.org/system/files/conference/woot17/woot17-paper-atya.pdf" target="_blank" rel="external">Stalling Live Migrations on the Cloud</a>验证了上述论文中的可能性，并设计了一种攻击方式来拖延或暂停虚拟机活迁移以击败上述两篇论文中的防御。具体来说，其利用一个hypervisor漏洞，使得攻击虚拟机能拖延虚拟机活迁移的同时，又能利用Flush+Reload信息泄露实施云上侧信道攻击</p>
 <p>>&gt; 2017-08-31 12:40 PM</p>
 <p>最近几年的论文利用虚拟机活迁移来防御侧信道攻击<a href="https://users.ece.cmu.edu/~vsekar/papers/ccs15_nomad.pdf" target="_blank" rel="external">Nomad: Mitigating arbitrary cloud side channels<br>via provider-assisted migration</a>,<a href="http://www.patrickmcdaniel.org/pubs/infocom17b.pdf" target="_blank" rel="external">Malicous co-residency on the cloud:<br>Attacks and defense</a>。具体来说，大部分侧信道攻击通过攻击虚拟机与受害虚拟机共处同一台物理机中，来获取受害虚拟机中的秘密信息泄露(登陆密码，已加密的key，会话token),从而获取受害虚拟机的权限。这两篇论文通过虚拟机活迁移来减少攻击虚拟机和受害虚拟机共处时间，来减少侧信道攻击的可能性。</p>
 <p>>&gt; 2017-08-31 12:14 PM</p>
