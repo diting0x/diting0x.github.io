@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Blackhat系列USA 2016 Summary - 善守者</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="由师妹整理，119篇 【1】SHELL ON EARTH: FROM BROWSER TO SYSTEM COMPROMISE PRESENTED BY  Matt Molinyawe  &amp;amp; Jasiel Spelman  &amp;amp; Abdul-Aziz Hariri &amp;amp; Joshua Smith SHELL ON EARTH:从浏览器到系统妥协摘要：这个presentation">
+<meta name="keywords" content="Blackhat,Notes">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Blackhat系列USA 2016 Summary">
+<meta property="og:url" content="https://diting0x.github.io/20170501/blackhat16/index.html">
+<meta property="og:site_name" content="善守者">
+<meta property="og:description" content="由师妹整理，119篇 【1】SHELL ON EARTH: FROM BROWSER TO SYSTEM COMPROMISE PRESENTED BY  Matt Molinyawe  &amp;amp; Jasiel Spelman  &amp;amp; Abdul-Aziz Hariri &amp;amp; Joshua Smith SHELL ON EARTH:从浏览器到系统妥协摘要：这个presentation">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2017-12-29T02:44:21.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Blackhat系列USA 2016 Summary">
+<meta name="twitter:description" content="由师妹整理，119篇 【1】SHELL ON EARTH: FROM BROWSER TO SYSTEM COMPROMISE PRESENTED BY  Matt Molinyawe  &amp;amp; Jasiel Spelman  &amp;amp; Abdul-Aziz Hariri &amp;amp; Joshua Smith SHELL ON EARTH:从浏览器到系统妥协摘要：这个presentation">
+  
+  
+  <link href="/webfonts/ptserif/main.css" rel='stylesheet' type='text/css'>
+  <link href="/webfonts/source-code-pro/main.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <header id="header">
+  <div id="header-outer" class="outer">
+    <div id="header-inner" class="inner">
+      <a id="main-nav-toggle" class="nav-icon" href="javascript:;"></a>
+      <a id="logo" class="logo logo-text" href="/">谛听</a>
+      <nav id="main-nav">
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+          <a class="main-nav-link" href="/timeline">Timeline</a>
+        
+          <a class="main-nav-link" href="/shoulders">Shoulders</a>
+        
+          <a class="main-nav-link" href="/about">About</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        <div id="search-form-wrap">
+          <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://diting0x.github.io"></form>
+        </div>
+      </nav>
+    </div>
+  </div>
+</header>
+    <section id="main" class="outer"><article id="post-blackhat16" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Blackhat系列USA 2016 Summary
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/20170501/blackhat16/" class="article-date">
+  <time datetime="2017-05-01T02:28:29.000Z" itemprop="datePublished">2017-05-01</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Blackhat/">Blackhat</a>
+  </div>
+
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>由师妹整理，119篇</p>
+<p>【1】SHELL ON EARTH: FROM BROWSER TO SYSTEM COMPROMISE</p>
+<p>PRESENTED BY  Matt Molinyawe  &amp; Jasiel Spelman  &amp; Abdul-Aziz Hariri &amp; Joshua Smith</p>
+<p>SHELL ON EARTH:从浏览器到系统妥协<br>摘要：这个presentation详细介绍了8个在今年的Pwn2Own比赛中获奖的从浏览器到超级用户的开发链（21个漏洞）。提出应用程序沙箱减少攻击面是朝着正确方向迈出的一步，但是攻击面仍然是广阔的，沙箱显然只是道路上的缓冲区。</p>
+<hr>
+<p>【2】1000 WAYS TO DIE IN MOBILE OAUTH</p>
+<p>PRESENTED BY Yuan Tian  &amp;     Eric Chen  &amp;  Shuo Chen  &amp;     Yutong Pei  &amp;  Robert Kotcher  &amp;     Patrick Tague</p>
+<p>1000种方法在移动的oAuth协议中死去<br>摘要：本文确定的关键部分都是在每个OAuth协议流程安全的关键，但是移动应用开发商混淆或未指定的，然后展示了几个有代表性的案例来具体说明实际实现是如何落入这些陷阱的。</p>
+<hr>
+<p>【3】A JOURNEY FROM JNDI/LDAP MANIPULATION TO REMOTE CODE EXECUTION DREAM LAND</p>
+<p>PRESENTED BY Alvaro Munoz  &amp;     Oleksandr Mirosh</p>
+<p>一个从JNDI/LDAP操作到远程代码执行梦想土地的旅程<br>摘要：本文首先介绍了一种攻击者将能够使用不同的技术在执行JNDI查找的服务器上运行任意代码的“JNDI参考注入”的新型漏洞 (CVE-2015-4902)，以及相关基础知识，包括底层技术。然后深入解释攻击者利用不同的向量和服务来利用它的不同方法，其中LDAP提供了一种攻击向量，攻击者无法影响LDAP查找操作的地址，仍然可以修改LDAP目录，以便存储在应用程序查找操作检索时可执行任意代码的对象。</p>
+<hr>
+<p>【4】A LIGHTBULB WORM?</p>
+<p>PRESENTED BY Colin O’Flynn</p>
+<p>一个灯泡上的蠕虫<br>摘要：本文探讨了蠕虫能通过智能光网络传播这个想法，特别是潜入飞利浦Hue智能照明系统的内部部件，并详细介绍了为防止这种情况而采取的安全措施。主要集中讨论了用于攻击物联网/嵌入式硬件设备的先进技术的例子。</p>
+<hr>
+<p>【5】A RETROSPECTIVE ON THE USE OF EXPORT CRYPTOGRAPHY</p>
+<p>PRESENTED BY David Adrian</p>
+<p>关于出口密码使用的回顾<br>摘要：TLS在2015年经历了“出口级”密码学的三个重大漏洞— FREAK，Logajm和Drown。本文首先研究了与这三个出口相关漏洞的技术细节和历史背景，并提供最近的漏洞从一年以上的互联网扫描中收集的测量数据，同时研究了这些漏洞为什么发生，包含削弱密码的协议如何影响了安全性，以及如何更好地设计和实现未来的加密协议。</p>
+<hr>
+<p>【6】ABUSING BLEEDING EDGE WEB STANDARDS FOR APPSEC GLORY</p>
+<p>PRESENTED BY Bryant Zadegan  &amp;     Ryan Lester</p>
+<p>滥用网络标准出血边缘为了应用安全的光荣？？？<br>摘要：这篇文章严格探讨了SRI，CSP和HPKP标准带来的风险，展示有效的缓解策略和妥协，这可能使支持传统应用的建设者和维护者更合理适宜地使用这些标准；同时检查如HPKP等标准的紧急属性，以覆盖以前的不可预见的情景。</p>
+<hr>
+<p>【7】ACCESS KEYS WILL KILL YOU BEFORE YOU KILL THE PASSWORD</p>
+<p>PRESENTED BY Loic Simon</p>
+<p>在你kill密码之前，访问密钥会kill you<br>摘要：本文详细介绍所有用户如何始终如一地需要MFA，而不管身份验证方法如何。此外，介绍了几个开源工具，其中包括一个新工具的发布，该工具可用于在AWS帐户中强制执行MFA保护的API访问，以便进行无痛工作。</p>
+<hr>
+<p><strong>【8】ACCOUNT JUMPING POST INFECTION PERSISTENCY &amp; LATERAL MOVEMENT IN AWS</strong></p>
+<p>PRESENTED BY Dan Amiga  &amp;     Dor Knafo</p>
+<p>账户在感染后的持久性以及在AWS中的横向运动<br>摘要：本将介绍几种感染方法，包括一个新概念 - 用于接管PaaS（例如ElasticBeans）和IaaS（EC2，EC2 Containers）资源的“Account Jumping”。讨论了被感染的AMI，肮脏的账户转移以及利用S3和CloudFront用于执行AWS特定的凭据窃取，可以轻松导致完全帐户访问权限。接着讨论后感染阶段以及攻击者如何操纵AWS资源（公共端点，如EC2 IPS，弹性IPS，负载均衡器等），以完成对服务的MITM攻击。演示了如何通过lambda函数、一些跨区域复制配置以及特定帐户的存储相关性问题来很好地隐藏攻击者代码。通过利用和修改连接方法（HW / SW VPN，直接连接或云集线器）来检查云中的混合部署，并妥协内部数据中心。最后讨论将讨论可用于保护如堡垒SSH / RDP网关等攻击的最佳实践，了解基于CASB的解决方案的价值及其适合的位置，同时利用AWS中的审核和HSM功能查看不同的隔离方法来创建管理员和云之间的隔离，同时仍然提供对关键服务的访问。</p>
+<hr>
+<p>【9】ADAPTIVE KERNEL LIVE PATCHING: AN OPEN COLLABORATIVE EFFORT TO AMELIORATE ANDROID N-DAY ROOT EXPLOITS</p>
+<p>PRESENTED BY Yulong Zhang  &amp;     Tao Wei</p>
+<p>自适应的内核实时修补：一个开放的协作努力来改善Android N-day root漏洞渗透<br>摘要：本文提出了一个适应性的Android内核实时补丁框架，可以实现内核的开放和实时修补。同时为了防止hotpatches引入更多的漏洞和后门，组建了具有会员资格的特别联盟，只有那些选定的供应商才能提供从其他联盟成员提交的补丁和审核补丁。最后，该框架可以轻松扩展并应用于一般的Linux平台。</p>
+<hr>
+<p>【10】ADVANCED CAN INJECTION TECHNIQUES FOR VEHICLE NETWORKS</p>
+<p>PRESENTED BY Charlie Miller  &amp;     Chris Valasek</p>
+<p>车载网络先进的CAN(控制器局域网)注入技术   (no ppt)<br>摘要：本文讨论了物理，安全关键系统如何对注入的CAN消息做出反应，以及这些系统通常如何对这种类型的操作进行恢复。概述了CAN消息注入的新方法，可以绕过许多这些限制，并展示汽车的制动，转向和加速系统的结果。</p>
+<hr>
+<p>【11】AIRBNBEWARE: SHORT TERM RENTALS LONG TERM PWNAGE</p>
+<p>PRESENTED BY Jeremy Galloway</p>
+<p>Airbnbeware:短期租赁长期使用<br>摘要：本文介绍了短期租赁可能会引起深不可测的网络安全状态，讨论了常规的攻击及其相应的防御（常规或其他），强调实用性和简单性，同时包含攻击演示。</p>
+<hr>
+<p>【12】AMSI: HOW WINDOWS 10 PLANS TO STOP SCRIPT-BASED ATTACKS AND HOW WELL IT DOES IT</p>
+<p>PRESENTED BY Nikhil Mittal</p>
+<p>AMSI(AntiMalware Scan Interface)：WINDOWS 10计划停止基于脚本的攻击，以及它是如何做到的<br>摘要：本文介绍了微软的AMSI是如何阻塞基于脚本的攻击的，并进行了展示。</p>
+<hr>
+<p><strong>【13】AN AI APPROACH TO MALWARE SIMILARITY ANALYSIS: MAPPING THE MALWARE GENOME WITH A DEEP NEURAL NETWORK</strong></p>
+<p>PRESENTED BY Konstantin Berlin</p>
+<p>恶意软件相似性分析的AI方法：使用深层神经网络映射恶意软件基因组<br>摘要：本文开发了一种新的恶意代码相似性检测方法。这种方法不仅显着降低了手动调整相似性的需求，而且使用了更少的部署空间，精度也显著增加。相似性检测系统是利用深层神经网络进行代码共享识别，通过自动学习拆穿对手谍报，从而保持对手演变的最新状态。本文介绍了该方法如何工作，为什么能够显着改进当前的方法，以及如何轻松根据特定需求进行调整。</p>
+<hr>
+<p>【14】AN INCONVENIENT TRUST: USER ATTITUDES TOWARD SECURITY AND USABILITY TRADEOFFS FOR KEY-DIRECTORY ENCRYPTION SYSTEMS</p>
+<p>PRESENTED BY Patrick Gage Kelley</p>
+<p>一种不方便的信任：用户关于key-directory加密系统安全性和可用性权衡的态度<br>【摘要】通过实验，让参与者使用传统的密钥交换模型和基于密钥目录的注册模型完成加密任务。并描述了每个的安全属性（不同的介绍顺序）。发现参与者很好地理解了这两个模型，并对何时采用不同的权衡做出了一致的评估。较不方便的交换模式整体上更加安全，但发现注册模式的安全性对于许多日常用途来说是“足够好”的。</p>
+<hr>
+<p>【15】AN INSIDER’S GUIDE TO CYBER-INSURANCE AND SECURITY GUARANTEES</p>
+<p>PRESENTED BY Jeremiah Grossman</p>
+<p>一个关于网络保险和安全保障的内部指引<br>【摘要】本文从商业模式/产品效能等多个方面考虑，介绍如何创建一个安全保障计划。提供了几个有用的工具和过程。</p>
+<hr>
+<p><strong>【16】ANALYSIS OF THE ATTACK SURFACE OF WINDOWS 10 VIRTUALIZATION-BASED SECURITY</strong></p>
+<p>PRESENTED BY Rafal Wojtczuk</p>
+<p>WINDOWS 10基于虚拟化安全的攻击面分析<br>【摘要】在Windows 10中，Microsoft引入了基于虚拟化的安全性（VBS），这是基于虚拟机管理程序的一组安全解决方案。本文讨论了VBS实现的细节，并评估了与其他虚拟化解决方案截然不同攻击面，重点关注基础平台复杂性导致的潜在问题。同时展示了实际的漏洞：一个针对VBS本身，一个针对易受攻击的固件。前者是非关键的（提供旁路的一个VBS功能），后者是至关重要的。</p>
+<p>USA 2015: “Battle of the SKM and IUM: How Windows 10 Rewrites OS Architecture” and “Defeating Pass-the-Hash: Separation of Powers.”</p>
+<hr>
+<p>【17】APPLIED MACHINE LEARNING FOR DATA EXFIL AND OTHER FUN TOPICS</p>
+<p>PRESENTED BY Matt Wolff  &amp;     Brian Wallace  &amp;  Xuan Zhao</p>
+<p>在数据和其他有趣的话题上应用机器学习<br>【摘要】本文的目的是帮助研究人员，分析师和安全爱好者将机器学习应用于安全问题。从思路走到功能齐全的工具上，涉及到各种安全相关的问题，包括机器学习的进攻和防御用例。通过这些例子和示范，以非常具体的方式来解释将机器学习与指定问题相结合的每一步。<br>   此外，我们将发布所有的工具，以及源代码和相关数据集，使大家能够自己重现研究和实例。将通过此次演讲发布的基于机器学习的工具包括用于数据过滤的高级模糊工具，网络映射器以及命令和控制面板识别模块。</p>
+<hr>
+<p><strong>【18】ATTACKING SDN INFRASTRUCTURE: ARE WE READY FOR THE NEXT-GEN NETWORKING?</strong></p>
+<p>PRESENTED BY Changhoon Yoon  &amp;  Seungsoo Lee</p>
+<p>攻击SDN基础设施：我们为下一代网络做好准备了吗？<br>【摘要】本文通过实际攻击SDN堆栈的每一层来探索SDN的攻击面，展示了一些直接影响网络（服务）可用性或机密性的最关键的攻击，此外，还介绍了一些SDN安全项目。</p>
+<hr>
+<p>【19】AVLEAK: FINGERPRINTING ANTIVIRUS EMULATORS FOR ADVANCED MALWARE EVASION</p>
+<p>PRESENTED BY Alexei Bulazel</p>
+<p>AVLEAK：用于高级恶意软件问题的指纹防病毒模拟器<br>【摘要】本文介绍的AVLeak，是通过自动黑盒测试来指纹化消费者防病毒模拟器的工具。AVLeak可用于从AV模拟器中提取可能被恶意软件使用的指纹，以检测其正在进行分析，并随后避开检测。AVLeak将被实时演示，显示使用可用于检测和规避受消费者青睐的AV的工具发现的真实世界指纹。</p>
+<hr>
+<p>【20】BAD FOR ENTERPRISE: ATTACKING BYOD ENTERPRISE MOBILE SECURITY SOLUTIONS</p>
+<p>PRESENTED BY Vincent Tan</p>
+<p>对企业不利：攻击BYOD企业移动安全解决方案<br>【摘要】企业移动安全（EMS）是BYOD(Bring Your Own Device)解决方案的组成部分，为企业提供数据，设备和通信安全。其中，其目的是解决数据丢失，网络隐私和设备的越狱/生根。本文显示了EMS解决方案在很大程度上无效，在某些情况下甚至可能使组织面临意外的风险。分别在越狱和非越狱设备上展示针对EMS保护的应用程序的攻击，并介绍一个开创性的工具Swizzler，以帮助渗透测试员面对包含EMS保护的应用程序。</p>
+<hr>
+<p>【21】BADTUNNEL: HOW DO I GET BIG BROTHER POWER?</p>
+<p>PRESENTED BY Yang Yu</p>
+<p>坏的隧道：如何获得大的兄弟力量？<br>【摘要】本文介绍了一种新的威胁模型。基于这种威胁模型，我们发现Windows系统中存在缺陷。它影响了过去20年发布的所有窗口，包括Windows 10。它具有非常广泛的攻击面，攻击可以在Internet Explorer、edge、微软Office、许多第三方软件、USB闪存驱动器，甚至Web服务器上执行。当此漏洞被触发时，您将被监视。同时展示了如何抵御这种威胁，特别是在那些不再受微软支持的系统上。</p>
+<hr>
+<p>【22】BADWPAD</p>
+<p>PRESENTED BY Maxim Goncharov</p>
+<p>糟糕的wpad协议<br>【摘要】本文通过介绍几个实验的结果，突出显示这个设计不良的协议（WPAD）所固有的缺陷，并注意到可以轻易利用的许多方法。我们的研究扩展了这些已知的缺陷，并证明了“badWPAD”在今天通过在不同环境中测试可能恶意使用的令人惊讶的广泛适用性。</p>
+<hr>
+<p>【23】BEHIND THE SCENES OF IOS SECURITY</p>
+<p>PRESENTED BY Ivan Krstic</p>
+<p>IOS安全背后的场景<br>【摘要】本文前所未有的讨论三种iOS安全机制技术细节，首次公开讨论其中一项iOS 10新的技术。HomeKit，Auto Unlock和iCloud Keychain是三种苹果技术，可处理用户数据异常敏感的用户数据。讨论了新型安全同步结构的加密设计和实现，以及iOS 10新增的一种独特的JIT硬化机制，使iOS Safari JIT成为更难的目标。</p>
+<hr>
+<p>【24】BEYOND THE MCSE: ACTIVE DIRECTORY FOR THE SECURITY PROFESSIONAL</p>
+<p>PRESENTED BY Sean Metcalf</p>
+<p>超越微软安全认证：给安全专业人员的活动目录<br>【摘要】本文介绍了主要的Active Directory组件，这些组件对于安全专业人员来说，保护AD至关重要。 </p>
+<hr>
+<p>【25】BLUNTING THE PHISHER’S SPEAR: A RISK-BASED APPROACH FOR DEFINING USER TRAINING AND AWARDING ADMINISTRATIVE PRIVILEGES</p>
+<p>PRESENTED BY Arun Vishwanath</p>
+<p>钝化的钓鱼者的枪：一种基于风险的方法来定义用户培训和授予管理权限<br>【摘要】本文使用SCAM模型，提出了开发员工网络风险指数（CRI）。CRI将为安全分析师提供精确定位，并确定哪些人可能成为受害者，谁需要培训，多少培训以及培训应该集中在何方。CRI还将允许安全分析师识别哪些用户获得管理访问权，取代当前大多数基于角色的基于角色的分配方法，其中个人可以根据其组织角色和职责进行访问，并以基于个人量化的系统网络风险倾向。提出的基于CRI的方法将导致个性化，认知行为训练和循证方法来授予用户的管理员权限。</p>
+<hr>
+<p>【26】BREAKING FIDO: ARE EXPLOITS IN THERE?</p>
+<p>PRESENTED BY Jerrod Chong</p>
+<p>打破FIDO：这里存在漏洞利用吗？<br>【摘要】本文确定了FIDO部署中隐藏的漏洞，漏洞的难度以及企业和组织如何保护自身。</p>
+<hr>
+<p><strong>【27】BREAKING HARDWARE-ENFORCED SECURITY WITH HYPERVISORS</strong></p>
+<p>PRESENTED BY Joseph Sharkey</p>
+<p>通过虚拟机管理程序打破硬件强制安全<br>【摘要】本文演示了如何使用诸如虚拟机管理程序之类的低级技术来颠覆由这些强制安全机制所构成的安全保障。具体展示了虚拟机管理程序rootkit如何绕过英特尔的可信执行环境（TXT）DRTM（信任度量的动态根），并从Intel的AES-NI指令中捕获密钥。然后，通过使用其他英特尔技术，即1型虚拟机管理程序（VT-x）利用一台机器来突出显示英特尔TXT配置错误的老旧问题。最后，本文突出了开源tBoot项目和底层英特尔TXT技术实现过程中的一个缺陷。总结了要提供防御措施，包括妥善部署设计，包括使用密封存储，远程认证和硬件硬化。</p>
+<hr>
+<p><strong>【28】BREAKING KERNEL ADDRESS SPACE LAYOUT RANDOMIZATION (KASLR) WITH INTEL TSX</strong></p>
+<p>PRESENTED BY  Yeongjin Jang &amp; Sangho Lee &amp; Taesoo Kim</p>
+<p>通过英特尔的TSX打破内核地址空间布局随机化（KASLR）<br>【摘要】本文提出了一个新的KASLR定时侧信道攻击，称为DrK（去随机内核地址空间），可以通过识别页面属性来准确快速地对内存内存布局进行非随机化。展示了DrK在几秒钟内以几乎完美的准确性打破了所有主要操作系统的KASLR，包括Windows，Linux和OS X。最后，提出了可以防止或减轻DrK攻击的潜在硬件修改。</p>
+<hr>
+<p>【29】BREAKING PAYMENT POINTS OF INTERACTION (POI)</p>
+<p>PRESENTED BY Nir Valtman  &amp; Patrick Watson</p>
+<p>打破支付交易点<br>【摘要】本文解释了主要的缺陷，并对广泛使用的密码键盘上的几个弱点进行了现场演示。作为我们演示的一部分，包括了绕过EMV，避免PIN保护和从各种渠道获取PAN。</p>
+<hr>
+<p>【30】BRUTE-FORCING LOCKDOWN HARDDRIVE PIN CODES</p>
+<p>PRESENTED BY Colin O’Flynn</p>
+<p>【摘要】本文展示了通过欺骗前面板键盘，暴力破解一个AES-256加密硬盘驱动器的方法。除了硬盘驱动器的内部设计之外，还扩展了验证基于MB86C311芯片组的任何加密驱动器的安全性的相关工作。</p>
+<hr>
+<p>【31】BUILDING A PRODUCT SECURITY INCIDENT RESPONSE TEAM: LEARNINGS FROM THE HIVEMIND</p>
+<p>PRESENTED BY Kymberlee Price</p>
+<p>建立产品安全事故响应团队：从HiverMind中学习<br>【摘要】本文针对中小型企业，小型的安全团队，并将内容分享和支持这些团队的产品事件响应程序的最佳实践。与会者将提供模板和可操作的建议，基于成熟的最佳做法，从多个成熟的安全响应组织。</p>
+<hr>
+<p>【32】BUILDING TRUST &amp; ENABLING INNOVATION FOR VOICE ENABLED IOT</p>
+<p>PRESENTED BY Lynn Terwoerds</p>
+<p>建立信任和鼓励语音功能启用IOT的创新<br>【摘要】语音隐私联盟为语音隐私创新工具包的一部分创建了一组39个敏捷安全故事，专门用于支持语音的IoT产品。这是一个非常实用的开发工具，语音隐私联盟认为这是确保语音支持的技术和促进创新所必需的。</p>
+<hr>
+<p>【33】CALL ME: GATHERING THREAT INTELLIGENCE ON TELEPHONY SCAMS TO DETECT FRAUD</p>
+<p>PRESENTED BY Aude Marzuoli</p>
+<p>call me:收集电话诈骗的威胁情报来发现诈欺行为<br>【摘要】通过在一个大型电话蜜罐中跟踪呼叫模式，在电话信道中收集威胁情报，利用这些数据，开发了一种方法，以独特的“指纹识别”隐藏在多个电话号码后面的不良演员，并在呼叫的前几秒钟内对其进行检测。</p>
+<hr>
+<p>【34】CAN YOU TRUST ME NOW? AN EXPLORATION INTO THE MOBILE THREAT LANDSCAPE</p>
+<p>PRESENTED BY Josh Thomas  &amp; Shawn Moyer</p>
+<p>【摘要】本文集中在整个移动生态系统中，从硬件组件到操作系统到他们连接的网络。探讨了移动供应商和操作系统的核心组件，重点是可能影响所有移动设备的错误，逻辑和根本问题。并且讨论了移动可信计算的局限性，以及可以做些什么来保护数据和数据所在的设备。如果熟练的攻击者可以在硬件级别打破信任，则整个设备在非常基本的（甚至不可检测的）级别被破坏。本文介绍了关于如何打破这种信任的方法。</p>
+<hr>
+<p>【35】CANSPY: A PLATFORM FOR AUDITING CAN DEVICES</p>
+<p>PRESENTED BY Jonathan-Christofer Demay  &amp;  Arnaud Lebrun</p>
+<p>CANSPY：用于审计CAN设备的平台<br>【摘要】本文提供了CANSPY，这是一个给安全审计员在审核CAN设备时提供的平台。它不仅可以实时阻止，转发或修改CAN帧，还可以通过一套规则自动执行，也可以交互使用以太网和诸如Scapy的数据包操作框架。</p>
+<hr>
+<p>【36】CAPTAIN HOOK: PIRATING AVS TO BYPASS EXPLOIT MITIGATIONS</p>
+<p>PRESENTED BY Udi Yavo  &amp;     Tomer Bitton</p>
+<p>captain hook：盗版AVS绕过漏洞缓解<br>【摘要】本文揭示了在各种hooking引擎中发现的六个不同的安全问题，被发现的漏洞使得威胁行为者能够绕过底层操作系统的安全措施。对不同的漏洞进行了调查，深入了解其中的几个漏洞。特别仔细地研究了大型供应商最受欢迎的商业hooking引擎中出现的漏洞。最后，我们演示了安全工具如何作为威胁行为者的入侵通道，挫败了安全措施。</p>
+<hr>
+<p><strong>【37】CAPTURING 0DAY EXPLOITS WITH PERFECTLY PLACED HARDWARE TRAPS</strong></p>
+<p>PRESENTED BY Cody Pierce  &amp; Matt Spisak  &amp;  Kenneth Fitch</p>
+<p>通过理想的硬件陷阱捕捉0day漏洞攻击<br>【摘要】本文提出了一个新的策略大幅度提高了在获得执行之前阻止利用，防止绕过缓解的机率。介绍了一种新的跨平台，硬件辅助的控制流完整性（CFI）方法，以减轻对Intel架构的控制流劫持攻击。同时介绍了研究方法，结果和局限性，强调了面临主要障碍时所提出的新颖的解决方案，包括：正确跟踪Windows线程上下文交换;配置PMU中断传递而不跳过Microsoft的PatchGuard;在运行时发现PE和ELF文件中有效分支目的地的高效算法;以及在虚拟化环境中运行的影响。使用硬件辅助陷阱来监控程序执行并对错误预测的分支执行CFI策略的方法的有效性被实时证明。同时还提供了有关性能影响的收集指标以及该技术的现实应用。</p>
+<hr>
+<p>【38】CERTIFICATE BYPASS: HIDING AND EXECUTING MALWARE FROM A DIGITALLY SIGNED EXECUTABLE</p>
+<p>PRESENTED BY Tom Nipravsky</p>
+<p>认证旁路：从数字签名的可执行文件中隐藏和执行恶意软件<br>【摘要】本文提出了一个通过数字签名的文件（虽然仍保持文件的有效证件）来隐藏恶意软件（加密和未加密的）的新技术，并且通过使用一个良性的可执行文件（一个反射的EXE加载器，从头写）来从内存中执行它。本文重点研究了PE文件结构，证书表，以及如何将数据注入表中，而不会损坏证书本身（该文件仍然会被视为有效的数字签名文件）。最后用实例展示如何通过查看证书表的方法绕过安全解决方案。</p>
+<hr>
+<p>【39】CRIPPLING HTTPS WITH UNHOLY PAC</p>
+<p>PRESENTED BY Itzik Kotler  &amp;     Amit Klein</p>
+<p>通过不满意的PAC(代理自动配置)使https协议瘫痪<br>【摘要】本文揭示了通过强制浏览器/系统使用一个恶意的PAC（代理自动配置）的资源，就有可能泄露https URL。解释了这种恶意攻击如何影响用户的隐私以及证书/会话如何被窃取。提出了PAC恶意软件的概念以及特点，以及一个全面的浏览器PAC特征矩阵，阐述了更多关于跨平台（Linux，Windows，Mac）和浏览器（IE、Chrome、Safari）的威胁。</p>
+<hr>
+<p>【40】CUNNING WITH CNG: SOLICITING SECRETS FROM SCHANNEL</p>
+<p>PRESENTED BY Jake Kambic</p>
+<p>CNG中的诡计：从安全通道中得到秘密<br>【摘要】本文探讨了安全通道如何利用Microsoft的CryptoAPI-NG（CNG）来缓存用于TLS / SSL连接的主密钥，会话密钥，私有密钥和会话密钥。它讨论了底层数据结构，以及如何提取密钥和其他有用的信息，这些信息提供了关于连接的法律上下文，然后利用该信息解密使用短暂密钥交换的会话。</p>
+<hr>
+<p>【41】CYBER WAR IN PERSPECTIVE: ANALYSIS FROM THE CRISIS IN UKRAINE</p>
+<p>PRESENTED BY Kenneth Geers</p>
+<p>网络战争远景：从乌克兰危机分析<br>【摘要】本文介绍了一个北约资助的研究项目，由20个国家安全和网络安全领导机构承担，揭示了恶意代码对于间谍和犯罪是非常有用的，探讨了计算机黑客是否具有战略效应，和平与战争中数字化行动的政治和军事限制是什么。</p>
+<hr>
+<p>【42】DANGEROUS HARE: HANGING ATTRIBUTE REFERENCES HAZARDS DUE TO VENDOR CUSTOMIZATION</p>
+<p>PRESENTED BY Nan Zhang</p>
+<p>危险的Hare：挂起属性引用由于供应商用户化定制带来的危害<br>【摘要】由于安卓系统存在不同的用户自定义，一个恶意的应用程序可以通过伪装成在设备上使用但未被定义的属性的所有者来获取关键的系统功能。本文显示了这样的缺陷以及可能会带来严重的安全隐患，展示了一套自己开发的用于自动检测不同Android版本中的Hare缺陷的新技术。</p>
+<hr>
+<p>【43】DARK SIDE OF THE DNS FORCE</p>
+<p>PRESENTED BY Erik Wu</p>
+<p>DNS力量的黑暗面<br>【摘要】本文介绍了新兴的基于DNS的攻击背后的一系列新的秘密武器，分析了互联网领域激增的根本原因，展示了一些真正的用例来说明域名对互联网的可用性和稳定性的影响。重点关注了随机子域武器的演变，通过解剖用于提高攻击强度并逃避侦测的核心技术和机制来解决这一挑战。讨论了多种级别的随机域，混合使用常数名称和随机字符串的技术，创新使用时间戳作为唯一域名，以及本地和全球升级。</p>
+<hr>
+<p>【44】DEFENSE AT HYPERSCALE: TECHNOLOGIES AND POLICIES FOR A DEFENSIBLE CYBERSPACE</p>
+<p>PRESENTED BY Jason Healey</p>
+<p>超大规模防御：防御网络的技术和策略<br>【摘要】本文描述了最近一支工作队的成果，以确定最先进的技术、业务创新和公共策略，这些措施提供了规模化的安全措施，以赶上攻击者。认识到什么是最有效的，以及对如何重复这些成功的超大规模防御给出了建议。</p>
+<hr>
+<p>【45】DEMYSTIFYING THE SECURE ENCLAVE PROCESSOR</p>
+<p>PRESENTED BY Tarjei Mandt  &amp;     Mathew Solnik  &amp;     David Wang</p>
+<p>解密SEP<br>【摘要】本文展示了SEP处理器和SEPOS的一些亮点，特别关注了SEP处理器的硬件设计和引导过程，以及SEPOS架构本身。还详细介绍了iOS内核和SEP如何使用复杂的邮箱机制交换数据，以及这些数据如何由SEPOS处理并转发到其服务和应用程序。最后评估了SEP攻击面，并强调了我们研究的一些发现，包括潜在攻击向量。</p>
+<hr>
+<p>【46】DISCOVERING AND EXPLOITING NOVEL SECURITY VULNERABILITIES IN APPLE ZEROCONF</p>
+<p>PRESENTED BY Luyi Xing  &amp;     Xiaolong Bai</p>
+<p>发现和开发APPLE零配置中新的安全漏洞<br>【摘要】本文首先系统研究了ZeroConf技术对苹果系统的安全性影响。研究揭示了Apple平台上的主要ZeroConf框架大多是无保护的，容易受到假冒或中间人攻击。突出了ZeroConf技术的基本安全挑战。发布了对Apple ZeroConf技术攻击的技术细节，同时以Airdrop，Bonjour和Multiper Connectivity为例来展示其设计和实现中的漏洞，以及如何入侵这些ZeroConf框架和系统服务从而执行中间人攻击。最后展示一些由于TLS无法在ZeroConf场景中保护设备间通信而引起的漏洞。</p>
+<hr>
+<p>【47】DOES DROPPING USB DRIVES IN PARKING LOTS AND OTHER PLACES REALLY WORK?</p>
+<p>PRESENTED BY Elie Bursztein</p>
+<p>在停车场和其他地点丢置USB驱动器是否真的有用？<br>【摘要】本文通过调查，深入分析哪些因素影响用户拿起驱动器，为什么用户插入驱动器，以及演示一个可以帮助减轻USB攻击的新工具。</p>
+<hr>
+<p>【48】DPTRACE: DUAL PURPOSE TRACE FOR EXPLOITABILITY ANALYSIS OF PROGRAM CRASHES</p>
+<p>PRESENTED BY Rodrigo Rubira Branco  &amp;  Rohit Mothe</p>
+<p>DPTRACE：双目标跟踪程序崩溃的可行性分析<br>【摘要】本文改进了程序崩溃分析领域的现有工具和方法，提出了本质上是后向和前向污染传播系统的组合，利用这两种方法并将它们集成到一个单一的框架中。讨论了作者开发的两个功能工具的概念和实现，并讨论了集成它们的好处。最后演示了使用集成工具DPTrace公开0-day漏洞，包括发现的一些工具，分析/开发和报告。</p>
+<hr>
+<p>【49】DRONE ATTACKS ON INDUSTRIAL WIRELESS: A NEW FRONT IN CYBER SECURITY</p>
+<p>PRESENTED BY Jeff Melrose</p>
+<p>无人机攻击工业无线：网络安全的新前沿<br>【摘要】本文介绍了电子威胁、电子防御措施、最近的电子干扰事件、最新的无人驾驶飞机威胁和能力、防御计划和以无人驾驶飞机作为运载平台的电子攻击威胁。</p>
+<hr>
+<p>【50】DUNGEONS DRAGONS AND SECURITY</p>
+<p>PRESENTED BY Tiphaine Romand Latapie</p>
+<p>地下龙与安全<br>【摘要】本文提供了计算机安全基本原理的新方法。培训围绕一个角色扮演游戏开发的，其中包括攻击和捍卫建筑物。通过汇报来突出显示游戏和计算机安全风险之间的所有相似之处。重点介绍了培训的主要特点，并将提供一个解释如何进行此类培训的白皮书。</p>
+<p>passpasspass boringggggggg</p>
+<hr>
+<p>【51】EXPLOITING CURIOSITY AND CONTEXT: HOW TO MAKE PEOPLE CLICK ON A DANGEROUS LINK DESPITE THEIR SECURITY AWARENESS</p>
+<p>PRESENTED BY Zinaida Benenson</p>
+<p>利用好奇心和情境：如何让人们不顾安全意识点击危险链接<br>【摘要】本文通过调查发现用户无错误的决策似乎是非常不现实的，即使他们被提供有效的意识培训。因此，需要仔细评估提高针对钓鱼网络钓鱼的安全意识的所有利弊。从长远来看，依靠技术深度防御可能是一个更好的解决方案。</p>
+<hr>
+<p>【52】GATTACKING BLUETOOTH SMART DEVICES - INTRODUCING A NEW BLE PROXY TOOL</p>
+<p>PRESENTED BY Slawomir Jasek</p>
+<p>gattacking蓝牙智能设备：引入新的代理工具<br>【摘要】本文发现很多蓝牙设备由于场景不同，很少使用BLE规范中的安全机制，这样利用简单的技巧，便可以欺骗使用者。基于几个例子展示了可能的利用漏洞的常见缺陷，提出了减轻攻击的最佳做法，开发了一个免费的开源工具BLE MITM代理。</p>
+<hr>
+<p>【53】GREATFET: MAKING GOODFET GREAT AGAIN</p>
+<p>PRESENTED BY Michael Ossmann</p>
+<p>GREATFET: 让GOODFET再次变得很棒<br>【摘要】 GoodFET是区分世界各地硬件黑客的首选开源工具，包括太多不同的硬件设计。本文通过移动了一些更高级的东西来替代整个项目，使goodfet变得更好。</p>
+<hr>
+<p>【54】HACKING NEXT-GEN ATMS: FROM CAPTURE TO CASHOUT</p>
+<p>PRESENTED BY Weston Hecker</p>
+<p>hacking下一代ATM：从捕获到兑现<br>【摘要】本文演示了2000美元的投资如何执行无人值守的“现金支出”，同时也介绍了EMV实施过程中的失败情况，以及未来信用卡数据如何最有可能与新的EMV数据一起出售。另外，包括一个“La-Cara”的演示，这是一款适用于当前EMV和NFC自动柜员机的自动出货机。</p>
+<hr>
+<p>【55】HACKPROOFING ORACLE EBUSINESS SUITE</p>
+<p>PRESENTED BY David Litchfield</p>
+<p>Oracle电子商务套件的防盗<br>【摘要】甲骨文电子商务套件最近的一项安全评估表明，它易受到一些（未经身份验证的）远程代码执行缺陷，大量SQL注入漏洞和跨站脚本错误的影响。本文通过示范漏洞来研究这些弱点，然后研究如何保护自己的系统免遭这些攻击。</p>
+<hr>
+<p>【56】HARDENING AWS ENVIRONMENTS AND AUTOMATING INCIDENT RESPONSE FOR AWS COMPROMISES</p>
+<p>PRESENTED BY Andrew Krug  &amp; Alex McCormack</p>
+<p>加强AWS环境和自动化对AWS损害的应急响应<br>【摘要】本文讨论了云事件响应的范例，并介绍了一种自动化收集受损主机取证证据的工具。它强调了正确配置AWS环境的需要，并提供了一个工具来帮助配置过程，还提供额外的工具帮助在AWS密钥泄密的情况下恢复AWS帐户。</p>
+<hr>
+<p>【57】HEIST: HTTP ENCRYPTED INFORMATION CAN BE STOLEN THROUGH TCP-WINDOWS</p>
+<p>PRESENTED BY Tom Van Goethem  &amp; Mathy Vanhoef</p>
+<p>HEIST:HTTP加密的信息可以通过tcp-windows被盗<br>【摘要】本文引入了HEIST，一套新颖的攻击技术，将网络级别的攻击带入浏览器，对我们的在线安全和隐私构成迫在眉睫的威胁。HEIST可以利用用浏览器以及底层的HTTP，SSL/TLS和TCP层中的弱点和微妙之处。最重要的，发现了一个旁路通道攻击，可以泄漏任何交叉起点响应的确切大小，此侧信道滥用在TCP级别发送响应的方式。</p>
+<hr>
+<p>【58】HORSE PILL: A NEW TYPE OF LINUX ROOTKIT</p>
+<p>PRESENTED BY Michael Leibowitz</p>
+<p>HORSE PILL：一种新型的LINUX ROOTKIT<br>【摘要】本文介绍了一种新的Linux Rootkit，通过恶意地利用Linux容器的底层技术元素，得益于几乎所有的Linux系统启动方式，甚至能感染并持续存在在UEFI安全启动的系统中。这种方法没有恶意内核模块，也不需要签名。受感染的系统有一个几乎看不见的后门，可以通过一个隐蔽的网络通道远程控制。</p>
+<hr>
+<p>【59】HTTP COOKIE HIJACKING IN THE WILD: SECURITY AND PRIVACY IMPLICATIONS</p>
+<p>PRESENTED BY Suphannee Sivakorn  &amp;     Jason Polakis</p>
+<p>Htpp cookie在野外劫持：安全和隐私的意义<br>【摘要】本文对各种主要网站进行了深入评估，并探讨哪些功能和信息暴露给已经劫持用户HTTP Cookie的攻击者。对cookie劫持的研究揭示了一些严重的缺陷，探讨了用户如何保护自己，而EFF的HTTPS  Everywhere扩展等机制可以减少攻击面。</p>
+<hr>
+<p>【60】HTTP/2 &amp; QUIC - TEACHING GOOD PROTOCOLS TO DO BAD THINGS</p>
+<p>PRESENTED BY Catherine (Kate) Pearce  &amp;  Carl Vincent</p>
+<p>HTTP/2＆QUIC - 教导好的协议做坏的事情<br>【摘要】本文简要介绍了QUIC和HTTP/2，涵盖MPTCP以外的多路复用攻击，讨论如何在QUIC和HTTP/2中使用这些技术，并讨论如何理解和防御网络上的H2/QUIC流量。另外，展示并发布一些使用这些技术的工具。</p>
+<hr>
+<p>【61】I CAME TO DROP BOMBS: AUDITING THE COMPRESSION ALGORITHM WEAPON CACHE</p>
+<p>PRESENTED BY Cara Marie</p>
+<p>我想要消除炸弹：审查压缩算法武器高速缓存<br>【摘要】本文除了介绍压缩算法审计之外，正在生成一个庞大的工具库（“炸弹”），可以由安全研究人员和开发人员用来在各种应用/协议中测试此漏洞。这些炸弹是根据开源许可证发布的。</p>
+<hr>
+<p>【62】INTO THE CORE - IN-DEPTH EXPLORATION OF WINDOWS 10 IOT CORE</p>
+<p>PRESENTED BY Paul Sabanal</p>
+<p>进入核心 - 深入探索WINDOWS 10物联网核心<br>【摘要】本文首先讨论操作系统的内部部件，包括与台式机版本共享的安全特性和缓解。然后列举运行Windows 10 IoT Core的设备的攻击面，以及它对恶意软件的潜在易感性。讨论评估运行Windows 10 IoT Core的设备的安全性的方法，如静态/动态逆向工程和模糊。最后给出关于如何保护Windows 10 IoT Core设备的一些建议。</p>
+<hr>
+<p>【63】INTRA-PROCESS MEMORY PROTECTION FOR APPLICATIONS ON ARM AND X86: LEVERAGING THE ELF ABI</p>
+<p>PRESENTED BY Sergey Bratus  &amp;     Maxwell Koo  &amp;     Julian Bangert</p>
+<p>位于ARM和X86架构上的应用程序的进程内存保护：引导ELF ABI<br>【摘要】本文演示了ELFbac，一个使用Linux ELF ABI来表达程序组件（如库）之间的访问控制策略的系统，并且不需要对GNU构建链进行任何更改。它通过使用修改的Linux加载程序和Linux虚拟内存系统来实施这些策略。ELFbac策略在ELF对象文件部分的级别上运行。开发了ARM和x86的原型，使用ARM原型来保护DNP3（一种流行的ICS协议）的验证代理防火墙，以及x86为Nginx编写基本策略。最后还将展示保护OpenSSH的政策。</p>
+<hr>
+<p>【64】IRAN’S SOFT-WAR FOR INTERNET DOMINANCE</p>
+<p>PRESENTED BY Claudio Guarnieri  &amp;     Collin Anderson</p>
+<p>伊朗为了互联网主宰地位的软战<br>【摘要】本文深入分析近几年来对伊朗威胁行为者的入侵活动的调查结果，特别是对民间社会成员的攻击活动。</p>
+<hr>
+<p>【65】KEYSTONE ENGINE: NEXT GENERATION ASSEMBLER FRAMEWORK</p>
+<p>PRESENTED BY Nguyen Anh Quynh</p>
+<p>KEYSTONE引擎：下一代汇编程序框架<br>【摘要】本文介绍了一些现有的汇编框架，然后详细介绍他们的设计/实现，并解释他们目前的问题。接着介绍了Keystone的架构以及设计和实现它的挑战，帮助大家了解keystone引擎的优势。</p>
+<hr>
+<p>【66】LANGUAGE PROPERTIES OF PHONE SCAMMERS: CYBERDEFENSE AT THE LEVEL OF THE HUMAN</p>
+<p>PRESENTED BY Judith Tabron</p>
+<p>电话骗子的语言特性：在人类水平的网络防御<br>【摘要】本文简要介绍和解释了IRS诈骗电话中的极地标签问题，话题控制，问题推迟和不规范的叙事结构，并为在电话过程中识别这种语言属性提供一些起点，以帮助改善人类水平。</p>
+<hr>
+<p><strong>【67】MEMORY FORENSICS USING VIRTUAL MACHINE INTROSPECTION FOR CLOUD COMPUTING</strong></p>
+<p>PRESENTED BY Tobias Zillner</p>
+<p>利用虚拟机内省进行云计算的内存取证<br>【摘要】本文开发了一种实用的方法，在取证调查时为用户提供额外的能力。该解决方案侧重于内存取证服务提供，自行开发的内存取证服务安装在每个云节点上，并通过云管理组件进行管理，是此解决方案的基础。取证数据是通过虚拟机内省技术获得的，与其他方法相比，可以在不影响运行系统的情况下获得可靠的数据。此外，还提供了有关底层技术的一般概述，并讨论了利弊。先讨论解决方案的方法，并在原型中实际实现。在这个原型中，OpenNebula和Xen虚拟化组件组合一起用来管理云基础设施，libvmi作为虚拟机自省库，volatility作为取证工具。</p>
+<hr>
+<p>【68】NEXT-GENERATION OF EXPLOIT KIT DETECTION BY BUILDING SIMULATED OBFUSCATORS</p>
+<p>PRESENTED BY Tongbo Luo  &amp;     Xing Jin</p>
+<p>通过建立模拟的模糊处理程序开发下一代漏洞利用工具包检测<br>【摘要】本文重建了6个漏洞利用工具包（Angler，Nuclear，Rig，Magnitude，Neutrino，SweetOrange）。讨论了我们的设计来实施漏洞利用套件使用的模糊处理程序，希望开源我们的模糊处理程序来使研究受益，其目的是为网络世界提供更好的保护。同时利用我们的模糊处理程序进行了一系列的试验，得到了一些结果。</p>
+<hr>
+<p>【69】NONCE-DISRESPECTING ADVERSARIES: PRACTICAL FORGERY ATTACKS ON GCM IN TLS</p>
+<p>PRESENTED BY  Sean Devlin &amp; Hanno Böck &amp; Aaron Zauner &amp; Philipp Jovanovic</p>
+<p>NONCE-不尊重对手：实际的伪造攻击在TLS GCM<br>【摘要】本文使用TLS中使用的GCM算法来研究非重用问题。GCM中的Nonce重用允许攻击者按照Joux的描述恢复认证密钥和伪造消息。我们实现了一个概念验证攻击，使我们能够违反受影响的HTTPS连接的真实性和注入内容。</p>
+<hr>
+<p>【70】O-CHECKER: DETECTION OF MALICIOUS DOCUMENTS THROUGH DEVIATION FROM FILE FORMAT SPECIFICATIONS</p>
+<p>PRESENTED BY Yuhei Otsubo</p>
+<p>O-CHECKER：通过文件格式规定的偏差检测恶意文件<br>【摘要】本文通过关注于文件格式规范的偏离和检查隐藏可执行文件的隐藏技术，分类八个异常结构，并创建一个名为o-checker的工具来检测它们。</p>
+<hr>
+<p>【71】OSS SECURITY MATURITY: TIME TO PUT ON YOUR BIG BOY PANTS!</p>
+<p>PRESENTED BY Jake Kouns  &amp;     Christine Gadsby</p>
+<p>开源软件的成熟度：是时候穿上你的大裤衩了（（（哈哈哈哈百度翻译好牛逼<br>【摘要】本文介绍了使用OSS的真正风险以及管理其在组织内使用的最佳方式，更具体地说是产品开发生命周期，以减少维护成本。提出了一个定制的OSS成熟度模型，并对组织开发软件的成熟阶段进行探讨，以了解它们如何对OSS所带来的风险进行优先级划分和内部化。</p>
+<hr>
+<p><strong>【72】OUROBOROS: TEARING XEN HYPERVISOR WITH THE SNAKE</strong></p>
+<p>PRESENTED BY Shangcong Luan</p>
+<p>Ouroboros:通过蛇撕碎XEN虚拟机管理程序<br>【摘要】本文在Xen虚拟机管理程序发现了一个关键的验证旁路错误，可以将此用来撕裂虚拟机管理程序。使用不同的攻击向量和有效载荷，恶意的PV客户端操作系统不仅可以控制虚拟机管理程序，还可以控制在当前平台上运行的所有其他客户机操作系统。</p>
+<hr>
+<p>【73】PANGU 9 INTERNALS</p>
+<p>PRESENTED BY Tielei Wang  &amp; Hao Xu  &amp;  Xiaobo Chen</p>
+<p>盘古9的内部细节<br>【摘要】盘古9是iOS 9的第一个（而且仅有的）无限制越狱工具，它利用了iOS用户界面中的一系列漏洞，在内核中实现最终的任意代码执行，并持续执行代码签名旁路。本文揭示盘古9的内部细节，解释盘古9如何通过系统调试功能在沙箱外获得任意代码执行。然后，在加载dyld_shared_cache文件的过程中阐述一个漏洞，该文件使盘古9能够实现持久代码签名旁路。</p>
+<hr>
+<p>【74】PINDEMONIUM: A DBI-BASED GENERIC UNPACKER FOR WINDOWS EXECUTABLE</p>
+<p>PRESENTED BY Sebastiano Mariani  &amp;  Lorenzo Fontana</p>
+<p>PINDEMONIUM：一种基于DBI通用的Windows可执行文件的解压器<br>【摘要】本文对解包问题进行了深入研究，并提出了几项工作，用于增强最终用户的保护和支持恶意软件分析人员的工作。本文探讨了利用DBI框架的功能的可能性，因为它提供了在分析过程中有用的大量功能：它允许通过高级API对指令级别进行粒度检查和修改，从而使分析人员完全控制程序被装载。设计了一个通用的解包算法，该算法试图从它的包装工具版本重建工作PE，并试图打败最常用的IAT混淆技术。为了验证我们的工作进行了两个实验来证明其一般性和有效性。</p>
+<hr>
+<p>【75】PLC-BLASTER: A WORM LIVING SOLELY IN THE PLC</p>
+<p>PRESENTED BY Ralf Spenneberg  &amp; Maik Brüggemann &amp; Hendrik Schwartke</p>
+<p>PLC-BLASTER：一种在PLC中独自生活的蠕虫<br>【摘要】本文展示并演示第一个PLC蠕虫。我们的PLC蠕虫用SCL编程语言编写，将扫描并危及西门子Simatic S7-1200 v1-v3 PLC，无需任何外部支持。</p>
+<hr>
+<p>【76】PWNING YOUR JAVA MESSAGING WITH DESERIALIZATION VULNERABILITIES</p>
+<p>PRESENTED BY Matthias Kaiser</p>
+<p>PWN你的java消息通过反序列化漏洞<br>【摘要】本文展示各种java消息API实现和反序列化漏洞的攻击面，同时java通讯开发工具（JMET）被提供给大家用来帮助识别和利用message-consuming系统。</p>
+<hr>
+<p>【77】RECOVER A RSA PRIVATE KEY FROM A TLS SESSION WITH PERFECT FORWARD SECRECY</p>
+<p>PRESENTED BY Marco Ortisi</p>
+<p>从具有完全前向保密性的TLS会话中恢复RSA私钥<br>【摘要】本文解释了攻击背后的理论，发布了能够在被动模式（即仅通过嗅探网络流量）和主动模式（即直接参与建立TLS握手）的概念验证。</p>
+<hr>
+<p>【78】SAMSUNG PAY: TOKENIZED NUMBERS FLAWS AND ISSUES</p>
+<p>PRESENTED BY Salvador Mendoza</p>
+<p>三星支付：符号数字的缺陷和问题<br>【摘要】Samsung Pay试图为客户提供安全，这个应用程序是一个复杂的机制，其安全性有一些限制。使用随机标记号码和实施磁安全传输（MST）技术，这并不能保证用Samsung Pay生成的每个令牌都可以应用于使用相同的三星设备进行购买。这意味着攻击者可以从Samsung Pay设备中窃取令牌，并且无限制地使用它。</p>
+<hr>
+<p>【79】SECURE PENETRATION TESTING OPERATIONS: DEMONSTRATED WEAKNESSES IN LEARNING MATERIAL AND TOOLS</p>
+<p>PRESENTED BY Wesley McGrew</p>
+<p>安全渗透测试操作：学习材料和工具中的呈现的弱点<br>【摘要】本文探讨了用于培训渗透测试人员的广泛的学习材料是否导致对客户数据和渗透测试操作的保护不足。并演示劫持渗透测试员正常做法的技巧，以及检查和保护当前测试程序的指导。</p>
+<hr>
+<p>【80】SECURITY THROUGH DESIGN - MAKING SECURITY BETTER BY DESIGNING FOR PEOPLE</p>
+<p>PRESENTED BY Jelle Niemantsverdriet</p>
+<p>通过设计实现安全 - 通过为人们设计实现更好的安全<br>【摘要】本文探讨了我们通常如何创建我们的安全流程，团队和解决方案。研究了以经济，心理学或营销等其他学科为基础的以用户为中心的设计方法和概念，通过这些方法概念来帮助我们以真正可用的方式构建安全性。</p>
+<hr>
+<p><strong>【81】SGX SECURE ENCLAVES IN PRACTICE: SECURITY AND CRYPTO REVIEW</strong></p>
+<p>PRESENTED BY Jean-Philippe Aumasson  &amp;  Luis Merino</p>
+<p>实践中的SGX安全的enclaves：安全和保密审查<br>【摘要】本文是基于真正的支持SGX的硬件和英特尔软件开发环境对SGX的第一次公开评估。评估了SGX用户的攻击面和实际风险。然后介绍和演示使用SGX的安全功能的概念证明：安全的远程存储和授权（完全同态加密承诺，但实践太慢）和重新加密。了解基础架构如何提供功能强大的加密功能。最后发布代码以及一个工具用来提取和验证enclave元数据。</p>
+<hr>
+<p>【82】SIDE-CHANNEL ATTACKS ON EVERYDAY APPLICATIONS</p>
+<p>PRESENTED BY Taylor Hornby</p>
+<p>日常应用上的侧信道攻击<br>【摘要】本文简要介绍了FLUSH + RELOAD攻击如何工作，以及如何用来构建输入区分攻击，并进行演示。提出FLUSH + RELOAD的侧面渠道不仅仅对于打破加密技术而言是有用的，也是开发更好的攻击的起点。</p>
+<hr>
+<p>【83】SUBVERTING APPLE GRAPHICS: PRACTICAL APPROACHES TO REMOTELY GAINING ROOT</p>
+<p>PRESENTED BY Liang Chen  &amp;     Qidan He  &amp;  Marco Grassi  &amp;     Yubin Fu</p>
+<p>颠覆苹果的图表算法：远程获取根的实用方法<br>【摘要】本文介绍了用户界面的Apple Graphics图形组件WindowServer，解释了三个典型安全漏洞的错误。接着涉及到内核攻击面，展示所有苹果图形驱动程序的封闭源核心图形管道组件中的漏洞，包括最新的芯片组，分析根本原因，并解释如何使用我们的“图形风格”开发技术。还提出一种新的内核堆喷射方式，比已知的方法更少的副作用和更可控的内容。<br>通过在OS X El Capitan上的一系列漏洞，分别利用用户界面图形和内核图形展示了两个远程获取根的现场演示。</p>
+<hr>
+<p>【84】TCP INJECTION ATTACKS IN THE WILD - A LARGE SCALE STUDY</p>
+<p>PRESENTED BY Gabi Nakibly</p>
+<p>大规模的TCP注入攻击——大规模研究<br>【摘要】本文提出了一个大规模的互联网流量调查，研究虚假内容注入在网络上的做法。回顾并详细展示了今年早些时候发现的注入，另外，展示了新的非商业注入类型，确定背后的注入者以及其操作方式。最后，详细分析针对美国网站的针对性注入攻击。发现的攻击是使用带TCP注入错误数据包（而不是原始数据包的带内更改）完成的，故提出了一种新的客户端工具来检测注入事件，减轻对性能影响最小的这种攻击。</p>
+<hr>
+<p>【85】THE ART OF DEFENSE - HOW VULNERABILITIES HELP SHAPE SECURITY FEATURES AND MITIGATIONS IN ANDROID</p>
+<p>PRESENTED BY Nick Kralevich</p>
+<p>防御的艺术-如何通过漏洞来帮助塑造安卓上的安全特性和缓解<br>【摘要】本文介绍了Android用户面临的威胁，同时使用以前的Black Hat会议和已发表的研究的具体例子，以及以前未发布的威胁。 对于这些威胁，将介绍包含该漏洞的特定技术控制，以及新增的Android N安全功能，以防未来的未知漏洞。最后，从何处着手制造安卓，以及整个计算机产业，让其更安全。</p>
+<hr>
+<p>【86】THE ART OF REVERSE ENGINEERING FLASH EXPLOITS</p>
+<p>PRESENTED BY Jeong Wook Oh</p>
+<p>逆向工程flash利用的艺术<br>【摘要】本文提供两件事情：1.可用于逆向工程攻击的策略和调试技术。这包括使用现有的工具集并以有效的方式组合它们。 2.详细的利用代码逆向工程实例，可以帮助了解攻击和缓解战争的当前和过去状态。讨论技术细节，了解漏洞，如何利用这些漏洞以及供应商如何防范这些漏洞。</p>
+<hr>
+<p>【87】THE BEAST WITHIN - EVADING DYNAMIC MALWARE ANALYSIS USING MICROSOFT COM</p>
+<p>PRESENTED BY Ralf Hund</p>
+<p>内部的野兽-利用微软com规避动态恶意软件分析<br>【摘要】本文介绍了自动化动态COM恶意软件分析的各个方面，并展示了哪些方法实际上是可行的，哪些方法从一开始就是无望的。展示了COM接口在恶意软件中已经被积极使用的情况。发现挂钩COM调用（或一般的API调用）使恶意软件能够轻松检测它在沙箱中运行。展示了如何使用基于转换的监视器来监视第一个接口层上的所有COM调用。</p>
+<hr>
+<p>【88】THE REMOTE MALICIOUS BUTLER DID IT!</p>
+<p>PRESENTED BY Tal Be’ery  &amp;     Chaim Hoch</p>
+<p>远程恶意管家做到了！<br>【摘要】本文揭示了“远程恶意管家”攻击，它显示了攻击者如何远程执行这样的攻击，以便对远程计算机进行完全的控制。深入了解攻击的技术细节，括流氓域控制器，客户端漏洞以及与之相关的Kerberos认证协议网络流量。最后分析了一些实用的针对流氓域控制器的通用检测和预防方法。</p>
+<hr>
+<p>【89】THE RISK FROM POWER LINES: HOW TO SNIFF THE G3 AND PRIME DATA AND DETECT THE INTERFERE ATTACK</p>
+<p>PRESENTED BY Lei Ji  &amp;     Yunding Jian</p>
+<p>电源线的风险：如何对G3和Prime数据进行嗅探，并检测干扰攻击<br>【摘要】本文讨论了如何在PLC通信系统中获取使用G3或Prime标准的PLC数据流，并讨论了如何在网络中检测攻击。最后重点讨论如何识别系统使用的标准以及如何在物理层上对PLC数据进行嗅探。</p>
+<hr>
+<p>【90】THE TAO OF HARDWARE THE TE OF IMPLANTS</p>
+<p>PRESENTED BY Joe FitzPatrick</p>
+<p>硬件的道和植入的技术<br>【摘要】本文展示了几个简单的硬件植入，总结出一些潜在的设计决策，可以减少植入物的脆弱性，以及保护现有硬件系统免受篡改的方法。</p>
+<hr>
+<p>【91】THE YEAR IN FLASH</p>
+<p>PRESENTED BY Natalie Silvanovich</p>
+<p>Flash的一年<br>【摘要】 本文描述了过去一年在Flash中发现的显著漏洞。从Flash攻击面的概述开始，然后讨论最常见的漏洞类型是如何工作的。最后讨论了Flash攻击的未来：可能出现新错误的领域以及现有缓解的影响。</p>
+<hr>
+<p>【92】TIMING ATTACKS HAVE NEVER BEEN SO PRACTICAL: ADVANCED CROSS-SITE SEARCH ATTACKS</p>
+<p>PRESENTED BY Nethanel Gelernter</p>
+<p>时间攻击从未如此现实：高级的跨站点搜索攻击<br>【摘要】跨站点搜索（XS-search）是实用的定时侧信道攻击，允许从Web服务中提取敏感信息。本文着重于应对通货膨胀技术，增加响应的规模。还涉及到算法的改进，当通过定时侧信道没有信息泄漏时，可以使用二阶（SO）XS搜索，这是一种新型攻击，允许攻击者通过恶意种植来显著增加响应大小的差异并记录到存储。</p>
+<hr>
+<p>【93】UNLEASH THE INFECTION MONKEY: A MODERN ALTERNATIVE TO PEN-TESTS</p>
+<p>PRESENTED BY Ofri Ziv</p>
+<p>释放感染猴：进行PEN测试的一种当前的选择<br>【摘要】本文开发了一种新的开源网络安全测试工具 - 感染猴，旨在从攻击者的角度彻底测试网络。展示了感染猴如何发现盲点，并证明了正在进行的全网安全测试为安全团队增添了强大的功能。重点关注目前为止一直处于行业“集体盲点”的漏洞。安全社区可以从破坏性的新型工具中获益，这些工具可以帮助验证安全解决方案部署，并揭示安全链中较弱的部分。</p>
+<hr>
+<p>【94】USING AN EXPANDED CYBER KILL CHAIN MODEL TO INCREASE ATTACK RESILIENCY</p>
+<p>PRESENTED BY Sean Malone</p>
+<p>使用扩展的CYBER KILL链模型来增加攻击弹性<br>【摘要】CYBER KILL链模型提供了一个框架，以了解对手如何破坏周边从而获得对内部网络系统的访问。然而，这种模式可能会导致对周边安全的过度关注，从而损害内部安全控制。本文探索了一个扩展模型，包括Internal Kill Chain 和the Target Manipulation Kill Chain. </p>
+<hr>
+<p>【95】USING EMET TO DISABLE EMET</p>
+<p>PRESENTED BY Abdulellah Alsaheel  &amp;  Raghav Pande</p>
+<p>使用EMET到禁用EMET<br>【摘要】本文重点放在打击EMET（Microsoft的增强型缓解体验工具包）或任何其他代理机构的难易程度上。任何端点利用预防/检测解决方案的安全性取决于相同的地址空间验证，以及如何用自己的检查或通过规避和回避验证来打败它们。此外，它还将反映有针对性的EMET逃避，即攻击者知道EMET安装在受害机器上时的情况。</p>
+<hr>
+<p><strong>【96】USING UNDOCUMENTED CPU BEHAVIOR TO SEE INTO KERNEL MODE AND BREAK KASLR IN THE PROCESS</strong></p>
+<p>PRESENTED BY Anders Fogh  &amp; Daniel Gruss</p>
+<p>使用未记录的CPU行为查看内核，并在过程中打破KASLR机制<br>【摘要】本文重点介绍了没有特殊权限的攻击者如何获得内核的洞察力，以及如何能够进一步破坏安全性。提出来一种方法，可以基于未记录的CPU行为，通过映射内核在内核模式区域中映射页面的位置以及定位特定内核模块的方法快速可靠地反思内核中的内存层次结构，并展示攻击者如何利用这些信息来对内核进行攻击并打破KASLR制作新的内存映射，然后使用多种方法在内核模式下运行未经授权的代码。</p>
+<hr>
+<p>【97】VIRAL VIDEO - EXPLOITING SSRF IN VIDEO CONVERTERS</p>
+<p>PRESENTED BY Nikolay Ermishkin  &amp;     Maxim Andreev</p>
+<p>病毒视频-在视频转换器中利用SSRF<br>【摘要】本文研究了在hls（m3u8）播放列表处理中利用SSRF攻击，展示了如何在ffmpeg中处理hls播放列表的实现细节，以及视频转换器中的SSRF如何能够基于像AWS这样的云端完成访问服务。介绍了检测并利用此漏洞的工具，同时展示了一个真正的“病毒”视频，可以对Facebook，Twitter等服务进行成功的攻击。</p>
+<hr>
+<p>【98】VOIP WARS: THE PHREAKERS AWAKEN</p>
+<p>PRESENTED BY Fatih Ozavci</p>
+<p>VoIP的战争：phreakers被唤醒<br>【摘要】本文的目的是让响应和安全测试团队掌握VoIP网络前沿攻击，工具和漏洞的知识。另外，对于诸如云UC服务，商业服务，服务提供商网络和企业通信的各种实现，解释这些攻击的业务影响。通过演示介绍了保护和测试他们的通信基础设施和服务的方法。</p>
+<hr>
+<p>【99】WEAPONIZING DATA SCIENCE FOR SOCIAL ENGINEERING: AUTOMATED E2E SPEAR PHISHING ON TWITTER</p>
+<p>PRESENTED BY John Seymour  &amp;     Philip Tully</p>
+<p>武器化社会工程数据科学研究：自动化的端到端的鱼叉式网络钓鱼的推特<br>【摘要】本文提出了一个递归神经网络，学习推特针对特定用户的钓鱼帖子。该模型使用鱼叉式网络钓鱼pen测试数据进行训练，为了使点击更有可能，它会从目标和他们转发或关注的用户的时间轴帖子中提取主题动态播种。通过聚类来增强模型，以根据社交参与度的水平来确定高价值目标。总而言之，这些技术使得世界上第一个T自动化的端到端钓鱼网络钓鱼活动生成器用于Twitter。</p>
+<hr>
+<p>【100】WEB APPLICATION FIREWALLS: ANALYSIS OF DETECTION LOGIC</p>
+<p>PRESENTED BY Vladimir Ivanov</p>
+<p>Web应用防火墙：检测逻辑的分析<br>【摘要】本文突出显示了Web应用程序防火墙（WAF）的核心：检测逻辑，具有正则表达式检测机制的重点。发布用于正则表达式分析的静态应用程序安全测试（SAST）工具，旨在发现正则表达式的狡猾语法中的安全漏洞。</p>
+<hr>
+<p>【101】WHAT’S THE DFIRENCE FOR ICS?</p>
+<p>PRESENTED BY Chris Sistrunk  &amp;     Josh Triplett</p>
+<p>工业控制系统（ICS）的数字取证和事件响应是什么？<br>【摘要】本文探讨在诸如可编程逻辑控制器（PLC），远程终端单元（RTU）和控制器等关键基础设施中使用的嵌入式设备的DFIR的基础知识。 如果这些被破坏或甚至出现误操作，我们将显示哪些数据在嵌入式系统中进行分析，以确定根本原因。</p>
+<hr>
+<p>【102】WHEN GOVERNMENTS ATTACK: STATE SPONSORED MALWARE ATTACKS AGAINST ACTIVISTS LAWYERS AND JOURNALISTS</p>
+<p>PRESENTED BY Cooper Quintin  &amp;     Eva Galperin</p>
+<p>当政府受到攻击时：国家赞助的恶意软件攻击活动家/律师/记者<br>【摘要】针对活动家、律师和记者的恶意软件攻击变得异常普遍，本文讨论针对世界各地的活动家、记者和律师（包括EFF）的恶意软件活动的技术和操作细节。</p>
+<hr>
+<p>【103】WHEN THE COPS COME A-KNOCKING: HANDLING TECHNICAL ASSISTANCE DEMANDS FROM LAW ENFORCEMENT</p>
+<p>PRESENTED BY Jennifer Granick  &amp;     Riana Pfefferkorn</p>
+<p>当警察来敲门：处理来自法律实施的技术援助<br>【摘要】本文帮助大家了解执法部门可能要求提供什么样的援助（并且要求过去的公司），他们是否有权要求这种协助以及根据什么法律以及公司的选择。</p>
+<hr>
+<p>【104】WINDOWS 10 MITIGATION IMPROVEMENTS</p>
+<p>PRESENTED BY Matt Miller  &amp; David Weston</p>
+<p>WINDOWS 10减缓改进<br>【摘要】本文描述了微软处理软件安全的一些新方法，以及对Windows 10所做的一些新的缓解改进。涵盖一种新的数据驱动的软件安全方法，这种方法包括主动监测和分析在野外发现的漏洞，以更好地了解正在被利用的漏洞和利用技术的类型。</p>
+<hr>
+<p>【105】WINDOWS 10 SEGMENT HEAP INTERNALS</p>
+<p>PRESENTED BY Mark Vincent Yason</p>
+<p>Windows 10 Segment Heap的内部构件<br>【摘要】本文讨论了Segment Heap的数据结构，算法和安全机制。通过讨论和演示如何使用Microsoft WinRT PDF库（CVE-2016117）中的内存损坏漏洞在Edge内容进程的上下文中创建可靠的写入原语，来深入理解应用Segment Heap的知识。</p>
+<hr>
+<p><strong>【106】XENPWN: BREAKING PARAVIRTUALIZED DEVICES</strong></p>
+<p>PRESENTED BY Felix Wilhelm</p>
+<p>XENPWN：破解半虚拟化设备<br>【摘要】现代虚拟机管理程序是使用半虚拟化设备来为guest虚拟机提供访问，特权后端组件中的错误可能允许攻击者突破客户端。本文介绍了对特权后端组件安全性的研究结果，并讨论了Xenpwn，一种基于虚拟机管理程序的内存访问跟踪工具，用于发现Xen虚拟机管理程序的半虚拟化驱动程序中的多个关键漏洞。</p>
+
+      
+    </div>
+    
+    
+      <footer class="article-footer">
+        
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Blackhat/">Blackhat</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Notes/">Notes</a></li></ul>
+
+      </footer>
+    
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/20170508/intro-aslr/" id="article-nav-newer" class="article-nav-link-wrap">
+      <div class="article-nav-title"><span>&lt;</span>&nbsp;
+        
+          系统安全浅薄知识系列(一)-ASLR
+        
+      </div>
+    </a>
+  
+  
+    <a href="/20170330/kernelmalware/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">内核层恶意代码分析&nbsp;<span>&gt;</span></div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+
+
+<div class="share_addthis">
+  <div class="sharing addthis_toolbox share">
+    <a class="addthis_button_facebook_like"></a>
+    <a class="addthis_button_tweet"></a>
+    <a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-560c64c35486b3d4" async="async"></script>
+</div>
+
+
+
+
+
+</section>
+    <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2017 Diting0x&nbsp;
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>, theme by <a href="http://github.com/ppoffice">PPOffice</a>
+    </div>
+  </div>
+</footer>
+    
+
+<script src="/js/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+  </div>
+</body>
+</html>

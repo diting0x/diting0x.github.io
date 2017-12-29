@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Blackhat系列USA 2017 Summary - 善守者</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="由师妹整理 Web AppSec【1】WEB CACHE DECEPTION ATTACKPRESENTED BY Omer Gil Tracks: #  Web AppSec 网络缓存欺骗攻击【摘要】Web Cache欺骗攻击是一种新的Web攻击向量，它将各种技术和框架置于危险之中。本文将对攻击从解剖，先决条件和缓解方案三个方面进行深入分析。还将介绍不同的网络服务器和缓存机制的行为，并且将以脆弱">
+<meta name="keywords" content="Blackhat,Notes">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Blackhat系列USA 2017 Summary">
+<meta property="og:url" content="https://diting0x.github.io/20170828/blackhat17/index.html">
+<meta property="og:site_name" content="善守者">
+<meta property="og:description" content="由师妹整理 Web AppSec【1】WEB CACHE DECEPTION ATTACKPRESENTED BY Omer Gil Tracks: #  Web AppSec 网络缓存欺骗攻击【摘要】Web Cache欺骗攻击是一种新的Web攻击向量，它将各种技术和框架置于危险之中。本文将对攻击从解剖，先决条件和缓解方案三个方面进行深入分析。还将介绍不同的网络服务器和缓存机制的行为，并且将以脆弱">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2017-12-29T02:44:08.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Blackhat系列USA 2017 Summary">
+<meta name="twitter:description" content="由师妹整理 Web AppSec【1】WEB CACHE DECEPTION ATTACKPRESENTED BY Omer Gil Tracks: #  Web AppSec 网络缓存欺骗攻击【摘要】Web Cache欺骗攻击是一种新的Web攻击向量，它将各种技术和框架置于危险之中。本文将对攻击从解剖，先决条件和缓解方案三个方面进行深入分析。还将介绍不同的网络服务器和缓存机制的行为，并且将以脆弱">
+  
+  
+  <link href="/webfonts/ptserif/main.css" rel='stylesheet' type='text/css'>
+  <link href="/webfonts/source-code-pro/main.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <header id="header">
+  <div id="header-outer" class="outer">
+    <div id="header-inner" class="inner">
+      <a id="main-nav-toggle" class="nav-icon" href="javascript:;"></a>
+      <a id="logo" class="logo logo-text" href="/">谛听</a>
+      <nav id="main-nav">
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+          <a class="main-nav-link" href="/timeline">Timeline</a>
+        
+          <a class="main-nav-link" href="/shoulders">Shoulders</a>
+        
+          <a class="main-nav-link" href="/about">About</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        <div id="search-form-wrap">
+          <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://diting0x.github.io"></form>
+        </div>
+      </nav>
+    </div>
+  </div>
+</header>
+    <section id="main" class="outer"><article id="post-blackhat17" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Blackhat系列USA 2017 Summary
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/20170828/blackhat17/" class="article-date">
+  <time datetime="2017-08-28T02:38:08.000Z" itemprop="datePublished">2017-08-28</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Blackhat/">Blackhat</a>
+  </div>
+
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>由师妹整理</p>
+<h2 id="Web-AppSec"><a href="#Web-AppSec" class="headerlink" title="Web AppSec"></a>Web AppSec</h2><h3 id="【1】WEB-CACHE-DECEPTION-ATTACK"><a href="#【1】WEB-CACHE-DECEPTION-ATTACK" class="headerlink" title="【1】WEB CACHE DECEPTION ATTACK"></a>【1】WEB CACHE DECEPTION ATTACK</h3><p>PRESENTED BY Omer Gil</p>
+<p>Tracks: <strong>#  Web AppSec</strong></p>
+<p>网络缓存欺骗攻击<br>【摘要】Web Cache欺骗攻击是一种新的Web攻击向量，它将各种技术和框架置于危险之中。本文将对攻击从解剖，先决条件和缓解方案三个方面进行深入分析。还将介绍不同的网络服务器和缓存机制的行为，并且将以脆弱的网站和现场演示为例。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-Gil-Web-Cache-Deception-Attack.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-Gil-Web-Cache-Deception-Attack.pdf</a></p>
+<hr>
+<h3 id="【2】CRACKING-THE-LENS-TARGETING-HTTP’S-HIDDEN-ATTACK-SURFACE"><a href="#【2】CRACKING-THE-LENS-TARGETING-HTTP’S-HIDDEN-ATTACK-SURFACE" class="headerlink" title="【2】CRACKING THE LENS: TARGETING HTTP’S HIDDEN ATTACK-SURFACE"></a>【2】CRACKING THE LENS: TARGETING HTTP’S HIDDEN ATTACK-SURFACE</h3><p>PRESENTED BY James Kettle</p>
+<p>Tracks: <strong>#  Web AppSec</strong></p>
+<p>打破镜头：瞄准HTTP隐藏的攻击表面<br>【摘要】本文将展示如何使用格式错误的请求和深奥的标头来诱使这些系统暴露自己，并将网关打开到受害者的网络中。将分享如何通过将这些技术与一点点Bash相结合，彻底打穿DoD网络。在解构损害的同时，还将展示其揭开的几种隐藏系统。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-Kettle-Cracking-The-Lens-Exploiting-HTTPs-Hidden-Attack-Surface.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-Kettle-Cracking-The-Lens-Exploiting-HTTPs-Hidden-Attack-Surface.pdf</a></p>
+<hr>
+<h3 id="【3】DON’T-TRUST-THE-DOM-BYPASSING-XSS-MITIGATIONS-VIA-SCRIPT-GADGETS"><a href="#【3】DON’T-TRUST-THE-DOM-BYPASSING-XSS-MITIGATIONS-VIA-SCRIPT-GADGETS" class="headerlink" title="【3】DON’T TRUST THE DOM: BYPASSING XSS MITIGATIONS VIA SCRIPT GADGETS"></a>【3】DON’T TRUST THE DOM: BYPASSING XSS MITIGATIONS VIA SCRIPT GADGETS</h3><p>PRESENTED BY Sebastian Lekies  &amp;     Krzysztof Kotowicz  &amp;     Eduardo Vela</p>
+<p>Tracks: <strong>#  Web AppSec</strong></p>
+<p>不要信任DOM：通过脚本工具绕过XSS缓解方案<br>【摘要】本文提出一种新颖的网络黑客技术，使攻击者能够绕过大多数XSS缓解。攻击者滥用所谓的脚本小工具，即页面中合法的JavaScript片段，通过选择器从DOM读取元素，并以导致脚本执行的方式处理它们。随后，小工具选择良性的元素，并执行攻击者控制的脚本，当小工具错误地提升元素的权限时，XSS才会表现出来。同时将展示这些小工具几乎遍布所有现代JavaScript库，API和应用程序。通过介绍几个案例研究和现实世界的例子，证明许多缓解技术不适合现代应用。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/thursday/us-17-Lekies-Dont-Trust-The-DOM-Bypassing-XSS-Mitigations-Via-Script-Gadgets.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/thursday/us-17-Lekies-Dont-Trust-The-DOM-Bypassing-XSS-Mitigations-Via-Script-Gadgets.pdf</a></p>
+<hr>
+<h3 id="【4】GAME-OF-CHROMES-OWNING-THE-WEB-WITH-ZOMBIE-CHROME-EXTENSIONS"><a href="#【4】GAME-OF-CHROMES-OWNING-THE-WEB-WITH-ZOMBIE-CHROME-EXTENSIONS" class="headerlink" title="【4】GAME OF CHROMES: OWNING THE WEB WITH ZOMBIE CHROME EXTENSIONS"></a>【4】GAME OF CHROMES: OWNING THE WEB WITH ZOMBIE CHROME EXTENSIONS</h3><p>PRESENTED BY Tomer Cohen</p>
+<p>Tracks: <strong>#  Web AppSec</strong>, <strong>#  Malware</strong></p>
+<p>Chrome上的游戏：通过僵尸Chrome扩展程序来拥有网络<br>【摘要】扩展程序中的基于DOM的XSS漏洞允许攻击者制作一个运行Javascript内容的扩展程序。本文将展示这样一个缺陷如何导致对受害者浏览器的完全和永久的控制，将扩展变成僵尸。另外，详细描述2016年Wix和Facebook遭受的攻击，并展示如何使用类似的技术，通过流行的社交平台将恶意有效载荷有效地分发给新的受害者，从而创建最强大的僵尸网络。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/thursday/us-17-Cohen-Game-Of-Chromes-Owning-The-Web-With-Zombie-Chrome-Extensions-wp.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/thursday/us-17-Cohen-Game-Of-Chromes-Owning-The-Web-With-Zombie-Chrome-Extensions-wp.pdf</a></p>
+<hr>
+<h3 id="【5】FRIDAY-THE-13TH-JSON-ATTACKS"><a href="#【5】FRIDAY-THE-13TH-JSON-ATTACKS" class="headerlink" title="【5】FRIDAY THE 13TH: JSON ATTACKS"></a>【5】FRIDAY THE 13TH: JSON ATTACKS</h3><p>PRESENTED BY Alvaro Muñoz  &amp;     Oleksandr Mirosh</p>
+<p>Tracks: <strong>#  Web AppSec</strong>, <strong>#  Enterprise</strong></p>
+<p>星期五第十三：JSON攻击<br>【摘要】本文将分析.NET和Java中最流行的JSON解析器中潜在的RCE（远程执行代码）向量。将展示在这些库函数中RCE是可能存在的，并介绍了默认情况下易受RCE影响的一些库函数细节，还讨论了使其他库易受攻击的常见配置。除了专注于JSON格式，我们将把攻击技术推广到其他序列化格式，最后提供可用于以稳定的方式实现RCE的系统库中的几个小工具。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/thursday/us-17-Munoz-Friday-The-13th-Json-Attacks.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/thursday/us-17-Munoz-Friday-The-13th-Json-Attacks.pdf</a></p>
+<hr>
+<h3 id="【6】A-NEW-ERA-OF-SSRF-EXPLOITING-URL-PARSER-IN-TRENDING-PROGRAMMING-LANGUAGES"><a href="#【6】A-NEW-ERA-OF-SSRF-EXPLOITING-URL-PARSER-IN-TRENDING-PROGRAMMING-LANGUAGES" class="headerlink" title="【6】A NEW ERA OF SSRF - EXPLOITING URL PARSER IN TRENDING PROGRAMMING LANGUAGES!"></a>【6】A NEW ERA OF SSRF - EXPLOITING URL PARSER IN TRENDING PROGRAMMING LANGUAGES!</h3><p>PRESENTED BY Orange Tsai</p>
+<p>Tracks: <strong>#  Web AppSec</strong>, <strong># Exploit Development</strong></p>
+<p>新一代SSRF - 用流行编程语言开发URL解析器<br>【摘要】本文提出了一种新的漏洞利用技术，带来了全新的攻击面，绕过SSRF（服务器端请求伪造）保护，问题的根本原因在于URL解析器和URL请求者的不一致。将演示几种情况来说明如何利用URL解析器来绕过SSRF保护并实现RCE（远程执行代码）。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/thursday/us-17-Tsai-A-New-Era-Of-SSRF-Exploiting-URL-Parser-In-Trending-Programming-Languages.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/thursday/us-17-Tsai-A-New-Era-Of-SSRF-Exploiting-URL-Parser-In-Trending-Programming-Languages.pdf</a></p>
+<hr>
+<hr>
+<h2 id="Applied-Security"><a href="#Applied-Security" class="headerlink" title="Applied Security"></a>Applied Security</h2><h3 id="【1】ICHTHYOLOGY-PHISHING-AS-A-SCIENCE"><a href="#【1】ICHTHYOLOGY-PHISHING-AS-A-SCIENCE" class="headerlink" title="【1】ICHTHYOLOGY: PHISHING AS A SCIENCE"></a>【1】ICHTHYOLOGY: PHISHING AS A SCIENCE</h3><p>PRESENTED BY Karla Burnett</p>
+<p>Tracks: <strong>#  Applied Security</strong>, <strong>#  Human Factors</strong></p>
+<p>鱼类学：网络钓鱼作为一门科学<br>【摘要】本文将介绍网络钓鱼的心理学，然后通过对Bay Area科技公司进行的一系列现实世界的攻击，介绍最近在这一领域的技术进步，然后将这些与案例研究相结合，提供循证技术，提供关于如何预防，而不仅仅是减轻凭证诈骗。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-Burnett-Ichthyology-Phishing-As-A-Science.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-Burnett-Ichthyology-Phishing-As-A-Science.pdf</a></p>
+<hr>
+<h3 id="【2】HACKING-HARDWARE-WITH-A-10-SD-CARD-READER"><a href="#【2】HACKING-HARDWARE-WITH-A-10-SD-CARD-READER" class="headerlink" title="【2】HACKING HARDWARE WITH A $10 SD CARD READER"></a>【2】HACKING HARDWARE WITH A $10 SD CARD READER</h3><p>PRESENTED BY Amir Etemadieh  &amp;     Khoa Hoang  &amp;     CJ Heres</p>
+<p>Tracks: <strong>#  Applied Security</strong>, <strong># Hardware/Embeddeds</strong></p>
+<p>用一个10美元SD卡读卡器窃取硬件<br>【摘要】本文将介绍如何识别eMMC闪存芯片，如何逆向工程电路引脚，以及如何转储或修改数据。展示正确逆向工程硬件（包括eMMC闪存存储，没有Bricking）的技巧和窍门，以及从识别到编程过程的清晰解释。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-Etemadieh-Hacking-Hardware-With-A-$10-SD-Card-Reader.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-Etemadieh-Hacking-Hardware-With-A-$10-SD-Card-Reader.pdf</a></p>
+<hr>
+<h3 id="【3】THE-ART-OF-SECURING-100-PRODUCTS"><a href="#【3】THE-ART-OF-SECURING-100-PRODUCTS" class="headerlink" title="【3】THE ART OF SECURING 100 PRODUCTS"></a>【3】THE ART OF SECURING 100 PRODUCTS</h3><p>PRESENTED BY Nir Valtman</p>
+<p>Tracks: <strong>#  Applied Security</strong>, <strong>#  Security Development Lifecycle</strong></p>
+<p>保护100种产品的艺术<br>【摘要】本文介绍了通过扩展应用程序安全团队的功能，配置正确的安全工具以及新引入的缩略规则来构建一个成功的应用程序安全项目的可靠方法来应对这些挑战，使用切实的执行方法来确保大规模的产品。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-Valtman-The-Art-Of-Securing-100-Products.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-Valtman-The-Art-Of-Securing-100-Products.pdf</a></p>
+<hr>
+<h3 id="【4】PROTECTING-PENTESTS-RECOMMENDATIONS-FOR-PERFORMING-MORE-SECURE-TESTS"><a href="#【4】PROTECTING-PENTESTS-RECOMMENDATIONS-FOR-PERFORMING-MORE-SECURE-TESTS" class="headerlink" title="【4】PROTECTING PENTESTS: RECOMMENDATIONS FOR PERFORMING MORE SECURE TESTS"></a>【4】PROTECTING PENTESTS: RECOMMENDATIONS FOR PERFORMING MORE SECURE TESTS</h3><p>PRESENTED BY Wesley McGrew</p>
+<p>Tracks: <strong>#  Applied Security</strong>, <strong>#  Network Defense</strong></p>
+<p>保护pentests：执行更多安全测试的建议<br>【摘要】本文提出了一套可用于建立安全渗透测试操作的全面的建议。包括如何与客户组织沟通并与客户组织就风险和缓解进行合作的技术建议，策略，过程和指导。目标是开发出更加专业的测试能力，并保护客户组织和渗透测试的基础设施，同时避免了对速度、灵活性和创造力的负面影响。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-McGrew-Protecting-Pentests-Recommendations-For-Performing-More-Secure-Tests.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-McGrew-Protecting-Pentests-Recommendations-For-Performing-More-Secure-Tests.pdf</a></p>
+<hr>
+<h3 id="【5】PROTECTING-VISUAL-ASSETS-DIGITAL-IMAGE-COUNTER-FORENSICS"><a href="#【5】PROTECTING-VISUAL-ASSETS-DIGITAL-IMAGE-COUNTER-FORENSICS" class="headerlink" title="【5】PROTECTING VISUAL ASSETS: DIGITAL IMAGE COUNTER-FORENSICS"></a>【5】PROTECTING VISUAL ASSETS: DIGITAL IMAGE COUNTER-FORENSICS</h3><p>PRESENTED BY WNikita Mazurov  &amp; Kenneth Brown</p>
+<p>Tracks: <strong>#  Applied Security</strong>, <strong>#  Human Factors</strong></p>
+<p>保护视觉资产：数字图像的反取证<br>【摘要】本文将探索图像可以被挖掘从而获得信息数据的无数方式，反过来，通过专注于泄露信息的混淆，删除和改变来提供防范所述数据泄漏的反取证技术。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-Mazurov-Brown-Protecting-Visual-Assets-Digital-Image-Counter-Forensics.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-Mazurov-Brown-Protecting-Visual-Assets-Digital-Image-Counter-Forensics.pdf</a></p>
+<hr>
+<h3 id="【6】TRACKING-RANSOMWARE-END-TO-END"><a href="#【6】TRACKING-RANSOMWARE-END-TO-END" class="headerlink" title="【6】TRACKING RANSOMWARE END TO END"></a>【6】TRACKING RANSOMWARE END TO END</h3><p>PRESENTED BY Luca Invernizzi  &amp; Kylie McRoberts  &amp;     Elie Bursztein</p>
+<p>Tracks: <strong>#  Applied Security</strong>, <strong># Malware</strong></p>
+<p>端到端的跟踪勒索<br>【摘要】本文展示了一种从分销站点到现金流量点大规模跟踪勒索生态系统的方法，揭示了现金流出点，跟踪了货币如何从比特币网络中流出，使当局能够利用传统的金融追踪手段获取资金踪迹。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-Invernizzi-Tracking-Ransomware-End-To-End.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-Invernizzi-Tracking-Ransomware-End-To-End.pdf</a></p>
+<hr>
+<h3 id="【7】THE-EPOCHOLYPSE-2038-WHAT’S-IN-STORE-FOR-THE-NEXT-20-YEARS"><a href="#【7】THE-EPOCHOLYPSE-2038-WHAT’S-IN-STORE-FOR-THE-NEXT-20-YEARS" class="headerlink" title="【7】THE EPOCHOLYPSE 2038: WHAT’S IN STORE FOR THE NEXT 20 YEARS"></a>【7】THE EPOCHOLYPSE 2038: WHAT’S IN STORE FOR THE NEXT 20 YEARS</h3><p>PRESENTED BY Mikko Hypponen</p>
+<p>Tracks: <strong>#  Applied Security</strong></p>
+<p>启示2038：在接下来的20年将会发生什么<br>【摘要】本文将提到计算机安全形势的变化，以及什么可能是最重要的未来的发展。 通过了解攻击者及其动机，我们可以最好地保护我们的计算机。在未来，还需要保护更多的东西，而不仅仅是电脑。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/thursday/us-17-Hypponen-The-Epocholypse-2038-Whats-In-Store-For-The-Next-20-Years.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/thursday/us-17-Hypponen-The-Epocholypse-2038-Whats-In-Store-For-The-Next-20-Years.pdf</a></p>
+<hr>
+<h3 id="【8】GO-TO-HUNT-THEN-SLEEP"><a href="#【8】GO-TO-HUNT-THEN-SLEEP" class="headerlink" title="【8】GO TO HUNT THEN SLEEP"></a>【8】GO TO HUNT THEN SLEEP</h3><p>PRESENTED BY David Bianco  &amp; Robert Lee</p>
+<p>Tracks: <strong>#  Applied Security</strong>, <strong># Data Forensics/Incident Response</strong></p>
+<p>去狩猎然后睡觉<br>【摘要】本文提出如何着手处理数据泄露和有针对性的攻击等威胁，以及如何快速发现威胁者。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/thursday/us-17-Bianco-Go-To-Hunt-Then-Sleep.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/thursday/us-17-Bianco-Go-To-Hunt-Then-Sleep.pdf</a></p>
+<hr>
+<h3 id="【9】PRACTICAL-TIPS-FOR-DEFENDING-WEB-APPLICATIONS-IN-THE-AGE-OF-DEVOPS"><a href="#【9】PRACTICAL-TIPS-FOR-DEFENDING-WEB-APPLICATIONS-IN-THE-AGE-OF-DEVOPS" class="headerlink" title="【9】PRACTICAL TIPS FOR DEFENDING WEB APPLICATIONS IN THE AGE OF DEVOPS"></a>【9】PRACTICAL TIPS FOR DEFENDING WEB APPLICATIONS IN THE AGE OF DEVOPS</h3><p>PRESENTED BY Zane Lackey</p>
+<p>Tracks: <strong>#  Applied Security</strong>, <strong># Security Development Lifecycle</strong></p>
+<p>为维护Web应用程序的实用技巧<br>【摘要】本文分享Etsy在当今世界越来越快的应用程序创建和交付中最有效的应用安全技术方面的实践经验。具体来说，它将涵盖：将传统的重量级控制（如静态分析和动态扫描）适应于现代开发和部署实践中的轻量级工作；获得可见性，使开发和DevOps团队能够快速迭代，而不是阻碍开发；以非理论的方式衡量组织安全工作的成熟度。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/thursday/us-17-Lackey-Practical%20Tips-for-Defending-Web-Applications-in-the-Age-of-DevOps.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/thursday/us-17-Lackey-Practical%20Tips-for-Defending-Web-Applications-in-the-Age-of-DevOps.pdf</a></p>
+<hr>
+<h3 id="【10】EVOLUTIONARY-KERNEL-FUZZING"><a href="#【10】EVOLUTIONARY-KERNEL-FUZZING" class="headerlink" title="【10】EVOLUTIONARY KERNEL FUZZING"></a>【10】EVOLUTIONARY KERNEL FUZZING</h3><p>PRESENTED BY Richard Johnson</p>
+<p>Tracks: <strong>#  Applied Security</strong>, <strong># Security Development Lifecycle</strong></p>
+<p>演化内核模糊<br>【摘要】本文将讨论将进化覆盖引导模糊应用于内核系统调用，IOCTLS和其他低级接口的方法。首先，要了解什么是有效的引导内核fuzzer，我们将讨论可用于开源驱动程序和内核的工具；接下来，我们将使用像QEMU这样的系统仿真器来调试具有代码覆盖率的内核接口，以了解这种方法的性能和限制。最后，我们将利用自己的定制驱动程序，使用Intel Processor Trace进行硬件分支跟踪，作为Linux和Windows上未修改的内核二进制文件的进化模糊的新方法。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/thursday/us-17-Johnson-Evolutionary-Kernel-Fuzzing" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/thursday/us-17-Johnson-Evolutionary-Kernel-Fuzzing</a></p>
+<hr>
+<h3 id="【11】ELECTRONEGATIVITY-A-STUDY-OF-ELECTRON-SECURITY"><a href="#【11】ELECTRONEGATIVITY-A-STUDY-OF-ELECTRON-SECURITY" class="headerlink" title="【11】ELECTRONEGATIVITY - A STUDY OF ELECTRON SECURITY"></a>【11】ELECTRONEGATIVITY - A STUDY OF ELECTRON SECURITY</h3><p>PRESENTED BY Luca Carettoni</p>
+<p>Tracks:<strong># Applied Security</strong>,  <strong>#  Web AppSec</strong></p>
+<p>ELECTRONEGATIVITY - ELECTRON安全研究<br>【摘要】Github的Electron是使用JavaScript，HTML和CSS构建跨平台桌面应用程序的流行框架。本文将说明Electron的安全模型，并描述当前的隔离机制，以防止不可信内容使用Node.js原语；将全面讨论Electron的IPC消息传递，预加载和其他内部部件。分析BrowserWindow和WebView安全相关选项，以及基于ELECTRON应用程序的设计级弱点和实现错误。并推出了用于促进ELECTRON应用测试的新工具。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/thursday/us-17-Carettoni-Electronegativity-A-Study-Of-Electron-Security.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/thursday/us-17-Carettoni-Electronegativity-A-Study-Of-Electron-Security.pdf</a></p>
+<hr>
+<h3 id="【12】EXPLOITING-NETWORK-PRINTERS"><a href="#【12】EXPLOITING-NETWORK-PRINTERS" class="headerlink" title="【12】EXPLOITING NETWORK PRINTERS"></a>【12】EXPLOITING NETWORK PRINTERS</h3><p>PRESENTED BY Jens Müller</p>
+<p>Tracks: <strong>#  Applied Security</strong>, <strong># Internet of Things</strong></p>
+<p>利用网络打印机<br>【摘要】本文进行了大量打印机攻击分析，并通过提供打印机安全分析的一般方法来系统化我们的知识。基于我们的方法，我们实现了一个名为PRinter Exploration工具包（PRET）的开源工具，我们使用PRET来评估来自不同供应商的打印机型号。揭示了通过使用先进的跨站点打印技术，结合打印机CORS欺骗，从互联网攻击的新颖见解。最后，展示了如何将我们的攻击应用于像谷歌云打印或文档处理网站这样的典型打印机之外的系统。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/thursday/us-17-Mueller-Exploiting-Network-Printers.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/thursday/us-17-Mueller-Exploiting-Network-Printers.pdf</a></p>
+<hr>
+<hr>
+<h2 id="Network-Defense"><a href="#Network-Defense" class="headerlink" title="Network Defense"></a>Network Defense</h2><h3 id="【1】PEIMA-HARNESSING-POWER-LAWS-TO-DETECT-MALICIOUS-ACTIVITIES-FROM-DENIAL-OF-SERVICE-TO-INTRUSION-DETECTION-TRAFFIC-ANALYSIS-AND-BEYOND"><a href="#【1】PEIMA-HARNESSING-POWER-LAWS-TO-DETECT-MALICIOUS-ACTIVITIES-FROM-DENIAL-OF-SERVICE-TO-INTRUSION-DETECTION-TRAFFIC-ANALYSIS-AND-BEYOND" class="headerlink" title="【1】PEIMA: HARNESSING POWER LAWS TO DETECT MALICIOUS ACTIVITIES FROM DENIAL OF SERVICE TO INTRUSION DETECTION, TRAFFIC ANALYSIS, AND BEYOND"></a>【1】PEIMA: HARNESSING POWER LAWS TO DETECT MALICIOUS ACTIVITIES FROM DENIAL OF SERVICE TO INTRUSION DETECTION, TRAFFIC ANALYSIS, AND BEYOND</h3><p>PRESENTED BY Stefan Prandl</p>
+<p>Tracks:  <strong>#  Network Defense</strong></p>
+<p>PEIMA：利用更强效的规则来检测恶意活动，从拒绝服务攻击到入侵检测、流量分析等<br>【摘要】本文将介绍和讨论power laws分配的意义和强度，它们与计算机的关系，以及如何利用它来开发新的异常检测系统。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/thursday/us-17-Prandl-PEIMA-Harnessing-Power-Laws-To-Detect-Malicious-Activities-From-Denial-Of-Service-To-Intrusion-Detection-Traffic-Analysis-And-Beyond.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/thursday/us-17-Prandl-PEIMA-Harnessing-Power-Laws-To-Detect-Malicious-Activities-From-Denial-Of-Service-To-Intrusion-Detection-Traffic-Analysis-And-Beyond.pdf</a></p>
+<hr>
+<h3 id="【2】THEY’RE-COMING-FOR-YOUR-TOOLS-EXPLOITING-DESIGN-FLAWS-FOR-ACTIVE-INTRUSION-PREVENTION"><a href="#【2】THEY’RE-COMING-FOR-YOUR-TOOLS-EXPLOITING-DESIGN-FLAWS-FOR-ACTIVE-INTRUSION-PREVENTION" class="headerlink" title="【2】THEY’RE COMING FOR YOUR TOOLS: EXPLOITING DESIGN FLAWS FOR ACTIVE INTRUSION PREVENTION"></a>【2】THEY’RE COMING FOR YOUR TOOLS: EXPLOITING DESIGN FLAWS FOR ACTIVE INTRUSION PREVENTION</h3><p>PRESENTED BY John Ventura</p>
+<p>Tracks:  <strong># Network Defense</strong>, <strong>#  Applied Security</strong></p>
+<p>他们用来做您的工具：利用设计缺陷进行主动的入侵防御<br>【摘要】本文希望能够提供一种更加主动的入侵防御方法，使防御者能够使用简单的网络软件应用来寻找一些常见攻击。通过使用主动入侵检测策略，管理员可以创建一个情况，即那些过度依赖其工具的攻击者会将自身暴露于检测和其他重大并发症。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-Ventura-Theyre-Coming-For-Your-Tools-Exploiting-Design-Flaws-For-Active-Intrusion-Prevention.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-Ventura-Theyre-Coming-For-Your-Tools-Exploiting-Design-Flaws-For-Active-Intrusion-Prevention.pdf</a></p>
+<hr>
+<h3 id="【3】FLOWFUZZ-A-FRAMEWORK-FOR-FUZZING-OPENFLOW-ENABLED-SOFTWARE-AND-HARDWARE-SWITCHES"><a href="#【3】FLOWFUZZ-A-FRAMEWORK-FOR-FUZZING-OPENFLOW-ENABLED-SOFTWARE-AND-HARDWARE-SWITCHES" class="headerlink" title="【3】FLOWFUZZ - A FRAMEWORK FOR FUZZING OPENFLOW-ENABLED SOFTWARE AND HARDWARE SWITCHES"></a>【3】FLOWFUZZ - A FRAMEWORK FOR FUZZING OPENFLOW-ENABLED SOFTWARE AND HARDWARE SWITCHES</h3><p>PRESENTED BY Nicholas Gray  &amp;     Thomas Zinner  &amp;     Phuoc Tran-Gia  &amp;  Manuel Sommer</p>
+<p>Tracks:  <strong>#  Network Defense</strong>, <strong># Hardware/Embedded</strong></p>
+<p>FLOWFUZZ - 一个用于模糊启用OPENFLOW的软件和硬件交换机的框架<br>【摘要】本文提出了FlowFuzz，一个具有SDN功能的软件和硬件交换机的模糊框架。特别专注于OpenFlow协议，这是目前具有SDN功能的交换机和中央控制实例之间的实际标准通信协议。框架利用诸如AddressSanitizer的常规工具的输出来调查软件交换机，还评估了从侧面通道，即获得的数据，处理时间和功耗来识别硬件交换机内的唯一代码执行路径，以优化模糊过程。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-Gray-FlowFuzz-A-Framework-For-Fuzzing-OpenFlow-Enabled-Software-And-Hardware-Switches.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-Gray-FlowFuzz-A-Framework-For-Fuzzing-OpenFlow-Enabled-Software-And-Hardware-Switches.pdf</a></p>
+<hr>
+<h3 id="【4】SPLUNKING-DARK-TOOLS-A-PENTESTERS-GUIDE-TO-PWNAGE-VISUALIZATION"><a href="#【4】SPLUNKING-DARK-TOOLS-A-PENTESTERS-GUIDE-TO-PWNAGE-VISUALIZATION" class="headerlink" title="【4】SPLUNKING DARK TOOLS - A PENTESTERS GUIDE TO PWNAGE VISUALIZATION"></a>【4】SPLUNKING DARK TOOLS - A PENTESTERS GUIDE TO PWNAGE VISUALIZATION</h3><p>PRESENTED BY Nathan Bates  &amp;     Bryce Kunz</p>
+<p>Tracks:<strong># Network Defense</strong>, <strong>#  Applied Security</strong></p>
+<p>SPLUNKING DARK工具 - 针对PWNAGE可视化的指南<br>【摘要】本文涵盖了整合、分析和可视化每个红色团队使用dark tools所必要的工具，这一切都可以在规模上进行，即使是最流行的持续集成和部署环境。并且将发布所需的框架，以获取需要的数据，技术附件，以及Splunk的dashboards。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-Bates-Splunking-Dark-Tools-A-Pentesters-Guide-To-Pwnage-Visualization.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-Bates-Splunking-Dark-Tools-A-Pentesters-Guide-To-Pwnage-Visualization.pdf</a></p>
+<hr>
+<h3 id="【5】NETWORK-AUTOMATION-IS-NOT-YOUR-SAFE-HAVEN-PROTOCOL-ANALYSIS-AND-VULNERABILITIES-OF-AUTONOMIC-NETWORK"><a href="#【5】NETWORK-AUTOMATION-IS-NOT-YOUR-SAFE-HAVEN-PROTOCOL-ANALYSIS-AND-VULNERABILITIES-OF-AUTONOMIC-NETWORK" class="headerlink" title="【5】NETWORK AUTOMATION IS NOT YOUR SAFE HAVEN: PROTOCOL ANALYSIS AND VULNERABILITIES OF AUTONOMIC NETWORK"></a>【5】NETWORK AUTOMATION IS NOT YOUR SAFE HAVEN: PROTOCOL ANALYSIS AND VULNERABILITIES OF AUTONOMIC NETWORK</h3><p>PRESENTED BY Omar Eissa</p>
+<p>Tracks:  <strong>#  Network Defense</strong></p>
+<p>网络自动化不是您的避风港：自动化网络的协议分析和脆弱性<br>【摘要】本文将简要介绍思科的自主网络架构，然后我通过多个阶段对专有协议进行逆向工程。最后将提供多个漏洞，其中一个漏洞可以通过了解IPv6地址来远程中断系统。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-Eissa-Network-Automation-Isn&#39;t-Your-Safe-Haven-Protocol-Analysis-And-Vulnerabilities-Of-Autonomic-Network.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-Eissa-Network-Automation-Isn&#39;t-Your-Safe-Haven-Protocol-Analysis-And-Vulnerabilities-Of-Autonomic-Network.pdf</a></p>
+<hr>
+<h3 id="【6】WHAT’S-ON-THE-WIRELESS-AUTOMATING-RF-SIGNAL-IDENTIFICATION"><a href="#【6】WHAT’S-ON-THE-WIRELESS-AUTOMATING-RF-SIGNAL-IDENTIFICATION" class="headerlink" title="【6】WHAT’S ON THE WIRELESS? AUTOMATING RF SIGNAL IDENTIFICATION"></a>【6】WHAT’S ON THE WIRELESS? AUTOMATING RF SIGNAL IDENTIFICATION</h3><p>PRESENTED BY Michael Ossmann  &amp; Dominic Spill</p>
+<p>Tracks:<strong># Network Defense</strong>, <strong># Reverse Engineering</strong></p>
+<p>无线电话上有什么？射频信号自动识别<br>【摘要】本文开发了一个开源工具，以高水平监控射频频谱，然后深入研究各种信号，支持逆向工程和信号智能。通过自动将结果与世界各地监管机构的OSINT数据相结合，我们能够建立在环境中传输的设备的图片。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-Ossmann-Whats-On-The-Wireless-Automating-RF-Signal-Identification.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-Ossmann-Whats-On-The-Wireless-Automating-RF-Signal-Identification.pdf</a></p>
+<hr>
+<h3 id="【7】AUTOMATED-DETECTION-OF-VULNERABILITIES-IN-BLACK-BOX-ROUTERS-AND-OTHER-NETWORK-DEVICES"><a href="#【7】AUTOMATED-DETECTION-OF-VULNERABILITIES-IN-BLACK-BOX-ROUTERS-AND-OTHER-NETWORK-DEVICES" class="headerlink" title="【7】AUTOMATED DETECTION OF VULNERABILITIES IN BLACK-BOX ROUTERS (AND OTHER NETWORK DEVICES)"></a>【7】AUTOMATED DETECTION OF VULNERABILITIES IN BLACK-BOX ROUTERS (AND OTHER NETWORK DEVICES)</h3><p>PRESENTED BY Gabi Nakibly</p>
+<p>Tracks:<strong># Network Defense</strong>, <strong># Platform Security</strong></p>
+<p>自动检测黑匣子路由器（及其他网络设备）中的漏洞<br>【摘要】本文提出了一种无需访问设备的二进制或源代码，利用黑盒来发现封闭源网络设备中协议实现偏差的方法。该方法以全自动的方式发现这种偏差，同时利用基于模型的测试方法。并且将其应用于多个路由器，以使用我们在Cisco和Quagga发现路由器中的逻辑漏洞的工具来检查其路由协议的实现（特别是OSPF）。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-Nakibly-Automated-Detection-of-Vulnerabilities-in-Black-Box-Routers.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-Nakibly-Automated-Detection-of-Vulnerabilities-in-Black-Box-Routers.pdf</a></p>
+<hr>
+<h3 id="【8】WIFUZZ-DETECTING-AND-EXPLOITING-LOGICAL-FLAWS-IN-THE-WI-FI-CRYPTOGRAPHIC-HANDSHAKE"><a href="#【8】WIFUZZ-DETECTING-AND-EXPLOITING-LOGICAL-FLAWS-IN-THE-WI-FI-CRYPTOGRAPHIC-HANDSHAKE" class="headerlink" title="【8】WIFUZZ: DETECTING AND EXPLOITING LOGICAL FLAWS IN THE WI-FI CRYPTOGRAPHIC HANDSHAKE"></a>【8】WIFUZZ: DETECTING AND EXPLOITING LOGICAL FLAWS IN THE WI-FI CRYPTOGRAPHIC HANDSHAKE</h3><p>PRESENTED BY Mathy Vanhoef</p>
+<p>Tracks: <strong># Network Defense</strong>, <strong># Cryptography</strong></p>
+<p>wifuzz：检测和利用在WI-FI加密握手中的逻辑漏洞<br>【摘要】本文展示了如何检测和滥用这种握手实现中的逻辑缺陷。为了检测这些类型的逻辑漏洞，首先构建一个描述实现的预期行为的Wi-Fi握手模型，然后自动生成无效的握手执行，并检查一个实现是否对这些无效执行做出正确的反应。同时测试了12个Wi-Fi接入点，发现所有这些接入点都有违规行为，包括身份验证绕过，指纹技术，降级攻击，拒绝服务（DoS）攻击等。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-Vanhoeft-WiFuzz-Detecting-And-Exploiting_Logical-Flaws-In-The-Wi-Fi-Cryptographic-Handshake.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-Vanhoeft-WiFuzz-Detecting-And-Exploiting_Logical-Flaws-In-The-Wi-Fi-Cryptographic-Handshake.pdf</a></p>
+<hr>
+<hr>
+<h2 id="Malware"><a href="#Malware" class="headerlink" title="Malware"></a>Malware</h2><h3 id="【1】THE-ACTIVE-DIRECTORY-BOTNET"><a href="#【1】THE-ACTIVE-DIRECTORY-BOTNET" class="headerlink" title="【1】THE ACTIVE DIRECTORY BOTNET"></a>【1】THE ACTIVE DIRECTORY BOTNET</h3><p>PRESENTED BY Ty Miller  &amp;     Paul Kalinin</p>
+<p>Tracks: <strong># Malware</strong>, <strong># Enterprise</strong> </p>
+<p>ACTIVE DIRECTORY僵尸网络<br>【摘要】本文提出了一个全新的攻击技术，将您的Active Directory域控制器变成可以命令强大内部僵尸网络的C＆C服务器，从而绕过所有的网络控制，在安全区域和组织内部进行通信。并将进行一系列这种攻击的现场演示，以表明攻击行动。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-Miller-The-Active-Directory-Botnet.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-Miller-The-Active-Directory-Botnet.pdf</a></p>
+<hr>
+<h3 id="【2】SHIELDFS-THE-LAST-WORD-IN-RANSOMWARE-RESILIENT-FILE-SYSTEMS"><a href="#【2】SHIELDFS-THE-LAST-WORD-IN-RANSOMWARE-RESILIENT-FILE-SYSTEMS" class="headerlink" title="【2】SHIELDFS: THE LAST WORD IN RANSOMWARE RESILIENT FILE SYSTEMS"></a>【2】SHIELDFS: THE LAST WORD IN RANSOMWARE RESILIENT FILE SYSTEMS</h3><p>PRESENTED BY Andrea Continella  &amp;  Alessandro Guagnelli  &amp;  Giovanni Zingaro  &amp;     Giulio De Pasquale  &amp;     Alessandro Barenghi  &amp;     Stefano Zanero  &amp;     Federico Maggi</p>
+<p>Tracks: <strong># Malware</strong>, <strong># Platform Security</strong> </p>
+<p>SHIELDFS：勒索的弹性文件系统中的最后一个字<br>【摘要】本文将介绍ShieldFS，一个让Windows本机文件系统免受勒索攻击的内部驱动。即使检测失败，一旦其检测组件显示有可疑活动，shieldfs可以动态切换到使用copy-on-write机制的保护层。将展示ShieldFS如何影响写入操作，演示ShieldFS对来自最先进的ransomware系列的样品的有效性，表明它能够在运行时检测恶意活动，并透明地恢复所有原始文件。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-Continella-ShieldFS-The-Last-Word-In-Ransomware-Resilient-Filesystems.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-Continella-ShieldFS-The-Last-Word-In-Ransomware-Resilient-Filesystems.pdf</a></p>
+<hr>
+<h3 id="【3】GARBAGE-IN-GARBAGE-OUT-HOW-PURPORTEDLY-GREAT-MACHINE-LEARNING-MODELS-CAN-BE-SCREWED-UP-BY-BAD-DATA"><a href="#【3】GARBAGE-IN-GARBAGE-OUT-HOW-PURPORTEDLY-GREAT-MACHINE-LEARNING-MODELS-CAN-BE-SCREWED-UP-BY-BAD-DATA" class="headerlink" title="【3】GARBAGE IN, GARBAGE OUT: HOW PURPORTEDLY GREAT MACHINE LEARNING MODELS CAN BE SCREWED UP BY BAD DATA"></a>【3】GARBAGE IN, GARBAGE OUT: HOW PURPORTEDLY GREAT MACHINE LEARNING MODELS CAN BE SCREWED UP BY BAD DATA</h3><p>PRESENTED BY Hillary Sanders</p>
+<p>Tracks: <strong># Malware</strong>, <strong># Enterprise</strong> </p>
+<p>GARBAGE IN GARBAGE OUT：如何通过bad data得到好的机器学习模型<br>【摘要】本文将展示来自同一个旨在检测恶意URL的深层学习模型，但是通过3种不同的URL数据源进行培训和测试的灵敏度结果。查看结果后通过不同数据源之间的表面差异以及该神经网络在某些数据集中识别出更高级别的特征而在其他数据中没有识别两个方面来深入研究结果。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-Sanders-Garbage-In-Garbage-Out-How-Purportedly-Great-ML-Models-Can-Be-Screwed-Up-By-Bad-Data.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-Sanders-Garbage-In-Garbage-Out-How-Purportedly-Great-ML-Models-Can-Be-Screwed-Up-By-Bad-Data.pdf</a></p>
+<hr>
+<h3 id="【4】OFFENSIVE-MALWARE-ANALYSIS-DISSECTING-OSX-FRUITFLY-VIA-A-CUSTOM-C-amp-C-SERVER"><a href="#【4】OFFENSIVE-MALWARE-ANALYSIS-DISSECTING-OSX-FRUITFLY-VIA-A-CUSTOM-C-amp-C-SERVER" class="headerlink" title="【4】OFFENSIVE MALWARE ANALYSIS: DISSECTING OSX/FRUITFLY VIA A CUSTOM C&amp;C SERVER"></a>【4】OFFENSIVE MALWARE ANALYSIS: DISSECTING OSX/FRUITFLY VIA A CUSTOM C&amp;C SERVER</h3><p>PRESENTED BY Patrick Wardle</p>
+<p>Tracks: <strong># Malware</strong>, <strong># Reverse Engineering</strong> </p>
+<p>攻击的恶意软件分析：通过自定义的C＆C服务器解决OSX/FRUITFLY<br>【摘要】本文首先分析并完全解构恶意软件的滴管，一个混淆的perl脚本。将逆向重点放在初步的分流上，并展示如何创建自定义C＆C服务器。通过该服务器可以很容易地强制恶意软件来显示它的全部功能。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-Wardle-Offensive-Malware-Analysis-Dissecting-OSXFruitFly-Via-A-Custom-C&amp;C-Server.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-Wardle-Offensive-Malware-Analysis-Dissecting-OSXFruitFly-Via-A-Custom-C&amp;C-Server.pdf</a></p>
+<hr>
+<h3 id="【5】BOT-VS-BOT-FOR-EVADING-MACHINE-LEARNING-MALWARE-DETECTION"><a href="#【5】BOT-VS-BOT-FOR-EVADING-MACHINE-LEARNING-MALWARE-DETECTION" class="headerlink" title="【5】BOT VS. BOT FOR EVADING MACHINE LEARNING MALWARE DETECTION"></a>【5】BOT VS. BOT FOR EVADING MACHINE LEARNING MALWARE DETECTION</h3><p>PRESENTED BY Hyrum Anderson</p>
+<p>Tracks: <strong># Malware</strong></p>
+<p>BOT VS. 规避机器学习恶意软件检测的BOT<br>【摘要】本文展示了如何通过设置一个AI代理来与恶意软件检测器进行竞争，以主动探测可能被利用的盲点来逃避机器学习恶意软件检测。研究专注于静态Windows PE的恶意软件漏洞，但框架是通用的，可以扩展到其他的恶意软件。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/thursday/us-17-Anderson-Bot-Vs-Bot-Evading-Machine-Learning-Malware-Detection.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/thursday/us-17-Anderson-Bot-Vs-Bot-Evading-Machine-Learning-Malware-Detection.pdf</a></p>
+<hr>
+<h3 id="【6】INFECTING-THE-ENTERPRISE-ABUSING-OFFICE365-POWERSHELL-FOR-COVERT-C2"><a href="#【6】INFECTING-THE-ENTERPRISE-ABUSING-OFFICE365-POWERSHELL-FOR-COVERT-C2" class="headerlink" title="【6】INFECTING THE ENTERPRISE: ABUSING OFFICE365+POWERSHELL FOR COVERT C2"></a>【6】INFECTING THE ENTERPRISE: ABUSING OFFICE365+POWERSHELL FOR COVERT C2</h3><p>PRESENTED BY Craig Dods</p>
+<p>Tracks: <strong># Malware</strong>, <strong>#  Network Defense</strong> </p>
+<p>影响企业：滥用Office365 + PowerShell隐蔽C2<br>【摘要】本文试图揭示微软SaaS产品的潜在危害，同时也展示了一个实际示例，详细概述了攻击者如何利用Office365 + PowerShell的组合来利用本机功能。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-Dods-Infecting-The-Enterprise-Abusing-Office365-Powershell-For-Covert-C2.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-Dods-Infecting-The-Enterprise-Abusing-Office365-Powershell-For-Covert-C2.pdf</a></p>
+<hr>
+<h3 id="【7】AVPASS-LEAKING-AND-BYPASSING-ANTIVIRUS-DETECTION-MODEL-AUTOMATICALLY"><a href="#【7】AVPASS-LEAKING-AND-BYPASSING-ANTIVIRUS-DETECTION-MODEL-AUTOMATICALLY" class="headerlink" title="【7】AVPASS: LEAKING AND BYPASSING ANTIVIRUS DETECTION MODEL AUTOMATICALLY"></a>【7】AVPASS: LEAKING AND BYPASSING ANTIVIRUS DETECTION MODEL AUTOMATICALLY</h3><p>PRESENTED BY Jinho Jung  &amp;     Chanil Jeon  &amp;  Max Wolotsky  &amp;     Insu Yun  &amp;  Taesoo Kim</p>
+<p>Tracks: <strong># Malware</strong> , <strong># Mobile</strong></p>
+<p>AVPASS：自动泄漏和绕过抗病毒检测模型<br>【摘要】本文展示了AVPASS，用于泄漏Android防病毒（AV）程序的检测模型的工具，并且通过泄漏信息与APK扰动技术相结合来绕过AV检测。将介绍包括APK的扰动过程，泄漏模型过程和自动旁路过程在内的整个流程。现场演示AVPASS，显示它正确地修改了真实世界的恶意软件，并允许它们绕过泄露模型后的所有AV。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/thursday/us-17-Jung-AVPASS-Leaking-And-Bypassing-Anitvirus-Detection-Model-Automatically.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/thursday/us-17-Jung-AVPASS-Leaking-And-Bypassing-Anitvirus-Detection-Model-Automatically.pdf</a></p>
+<hr>
+<h3 id="【8】DIGITAL-VENGEANCE-EXPLOITING-THE-MOST-NOTORIOUS-C-amp-C-TOOLKITS"><a href="#【8】DIGITAL-VENGEANCE-EXPLOITING-THE-MOST-NOTORIOUS-C-amp-C-TOOLKITS" class="headerlink" title="【8】DIGITAL VENGEANCE: EXPLOITING THE MOST NOTORIOUS C&amp;C TOOLKITS"></a>【8】DIGITAL VENGEANCE: EXPLOITING THE MOST NOTORIOUS C&amp;C TOOLKITS</h3><p>PRESENTED BY Waylon Grange</p>
+<p>Tracks: <strong># Malware</strong> , <strong># Exploit Development</strong></p>
+<p>数字复仇：开发最臭名昭著的C&amp;C TOOLKITS<br>【摘要】远程管理工具（RAT）的命令和控制组件充满了漏洞，本文将公开几个允许在运行着C＆C组件的计算机上进行远程执行或远程信息泄露的几种漏洞利用。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/thursday/us-17-Grange-Digital-Vengeance-Exploiting-The-Most-Notorious-C&amp;C-Toolkits.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/thursday/us-17-Grange-Digital-Vengeance-Exploiting-The-Most-Notorious-C&amp;C-Toolkits.pdf</a></p>
+<hr>
+<h3 id="【9】THE-ADVENTURES-OF-AV-AND-THE-LEAKY-SANDBOX"><a href="#【9】THE-ADVENTURES-OF-AV-AND-THE-LEAKY-SANDBOX" class="headerlink" title="【9】THE ADVENTURES OF AV AND THE LEAKY SANDBOX"></a>【9】THE ADVENTURES OF AV AND THE LEAKY SANDBOX</h3><p>PRESENTED BY Itzik Kotler  &amp;     Amit Klein</p>
+<p>Tracks: <strong># Malware</strong> , <strong># Exploit Development</strong></p>
+<p>AV的冒险和泄露的沙盒<br>【摘要】本文描述和演示了一种新颖的技术，用于从度安全的企业中没有直接与互联网连接的终端，或者与Internet的连接仅限于合法的安装软件使用的主机渗透数据。结果显示如果防病毒产品在云中使用互联网连接的沙箱，可以促进这种渗透。将会发布开发中实施过滤技术的工具，并提供几个突出的AV产品在真实世界中的结果。并提供有关这些AV云端沙箱的数据和见解，解决如何进一步加强攻击的问题，以及基于云的AV厂商如何减轻攻击。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/thursday/us-17-Kotler-The-Adventures-Of-Av-And-The-Leaky-Sandbox.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/thursday/us-17-Kotler-The-Adventures-Of-Av-And-The-Leaky-Sandbox.pdf</a></p>
+<hr>
+<hr>
+<h2 id="Mobile"><a href="#Mobile" class="headerlink" title="Mobile"></a>Mobile</h2><h3 id="【1】ALL-YOUR-SMS-amp-CONTACTS-BELONG-TO-ADUPS-amp-OTHERS"><a href="#【1】ALL-YOUR-SMS-amp-CONTACTS-BELONG-TO-ADUPS-amp-OTHERS" class="headerlink" title="【1】ALL YOUR SMS &amp; CONTACTS BELONG TO ADUPS &amp; OTHERS"></a>【1】ALL YOUR SMS &amp; CONTACTS BELONG TO ADUPS &amp; OTHERS</h3><p>PRESENTED BY Ryan Johnson  &amp;     Angelos Stavrou  &amp;     Azzedine Benameur</p>
+<p>Tracks:  <strong># Mobile</strong>,  <strong>#  Malware</strong></p>
+<p>您所有的短信和联系人属于adups及他人<br>【摘要】本文确定了几种Android移动设备型号，其中包含固件，用于收集有关用户的敏感个人数据，并将此敏感数据传输到中国的第三方服务器 - 未经披露或用户同意。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-Johnson-All-Your-SMS-&amp;-Contacts-Belong-To-Adups-&amp;-Others.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-Johnson-All-Your-SMS-&amp;-Contacts-Belong-To-Adups-&amp;-Others.pdf</a></p>
+<hr>
+<h3 id="【2】NEW-ADVENTURES-IN-SPYING-3G-AND-4G-USERS-LOCATE-TRACK-amp-MONITOR"><a href="#【2】NEW-ADVENTURES-IN-SPYING-3G-AND-4G-USERS-LOCATE-TRACK-amp-MONITOR" class="headerlink" title="【2】NEW ADVENTURES IN SPYING 3G AND 4G USERS: LOCATE, TRACK &amp; MONITOR"></a>【2】NEW ADVENTURES IN SPYING 3G AND 4G USERS: LOCATE, TRACK &amp; MONITOR</h3><p>PRESENTED BY Ravishankar Borgaonkar  &amp;  Shinjo Park  &amp;     Lucca Hirschi  &amp;     Altaf Shaik  &amp;     Andrew Martin  &amp;     Jean-Pierre Seifert</p>
+<p>Tracks:  <strong># Mobile</strong>,  <strong># Cryptography</strong></p>
+<p>秘密监视3G和4G用户的新冒险：定位跟踪与监控<br>【摘要】本文引入了新的攻击向量，可以对移动用户进行跟踪和活动监控。发现了3G和4G蜂窝网络中广泛部署的加密协议的新缺陷，并将讨论使用低成本设置来利用这个缺陷的不同方法。然后提出了几个攻击，以展示其对携带3G和4G设备的终端用户的影响。最后将讨论应对这些隐私问题的对策。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-Borgaonkar-New-Adventures-In-Spying-3G-And-4G-Users-Locate-Track-And-Monitor.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-Borgaonkar-New-Adventures-In-Spying-3G-And-4G-Users-Locate-Track-And-Monitor.pdf</a></p>
+<hr>
+<h3 id="【3】SS7-ATTACKER-HEAVEN-TURNS-INTO-RIOT-HOW-TO-MAKE-NATION-STATE-AND-INTELLIGENCE-ATTACKERS’-LIVES-MUCH-HARDER-ON-MOBILE-NETWORKS"><a href="#【3】SS7-ATTACKER-HEAVEN-TURNS-INTO-RIOT-HOW-TO-MAKE-NATION-STATE-AND-INTELLIGENCE-ATTACKERS’-LIVES-MUCH-HARDER-ON-MOBILE-NETWORKS" class="headerlink" title="【3】SS7 ATTACKER HEAVEN TURNS INTO RIOT: HOW TO MAKE NATION-STATE AND INTELLIGENCE ATTACKERS’ LIVES MUCH HARDER ON MOBILE NETWORKS"></a>【3】SS7 ATTACKER HEAVEN TURNS INTO RIOT: HOW TO MAKE NATION-STATE AND INTELLIGENCE ATTACKERS’ LIVES MUCH HARDER ON MOBILE NETWORKS</h3><p>PRESENTED BY Martin Kacer  &amp; Philippe Langlois</p>
+<p>Tracks:  <strong># Mobile</strong>,  <strong>#  Network Defense</strong></p>
+<p>SS7攻击者天堂变成骚乱：如何使攻击者在移动网络上更难生存<br>【摘要】SS7移动漏洞影响全球所有移动用户的安全。本文将讨论当前状态，可能的解决方案，并概述高级SS7攻击，以及如何使用我们发布的开源SS7防火墙进行防御。采用这种信令防火墙可以帮助减少主动和被动攻击的暴露程度。我们将介绍此解决方案的功能，包括信令加密，向中央威胁情报报告攻击，并将攻击者转发到蜜罐。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-Kacer-SS7-Attacker-Heaven-Turns-Into-Riot-How-To-Make-Nation-State-And-Intelligence-Attackers-Lives-Much-Harder-On-Mobile-Networks.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-Kacer-SS7-Attacker-Heaven-Turns-Into-Riot-How-To-Make-Nation-State-And-Intelligence-Attackers-Lives-Much-Harder-On-Mobile-Networks.pdf</a></p>
+<hr>
+<h3 id="【4】THE-FUTURE-OF-APPLEPWN-HOW-TO-SAVE-YOUR-MONEY"><a href="#【4】THE-FUTURE-OF-APPLEPWN-HOW-TO-SAVE-YOUR-MONEY" class="headerlink" title="【4】THE FUTURE OF APPLEPWN - HOW TO SAVE YOUR MONEY"></a>【4】THE FUTURE OF APPLEPWN - HOW TO SAVE YOUR MONEY</h3><p>PRESENTED BY Timur Yunusov</p>
+<p>Tracks:  <strong># Mobile</strong>,  <strong>#  Malware</strong></p>
+<p>APPLEPWN的未来 - 如何节省你的钱<br>【摘要】本文将介绍一个特别开发的开源实用程序，它演示了黑客如何将卡重新连接到iPhone，或直接在受害者的手机（即使没有越狱）上进行欺诈性付款。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/thursday/us-17-Yunusov-The-Future-Of-Applepwn-How-To-Save-Your-Money.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/thursday/us-17-Yunusov-The-Future-Of-Applepwn-How-To-Save-Your-Money.pdf</a></p>
+<hr>
+<h3 id="【5】’GHOST-TELEPHONIST’-LINK-HIJACK-EXPLOITATIONS-IN-4G-LTE-CS-FALLBACK"><a href="#【5】’GHOST-TELEPHONIST’-LINK-HIJACK-EXPLOITATIONS-IN-4G-LTE-CS-FALLBACK" class="headerlink" title="【5】’GHOST TELEPHONIST’ LINK HIJACK EXPLOITATIONS IN 4G LTE CS FALLBACK"></a>【5】’GHOST TELEPHONIST’ LINK HIJACK EXPLOITATIONS IN 4G LTE CS FALLBACK</h3><p>PRESENTED BY Haoqi Shan  &amp;     Jun Li  &amp;     Yuwei Zheng  &amp;     Lin Huang  &amp;     Qing Yang</p>
+<p>Tracks:  <strong># Mobile</strong>,  <strong>#  Network Defense</strong></p>
+<p>在4G LTE CS Fallback上的“GHOST TELEPHONIST”链接劫持利用<br>【摘要】绍了4G LTE网络中CSFB（Circuit Switched Fallback）中的一个漏洞。发现在CSFB程序中缺少认证步骤，攻击者可以用这个漏洞来劫持受害者的通信。通过实验进行对漏洞进行验证，最后提出了对策。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/thursday/us-17-Yuwei-Ghost-Telephonist-Link-Hijack-Exploitations-In-4G-LTE-CS-Fallback.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/thursday/us-17-Yuwei-Ghost-Telephonist-Link-Hijack-Exploitations-In-4G-LTE-CS-Fallback.pdf</a></p>
+<hr>
+<h3 id="【6】HONEY-I-SHRUNK-THE-ATTACK-SURFACE-–-ADVENTURES-IN-ANDROID-SECURITY-HARDENING"><a href="#【6】HONEY-I-SHRUNK-THE-ATTACK-SURFACE-–-ADVENTURES-IN-ANDROID-SECURITY-HARDENING" class="headerlink" title="【6】HONEY, I SHRUNK THE ATTACK SURFACE – ADVENTURES IN ANDROID SECURITY HARDENING"></a>【6】HONEY, I SHRUNK THE ATTACK SURFACE – ADVENTURES IN ANDROID SECURITY HARDENING</h3><p>PRESENTED BY Nick Kralevich</p>
+<p>Tracks:  <strong># Mobile</strong>,  <strong># Platform Security</strong></p>
+<p>亲爱的，我缩小了攻击面 —— 安卓安全加固的冒险<br>【摘要】本文讨论了Android的攻击面减少的历史，以及如何适应更广泛的Android安全故事。将详细介绍用于实现攻击面减少的具体技术策略，并探讨由于过去几年的加固而导致的无法触及的特定错误，最后将检查加固的总体结果和改进的领域。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/thursday/us-17-Kralevich-Honey-I-Shrunk-The-Attack-Surface-Adventures-In-Android-Security-Hardening.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/thursday/us-17-Kralevich-Honey-I-Shrunk-The-Attack-Surface-Adventures-In-Android-Security-Hardening.pdf</a></p>
+<hr>
+<h3 id="【7】DEFEATING-SAMSUNG-KNOX-WITH-ZERO-PRIVILEGE"><a href="#【7】DEFEATING-SAMSUNG-KNOX-WITH-ZERO-PRIVILEGE" class="headerlink" title="【7】DEFEATING SAMSUNG KNOX WITH ZERO PRIVILEGE"></a>【7】DEFEATING SAMSUNG KNOX WITH ZERO PRIVILEGE</h3><p>PRESENTED BY Di Shen</p>
+<p>Tracks:  <strong># Mobile</strong>,  <strong># Exploit Development</strong></p>
+<p>击败具有零特权级的SAMSUNG KNOX<br>【摘要】本文将描述如何使用一个漏洞链来来击败具有零特权的新的三星KNOX（利用链可以由任何不受信任的应用执行），包括KASLR绕过，DFI绕过，SELinux完全绕过和特权升级。演示文稿中将给出所有的漏洞和缓解绕过技术的细节。。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/thursday/us-17-Shen-Defeating-Samsung-KNOX-With-Zero-Privilege.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/thursday/us-17-Shen-Defeating-Samsung-KNOX-With-Zero-Privilege.pdf</a></p>
+<hr>
+<h3 id="【8】BLUE-PILL-FOR-YOUR-PHONE"><a href="#【8】BLUE-PILL-FOR-YOUR-PHONE" class="headerlink" title="【8】BLUE PILL FOR YOUR PHONE"></a>【8】BLUE PILL FOR YOUR PHONE</h3><p>PRESENTED BY Oleksandr Bazhaniuk  &amp; Yuriy Bulygin</p>
+<p>Tracks:  <strong># Mobile</strong>,  <strong>#  Malware</strong></p>
+<p>您手机的蓝色药丸<br>【摘要】本文探讨在使用Google Nexus 5X，Nexus 6P和Pixel作为主要目标的现代ARM手机中的虚拟机管理程序和TrustZone监视器的攻击面。使用SMC和其他接口以及TrustZone和管理程序特权级别之间的交互方法来解释不同的攻击场景。探索可以允许恶意操作系统（EL1）级别将权限升级到管理程序（EL2）级别的攻击向量，并可能在虚拟机管理程序中安装虚拟化rootkit。还将通过SMC和其他低级接口，TrustZone和管理程序（EL2）特权级别之间的交互来探索攻击向量。将发布ARM对CHIPSEC框架和新模块的支持，以测试基于ARM的虚拟机管理程序和TrustZone实现中的问题，包括SMC fuzzer。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-Bazhaniuk-BluePill-For-Your-Phone.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-Bazhaniuk-BluePill-For-Your-Phone.pdf</a></p>
+<hr>
+<h3 id="【9】CLOAK-amp-DAGGER-FROM-TWO-PERMISSIONS-TO-COMPLETE-CONTROL-OF-THE-UI-FEEDBACK-LOOP"><a href="#【9】CLOAK-amp-DAGGER-FROM-TWO-PERMISSIONS-TO-COMPLETE-CONTROL-OF-THE-UI-FEEDBACK-LOOP" class="headerlink" title="【9】CLOAK &amp; DAGGER: FROM TWO PERMISSIONS TO COMPLETE CONTROL OF THE UI FEEDBACK LOOP"></a>【9】CLOAK &amp; DAGGER: FROM TWO PERMISSIONS TO COMPLETE CONTROL OF THE UI FEEDBACK LOOP</h3><p>PRESENTED BY Yanick Fratantonio  &amp;  Chenxiong Qian  &amp;     Simon Pak Ho Chung  &amp;     Wenke Lee</p>
+<p>Tracks:  <strong># Mobile</strong>,  <strong># Platform Security</strong></p>
+<p>斗篷和匕首：从两个权限到完全控制UI反馈回路<br>【摘要】本文演示了如何组合SYSTEM_ALERT_WINDOW和BIND_ACCESSIBILITY_SERVICE Android权限的功能可以完全控制UI反馈循环并创建毁灭性和隐身攻击。同时演示了具有这两个权限的应用程序如何启动各种隐身，强大的攻击，从窃取用户的登录凭据和安全PIN，到默默安装具有所有权限的应用程序。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/thursday/us-17-Fratantonio-Cloak-And-Dagger-From-Two-Permissions-To-Complete-Control-Of-The-UI-Feedback-Loop.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/thursday/us-17-Fratantonio-Cloak-And-Dagger-From-Two-Permissions-To-Complete-Control-Of-The-UI-Feedback-Loop.pdf</a></p>
+<hr>
+<hr>
+<h2 id="Data-Forensics-Incident-Response"><a href="#Data-Forensics-Incident-Response" class="headerlink" title="Data Forensics/Incident Response"></a>Data Forensics/Incident Response</h2><h3 id="【1】HACKING-SERVERLESS-RUNTIMES-PROFILING-AWS-LAMBDA-AZURE-FUNCTIONS-AND-MORE"><a href="#【1】HACKING-SERVERLESS-RUNTIMES-PROFILING-AWS-LAMBDA-AZURE-FUNCTIONS-AND-MORE" class="headerlink" title="【1】HACKING SERVERLESS RUNTIMES: PROFILING AWS LAMBDA, AZURE FUNCTIONS, AND MORE"></a>【1】HACKING SERVERLESS RUNTIMES: PROFILING AWS LAMBDA, AZURE FUNCTIONS, AND MORE</h3><p>PRESENTED BY Andrew Krug  &amp;     Graham Jones</p>
+<p>Tracks:  <strong># Data Forensics/Incident Response</strong>,  <strong># Platform Security</strong></p>
+<p>破解无服务器的运行：概述AWS LAMBDA AZURE等功能<br>【摘要】本文将深入了解在研究中发现的公共数据和信息，解释在没有服务器的情况下是如何工作的，以及在无服务器云Azure，AWS和其他一些沙盒上的攻击链。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-Krug-Hacking-Severless-Runtimes.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-Krug-Hacking-Severless-Runtimes.pdf</a></p>
+<hr>
+<h3 id="【2】FIGHTING-TARGETED-MALWARE-IN-THE-MOBILE-ECOSYSTEM"><a href="#【2】FIGHTING-TARGETED-MALWARE-IN-THE-MOBILE-ECOSYSTEM" class="headerlink" title="【2】FIGHTING TARGETED MALWARE IN THE MOBILE ECOSYSTEM"></a>【2】FIGHTING TARGETED MALWARE IN THE MOBILE ECOSYSTEM</h3><p>PRESENTED BY Megan Ruthven  &amp;     Andrew Blaich</p>
+<p>Tracks:  <strong># Data Forensics/Incident Response</strong>,  <strong>#  Mobile</strong></p>
+<p>在移动生态系统中打击目标恶意软件<br>【摘要】本文将重新叙述如何使用基于设备和云安全服务的组合来追捕Chrysaor。将详细介绍使用这个方法和技术来检测这个恶意软件，然后将讨论如何使用我们开发的安装图引擎来确定其属性。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-Ruthven-Fighting-Targeted-Malware-In-The-Mobile-Ecosystem.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-Ruthven-Fighting-Targeted-Malware-In-The-Mobile-Ecosystem.pdf</a></p>
+<hr>
+<h3 id="【3】REVOKE-OBFUSCATION-POWERSHELL-OBFUSCATION-DETECTION-AND-EVASION-USING-SCIENCE"><a href="#【3】REVOKE-OBFUSCATION-POWERSHELL-OBFUSCATION-DETECTION-AND-EVASION-USING-SCIENCE" class="headerlink" title="【3】REVOKE-OBFUSCATION: POWERSHELL OBFUSCATION DETECTION (AND EVASION) USING SCIENCE"></a>【3】REVOKE-OBFUSCATION: POWERSHELL OBFUSCATION DETECTION (AND EVASION) USING SCIENCE</h3><p>PRESENTED BY Daniel Bohannon  &amp; Lee Holmes</p>
+<p>Tracks:  <strong># Data Forensics/Incident Response</strong></p>
+<p>Revoke-Obfuscation：利用科学进行Powershell混淆技术检测（规避）<br>【摘要】本文介绍了Revoke-Obfuscation，一个PowerShell框架，通过对任意PowerShell命令或脚本应用一套独特的统计分析，字符分配和命令调用检查来帮助检测模糊的PowerShell命令和脚本。它与PowerShell .evtx文件，命令行，脚本，ScriptBlock日志，模块日志一起使用，并允许轻松添加新的自定义指示器。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/thursday/us-17-Bohannon-Revoke-Obfuscation-PowerShell-Obfuscation-Detection-And%20Evasion-Using-Science.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/thursday/us-17-Bohannon-Revoke-Obfuscation-PowerShell-Obfuscation-Detection-And%20Evasion-Using-Science.pdf</a></p>
+<hr>
+<hr>
+<h2 id="Reverse-Engineering"><a href="#Reverse-Engineering" class="headerlink" title="Reverse Engineering"></a>Reverse Engineering</h2><h3 id="【1】EVILSPLOIT-–-A-UNIVERSAL-HARDWARE-HACKING-TOOLKIT"><a href="#【1】EVILSPLOIT-–-A-UNIVERSAL-HARDWARE-HACKING-TOOLKIT" class="headerlink" title="【1】EVILSPLOIT – A UNIVERSAL HARDWARE HACKING TOOLKIT"></a>【1】EVILSPLOIT – A UNIVERSAL HARDWARE HACKING TOOLKIT</h3><p>PRESENTED BY Chui Yew Leong  &amp;     Mingming Wan</p>
+<p>Tracks: <strong># Reverse Engineering</strong>, <strong># Hardware/Embedded</strong> </p>
+<p>EVILSPLOIT - 通用硬件黑客工具包<br>【摘要】本文将介绍一种新的方法，允许使用连接矩阵来提供端口标识和操作。由此，可以以阵列的形式构造任意的模拟相似连接，以实现总线接口芯片和目标之间的所有互连模式。因此，一旦找到适当的配置端口，它可以用于调试或固件dumping。此外，它还是未知信号分析，侧信道分析（SCA）和故障注入（FI）的理想辅助工具。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-Chui-Evilsploit-A-Universal-Hardware-Hacking-Toolkit.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-Chui-Evilsploit-A-Universal-Hardware-Hacking-Toolkit.pdf</a></p>
+<hr>
+<h3 id="【2】RVMI-A-NEW-PARADIGM-FOR-FULL-SYSTEM-ANALYSIS"><a href="#【2】RVMI-A-NEW-PARADIGM-FOR-FULL-SYSTEM-ANALYSIS" class="headerlink" title="【2】RVMI: A NEW PARADIGM FOR FULL SYSTEM ANALYSIS"></a>【2】RVMI: A NEW PARADIGM FOR FULL SYSTEM ANALYSIS</h3><p>PRESENTED BY NJonas Pfoh  &amp; Sebastian Vogl</p>
+<p>Tracks: <strong># Reverse Engineering</strong>, <strong># Malware</strong> </p>
+<p>RVMI：全面系统分析的新范式<br>【摘要】本文提供了rVMI，一个将VMI和Rekall（强大的内存取证框架）组合起来的系统，为可脚本化和交互式恶意软件分析提供平台。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/thursday/us-17-Pfoh-rVMI-A-New-Paradigm-For-Full-System-Analysis.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/thursday/us-17-Pfoh-rVMI-A-New-Paradigm-For-Full-System-Analysis.pdf</a></p>
+<hr>
+<h3 id="【3】ATTACKING-ENCRYPTED-USB-KEYS-THE-HARD-WARE-WAY"><a href="#【3】ATTACKING-ENCRYPTED-USB-KEYS-THE-HARD-WARE-WAY" class="headerlink" title="【3】ATTACKING ENCRYPTED USB KEYS THE HARD(WARE) WAY"></a>【3】ATTACKING ENCRYPTED USB KEYS THE HARD(WARE) WAY</h3><p>PRESENTED BY Jean-Michel Picod  &amp;     Rémi Audebert  &amp;     Elie Bursztein</p>
+<p>Tracks: <strong># Reverse Engineering</strong>, <strong># Hardware/Embedded</strong> </p>
+<p>攻击加密USB密钥的hard（ware）方式<br>【摘要】本文将介绍从软件和硬件两个角度评估AES硬件加密的USB设备。通过一系列案例研究来证明这种方法在实践中如何运作，并将展示在审核期间发现的一些实际攻击，以便您了解要查找的漏洞类型以及如何利用它们。掌握了这些知识和我们的工具，您将能够评估您选择的USB设备的安全性。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/thursday/us-17-Picod-Attacking-Encrypted-USB-Keys-The-Hard(ware)-Way.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/thursday/us-17-Picod-Attacking-Encrypted-USB-Keys-The-Hard(ware)-Way.pdf</a></p>
+<hr>
+<h2 id="Hardware-Embedded"><a href="#Hardware-Embedded" class="headerlink" title="Hardware/Embedded"></a>Hardware/Embedded</h2><h3 id="【1】BREAKING-ELECTRONIC-DOOR-LOCKS-LIKE-YOU’RE-ON-CSI-CYBER"><a href="#【1】BREAKING-ELECTRONIC-DOOR-LOCKS-LIKE-YOU’RE-ON-CSI-CYBER" class="headerlink" title="【1】BREAKING ELECTRONIC DOOR LOCKS LIKE YOU’RE ON CSI: CYBER"></a>【1】BREAKING ELECTRONIC DOOR LOCKS LIKE YOU’RE ON CSI: CYBER</h3><p>PRESENTED BY Colin O’Flynn</p>
+<p>Tracks: <strong>#  Hardware/Embedded</strong>, <strong># Reverse Engineering</strong></p>
+<p>打破电子门锁类似于CSI：CYBER(美剧网络犯罪现场调查)<br>【摘要】本文讨论了一些消费级电子锁，目的是像你在电影中看到的那样打破它们。详细介绍了这些锁上的电子产品，并讨论黑客绕过它们时可以利用的漏洞。</p>
+<p>Slides：<a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-OFlynn-Breaking-Electronic-Locks.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-OFlynn-Breaking-Electronic-Locks.pdf</a></p>
+<hr>
+<h3 id="【2】GO-NUCLEAR-BREAKING-RADIATION-MONITORING-DEVICES"><a href="#【2】GO-NUCLEAR-BREAKING-RADIATION-MONITORING-DEVICES" class="headerlink" title="【2】GO NUCLEAR: BREAKING RADIATION MONITORING DEVICES"></a>【2】GO NUCLEAR: BREAKING RADIATION MONITORING DEVICES</h3><p>PRESENTED BY Ruben Santamarta</p>
+<p>Tracks: <strong>#  Hardware/Embedded</strong>, <strong># Reverse Engineering</strong></p>
+<p>GO NUCLEAR：打破辐射监测设备<br>【摘要】本文将全面描述用于发现影响广泛部署的辐射监测设备的多个漏洞的技术细节和方法，涉及软件和固件逆向工程，RF分析和硬件黑客攻击。</p>
+<p>Slides：<a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-Santamarta-Go-Nuclear-Breaking%20Radition-Monitoring-Devices.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-Santamarta-Go-Nuclear-Breaking%20Radition-Monitoring-Devices.pdf</a></p>
+<hr>
+<h3 id="【3】OPENCRYPTO-UNCHAINING-THE-JAVACARD-ECOSYSTEM"><a href="#【3】OPENCRYPTO-UNCHAINING-THE-JAVACARD-ECOSYSTEM" class="headerlink" title="【3】OPENCRYPTO: UNCHAINING THE JAVACARD ECOSYSTEM"></a>【3】OPENCRYPTO: UNCHAINING THE JAVACARD ECOSYSTEM</h3><p>PRESENTED BY Vasilios Mavroudis  &amp;     George Danezis  &amp;     Petr Svenda  &amp;  Dan Cvrcek</p>
+<p>Tracks:  <strong># Hardware/Embedded</strong></p>
+<p>Opencrypto：解除JavaCard系统<br>【摘要】本文将介绍OpenCrypto库，使程序员能够利用没有被绑定到一个特定的供应商的JavaCard（例如，加密协处理器）的所有功能。将低级字节操作技巧和数学性质结合从高级加密方法（例如，RSA加密）重建低级算术运算（例如，整数乘法，ECPoint加法），从而消除了生态系统中特定于供应商的依赖关系。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/thursday/us-17-Mavroudis-Opencrypto-Unchaining-The-JavaCard-Ecosystem.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/thursday/us-17-Mavroudis-Opencrypto-Unchaining-The-JavaCard-Ecosystem.pdf</a></p>
+<hr>
+<h3 id="【4】SONIC-GUN-TO-SMART-DEVICES-YOUR-DEVICES-LOSE-CONTROL-UNDER-ULTRASOUND-SOUND"><a href="#【4】SONIC-GUN-TO-SMART-DEVICES-YOUR-DEVICES-LOSE-CONTROL-UNDER-ULTRASOUND-SOUND" class="headerlink" title="【4】SONIC GUN TO SMART DEVICES: YOUR DEVICES LOSE CONTROL UNDER ULTRASOUND/SOUND"></a>【4】SONIC GUN TO SMART DEVICES: YOUR DEVICES LOSE CONTROL UNDER ULTRASOUND/SOUND</h3><p>PRESENTED BY Zhengbo Wang  &amp;     Wang Kang  &amp;     Bo Yang  &amp;     Shangyuan LI  &amp;     Aimin Pan</p>
+<p>Tracks:  <strong># Hardware/Embedded</strong>,  <strong>#  Mobile</strong></p>
+<p>智能设备的音波枪：您的设备在超声波/声音下失去控制<br>【摘要】本文揭示了MEMS传感器的一个脆弱性，内部感测元件会在施加的声波在某些频率时产生谐振，从而产生损坏的数据。并开发了攻击方法，通过对参数的精确调整实现了对陀螺仪和加速度计的数据操作。同时介绍了几种针对硬件和软件的对策来减轻漏洞。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/thursday/us-17-Wang-Sonic-Gun-To-Smart-Devices-Your-Devices-Lose-Control-Under-Ultrasound-Or-Sound.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/thursday/us-17-Wang-Sonic-Gun-To-Smart-Devices-Your-Devices-Lose-Control-Under-Ultrasound-Or-Sound.pdf</a></p>
+<hr>
+<h3 id="【5】FIRMWARE-IS-THE-NEW-BLACK-ANALYZING-PAST-THREE-YEARS-OF-BIOS-UEFI-SECURITY-VULNERABILITIES"><a href="#【5】FIRMWARE-IS-THE-NEW-BLACK-ANALYZING-PAST-THREE-YEARS-OF-BIOS-UEFI-SECURITY-VULNERABILITIES" class="headerlink" title="【5】FIRMWARE IS THE NEW BLACK - ANALYZING PAST THREE YEARS OF BIOS/UEFI SECURITY VULNERABILITIES"></a>【5】FIRMWARE IS THE NEW BLACK - ANALYZING PAST THREE YEARS OF BIOS/UEFI SECURITY VULNERABILITIES</h3><p>PRESENTED BY Rodrigo Branco  &amp;     Vincent Zimmer  &amp;     Bruce Monroe</p>
+<p>Tracks:  <strong># Hardware/Embedded</strong>,  <strong>#  Platform Security</strong></p>
+<p>固件是新的黑色地带 - 分析过去三年 BIOS/UEFI 上的安全漏洞<br>【摘要】本文考察了BIOS / UEFI平台固件，试图帮助了解威胁。提出了一个威胁模型，讨论了可能阻止这些问题的新缓解措施，并提供了有助于将投资重点放在保护系统（和发现新的漏洞）上的bug类别分类。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/thursday/us-17-Branco-Firmware-Is-The-New-Black-Analyzing-Past-Three-Years-Of-BIOS-UEFI-Security-Vulnerabilities.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/thursday/us-17-Branco-Firmware-Is-The-New-Black-Analyzing-Past-Three-Years-Of-BIOS-UEFI-Security-Vulnerabilities.pdf</a></p>
+<hr>
+<h3 id="【6】INTEL-AMT-STEALTH-BREAKTHROUGH"><a href="#【6】INTEL-AMT-STEALTH-BREAKTHROUGH" class="headerlink" title="【6】INTEL AMT STEALTH BREAKTHROUGH"></a>【6】INTEL AMT STEALTH BREAKTHROUGH</h3><p>PRESENTED BY Dmitriy Evdokimov  &amp;  Alexander Ermolov  &amp;     Maksim Malyutin</p>
+<p>Tracks: <strong>#  Hardware/Embedded</strong>, <strong># Reverse Engineering</strong></p>
+<p>英特尔AMT的隐形突破<br>【摘要】英特尔主动管理技术（AMT）是基于它基于英特尔®ME和远程管理计算机系统的手段。本文将讨论远程Pwning几乎所有基于英特尔系统（自2010以后制造的）方法。</p>
+<p>Slides：<a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-Santamarta-Go-Nuclear-Breaking%20Radition-Monitoring-Devices.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-Santamarta-Go-Nuclear-Breaking%20Radition-Monitoring-Devices.pdf</a></p>
+<hr>
+<h3 id="【7】BREAKING-THE-X86-INSTRUCTION-SET"><a href="#【7】BREAKING-THE-X86-INSTRUCTION-SET" class="headerlink" title="【7】BREAKING THE X86 INSTRUCTION SET"></a>【7】BREAKING THE X86 INSTRUCTION SET</h3><p>PRESENTED BY Christopher Domas</p>
+<p>Tracks:  <strong># Hardware/Embedded</strong>,  <strong>#  Platform Security</strong></p>
+<p>打破X86指令集<br>【摘要】本文将演示如何利用页面故障分析和一些创意处理器模糊来彻底搜索x86指令集，并发现掩埋在芯片组中的秘密。将披露新的x86硬件故障，包括以前未知的机器指令，无处不在的软件错误和在企业hypervisor中的缺陷。并且会释放sandsifter工具，以便您可以审核和突破自己的处理器。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/thursday/us-17-Domas-Breaking-The-x86-ISA.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/thursday/us-17-Domas-Breaking-The-x86-ISA.pdf</a></p>
+<hr>
+<hr>
+<h2 id="Cryptography"><a href="#Cryptography" class="headerlink" title="Cryptography"></a>Cryptography</h2><h3 id="【1】AUTOMATED-TESTING-OF-CRYPTO-SOFTWARE-USING-DIFFERENTIAL-FUZZING"><a href="#【1】AUTOMATED-TESTING-OF-CRYPTO-SOFTWARE-USING-DIFFERENTIAL-FUZZING" class="headerlink" title="【1】AUTOMATED TESTING OF CRYPTO SOFTWARE USING DIFFERENTIAL FUZZING"></a>【1】AUTOMATED TESTING OF CRYPTO SOFTWARE USING DIFFERENTIAL FUZZING</h3><p>PRESENTED BY Jean-Philippe Aumasson  &amp;  Yolan Romailler</p>
+<p>Tracks:  <strong># Cryptography</strong>,  <strong># Security Development Lifecycle</strong></p>
+<p>使用差分FUZZING自动化测试软件<br>【摘要】本文提出了一种新的高效的密码软件系统测试方法：差分模糊。将发布CDF，一种实现大多数通用加密API的差分模糊的工具，将差分模糊与许多单元测试相结合，以检测特定于所测试的加密功能的漏洞。由于采用了最先进的泄漏检测技术，它还可以检测定时泄漏。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-Aumasson-Automated-Testing-Of-Crypto-Software-Using-Differential-Fuzzing.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-Aumasson-Automated-Testing-Of-Crypto-Software-Using-Differential-Fuzzing.pdf</a></p>
+<hr>
+<h3 id="【2】INTERCEPTING-ICLOUD-KEYCHAIN"><a href="#【2】INTERCEPTING-ICLOUD-KEYCHAIN" class="headerlink" title="【2】INTERCEPTING ICLOUD KEYCHAIN"></a>【2】INTERCEPTING ICLOUD KEYCHAIN</h3><p>PRESENTED BY Alex Radocea</p>
+<p>Tracks:  <strong># Cryptography</strong>,  <strong>#  Mobile</strong></p>
+<p>关闭ICLOUD KEYCHAIN<br>【摘要】iCloud Keychain采用端到端加密来同步iCloud注册设备的秘密。本文发现了一个关键的加密实现缺陷，这将使得熟练的攻击者能够通过iCloud通信特权访问到中间iCloud Keychain并同步获得对iCloud Keychain秘密的明文访问。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-Radocea-Intercepting-iCloud-Keychain.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-Radocea-Intercepting-iCloud-Keychain.pdf</a></p>
+<hr>
+<h3 id="【3】INTEL-SGX-REMOTE-ATTESTATION-IS-NOT-SUFFICIENT"><a href="#【3】INTEL-SGX-REMOTE-ATTESTATION-IS-NOT-SUFFICIENT" class="headerlink" title="【3】INTEL SGX REMOTE ATTESTATION IS NOT SUFFICIENT"></a>【3】INTEL SGX REMOTE ATTESTATION IS NOT SUFFICIENT</h3><p>PRESENTED BY Yogesh Swami</p>
+<p>Tracks:  <strong># Cryptography</strong>,  <strong># Platform Security</strong></p>
+<p>INTEL SGX远程登录不是很有效<br>【摘要】本文提出英特尔提供的SGX远程认证不足以保证在云中运行未修改的应用程序的机密性和完整性，并通过三个实例进行了展示。然后将讨论有关远程认证机制的细节。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/thursday/us-17-Swami-SGX-Remote-Attestation-Is-Not-Sufficient-wp.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/thursday/us-17-Swami-SGX-Remote-Attestation-Is-Not-Sufficient-wp.pdf</a></p>
+<hr>
+<hr>
+<h2 id="Enterprise"><a href="#Enterprise" class="headerlink" title="Enterprise"></a>Enterprise</h2><h3 id="【1】AN-ACE-UP-THE-SLEEVE-DESIGNING-ACTIVE-DIRECTORY-DACL-BACKDOORS"><a href="#【1】AN-ACE-UP-THE-SLEEVE-DESIGNING-ACTIVE-DIRECTORY-DACL-BACKDOORS" class="headerlink" title="【1】AN ACE UP THE SLEEVE: DESIGNING ACTIVE DIRECTORY DACL BACKDOORS"></a>【1】AN ACE UP THE SLEEVE: DESIGNING ACTIVE DIRECTORY DACL BACKDOORS</h3><p>PRESENTED BY Andy Robbins  &amp;     Will Schroeder</p>
+<p>Tracks: <strong># Enterprise</strong></p>
+<p>一个王牌套：设计活动目录的DACL（自由访问控制列表）后门<br>【摘要】本文将深入讨论Active Directory DACL，“配置错误分类法”，以及BloodHound新发布的功能集的枚举/分析；将介绍为提高域名权限滥用AD DACL的错误配置；最后将介绍如何设计AD DACL后门，包括避免当前检测的方法，并将为所描述的所有内容提供防御性缓解/检测技术。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-Robbins-An-ACE-Up-The-Sleeve-Designing-Active-Directory-DACL-Backdoors.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-Robbins-An-ACE-Up-The-Sleeve-Designing-Active-Directory-DACL-Backdoors.pdf</a></p>
+<hr>
+<h3 id="【2】WSUSPENDU-HOW-TO-HANG-WSUS-CLIENTS"><a href="#【2】WSUSPENDU-HOW-TO-HANG-WSUS-CLIENTS" class="headerlink" title="【2】WSUSPENDU: HOW TO HANG WSUS CLIENTS"></a>【2】WSUSPENDU: HOW TO HANG WSUS CLIENTS</h3><p>PRESENTED BY Romain Coltel  &amp;     Yves Le Provost</p>
+<p>Tracks: <strong># Enterprise</strong>, <strong>#  Platform Security</strong> </p>
+<p>WSUSPENDU：如何挂起WSUS客户端<br>【摘要】本文介绍一种新的方法，规避一些限制，从拥有的WSUS服务器控制目标网络。将描述易受攻击的体系结构，并用新的公共工具对攻击进行上下文演示。最后还将解释如何保护您的更新架构。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-Coltel-WSUSpendu-Use-WSUS-To-Hang-Its-Clients.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-Coltel-WSUSpendu-Use-WSUS-To-Hang-Its-Clients.pdf</a></p>
+<hr>
+<h3 id="【3】ESCALATING-INSIDER-THREATS-USING-VMWARE’S-API"><a href="#【3】ESCALATING-INSIDER-THREATS-USING-VMWARE’S-API" class="headerlink" title="【3】ESCALATING INSIDER THREATS USING VMWARE’S API"></a>【3】ESCALATING INSIDER THREATS USING VMWARE’S API</h3><p>PRESENTED BY Ofri Ziv</p>
+<p>Tracks: <strong># Enterprise</strong>, <strong># Policy</strong> </p>
+<p>使用VMWARE的API逐步升级内部威胁<br>【摘要】VMWare VIX API允许具有所需vSphere权限的用户在VMWare平台产品之间自动执行客户机操作功能，VIX包含一个破坏此安全模式的未记录功能，使恶意用户能够绕过访客域身份验证。本文将提供一个真实示例来暴露VMWare的这个安全设计缺陷，展示攻击者从配置虚拟机到运行具有root权限的命令的容易程度。最后发布一个用来测试哪些用户能够接管客户机的工具。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/thursday/us-17-Ziv-Escalating-Insider-Threats-Using-Vmware&#39;s-Api.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/thursday/us-17-Ziv-Escalating-Insider-Threats-Using-Vmware&#39;s-Api.pdf</a></p>
+<hr>
+<h3 id="【4】THE-INDUSTRIAL-REVOLUTION-OF-LATERAL-MOVEMENT"><a href="#【4】THE-INDUSTRIAL-REVOLUTION-OF-LATERAL-MOVEMENT" class="headerlink" title="【4】THE INDUSTRIAL REVOLUTION OF LATERAL MOVEMENT"></a>【4】THE INDUSTRIAL REVOLUTION OF LATERAL MOVEMENT</h3><p>PRESENTED BY Tal Be’ery  &amp;     Tal Maor</p>
+<p>Tracks: <strong># Enterprise</strong></p>
+<p>横向移动的工业革命<br>【摘要】本文将介绍自动化横向领域最新进展，随后演示和发布一款新的开源横向移动自动化工具“GoFetch”。 我们最后将讨论横向行动工业化对攻击者和维权者的影响。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/thursday/us-17-Beery-The-Industrial-Revolution-Of-Lateral-Movement.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/thursday/us-17-Beery-The-Industrial-Revolution-Of-Lateral-Movement.pdf</a></p>
+<hr>
+<h3 id="【5】EVADING-MICROSOFT-ATA-FOR-ACTIVE-DIRECTORY-DOMINATION"><a href="#【5】EVADING-MICROSOFT-ATA-FOR-ACTIVE-DIRECTORY-DOMINATION" class="headerlink" title="【5】EVADING MICROSOFT ATA FOR ACTIVE DIRECTORY DOMINATION"></a>【5】EVADING MICROSOFT ATA FOR ACTIVE DIRECTORY DOMINATION</h3><p>PRESENTED BY Nikhil Mittal</p>
+<p>Tracks: <strong># Enterprise</strong>, <strong>#  Network Defense</strong> </p>
+<p>规避微软在Active Directory的统治<br>【摘要】Microsoft Advanced Threat Analytics（ATA）是一个防御平台，可从多个来源如某些协议的流量、域控制器、Windows事件日志和SIEM事件等中读取信息，所收集的信息用于检测。本文将探讨如何逃避这种坚实的检测机制，如何修改其攻击链和方法来绕过ATA，并作出相应的展示。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/thursday/us-17-Mittal-Evading-MicrosoftATA-for-ActiveDirectory-Domination.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/thursday/us-17-Mittal-Evading-MicrosoftATA-for-ActiveDirectory-Domination.pdf</a></p>
+<hr>
+<h3 id="【6】LIES-AND-DAMN-LIES-GETTING-PAST-THE-HYPE-OF-ENDPOINT-SECURITY-SOLUTIONS"><a href="#【6】LIES-AND-DAMN-LIES-GETTING-PAST-THE-HYPE-OF-ENDPOINT-SECURITY-SOLUTIONS" class="headerlink" title="【6】LIES, AND DAMN LIES: GETTING PAST THE HYPE OF ENDPOINT SECURITY SOLUTIONS"></a>【6】LIES, AND DAMN LIES: GETTING PAST THE HYPE OF ENDPOINT SECURITY SOLUTIONS</h3><p>PRESENTED BY Lidia Giuliano  &amp;     Mike Spaulding</p>
+<p>Tracks: <strong># Enterprise</strong>, <strong>#  Malware</strong> </p>
+<p>LIES和DAMN LIES：结束了端终端安全解决方案的炒作<br>【摘要】本文为端点保护系统投入了大量时间，为业务案例进行了大量投资 - 了解问题，制定测试场景来评估市场上的5种解决方案。讨论了要测试什么恶意软件，以及如何测试其端点安全性，决策过程中使用的关键考虑因素。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/thursday/us-17-Giuliano-Lies-And-Damn-Lies-Getting-Past-The-Hype-Of-Endpoint-Security-Solutions.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/thursday/us-17-Giuliano-Lies-And-Damn-Lies-Getting-Past-The-Hype-Of-Endpoint-Security-Solutions.pdf</a></p>
+<hr>
+<hr>
+<h2 id="Platform-Security"><a href="#Platform-Security" class="headerlink" title="Platform Security"></a>Platform Security</h2><h3 id="【1】TAKING-DMA-ATTACKS-TO-THE-NEXT-LEVEL-HOW-TO-DO-ARBITRARY-MEMORY-READS-WRITES-IN-A-LIVE-AND-UNMODIFIED-SYSTEM-USING-A-ROGUE-MEMORY-CONTROLLER"><a href="#【1】TAKING-DMA-ATTACKS-TO-THE-NEXT-LEVEL-HOW-TO-DO-ARBITRARY-MEMORY-READS-WRITES-IN-A-LIVE-AND-UNMODIFIED-SYSTEM-USING-A-ROGUE-MEMORY-CONTROLLER" class="headerlink" title="【1】TAKING DMA ATTACKS TO THE NEXT LEVEL: HOW TO DO ARBITRARY MEMORY READS/WRITES IN A LIVE AND UNMODIFIED SYSTEM USING A ROGUE MEMORY CONTROLLER"></a>【1】TAKING DMA ATTACKS TO THE NEXT LEVEL: HOW TO DO ARBITRARY MEMORY READS/WRITES IN A LIVE AND UNMODIFIED SYSTEM USING A ROGUE MEMORY CONTROLLER</h3><p>PRESENTED BY Anna Trikalinou  &amp; Dan Lake</p>
+<p>Tracks: <strong># Platform Security</strong>, <strong># Hardware/Embedded</strong> </p>
+<p>把DMA攻击带到下一个层次：如何使用一个流氓内存控制器在一个实时和未修改的系统中进行任意内存读写操作<br>【摘要】本文将介绍一种不可检测的新颖的物理的DMA攻击，不需要特定的端口，只是利用标准DIMM插槽硬件设计的固有漏洞。用定制的PCB探头与FPGA，我们能够在系统系统处于S3（睡眠状态）时，以非侵入的方式连接到现成的桌面系统的暴露的DDR4引脚。将自己标记为系统的良性记忆控制器，从而能够读取或修改任何物理地址的内存，并且使受害者系统在退出睡眠状态时接受修改。将重点介绍如何在系统处于S3睡眠状态时逆向设计内存控制器和DIMM电路，将信号注入受害系统的内存总线。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-Trikalinou-Taking-DMA-Attacks-To-The-Next-Level-How-To-Do-Arbitrary-Memory-Reads-Writes-In-A-Live-And-Unmodified-System-Using-A-Rogue-Memory-Controller.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-Trikalinou-Taking-DMA-Attacks-To-The-Next-Level-How-To-Do-Arbitrary-Memory-Reads-Writes-In-A-Live-And-Unmodified-System-Using-A-Rogue-Memory-Controller.pdf</a></p>
+<hr>
+<h3 id="【2】FRACTURED-BACKBONE-BREAKING-MODERN-OS-DEFENSES-WITH-FIRMWARE-ATTACKS"><a href="#【2】FRACTURED-BACKBONE-BREAKING-MODERN-OS-DEFENSES-WITH-FIRMWARE-ATTACKS" class="headerlink" title="【2】FRACTURED BACKBONE: BREAKING MODERN OS DEFENSES WITH FIRMWARE ATTACKS"></a>【2】FRACTURED BACKBONE: BREAKING MODERN OS DEFENSES WITH FIRMWARE ATTACKS</h3><p>PRESENTED BY Yuriy Bulygin  &amp;     Mikhail Gorobets  &amp;     Oleksandr Bazhaniuk  &amp;     Andrew Furtak</p>
+<p>Tracks: <strong># Platform Security</strong>, <strong># Enterprise</strong> </p>
+<p>破裂的背景：通过固件攻击破解现代操作系统防御<br>【摘要】本文首先详细介绍在包括UEFI，Mac EFI和Coreboot在内的系统固件中发现的漏洞和攻击，并开发了多种技术用于检测正在使用开源框架chipsec的固件上的错误。然后针对现代操作系统开始采用基于虚拟化技术的更强的软件防御，发现多种方式可以利用固件来攻击虚拟机管理程序。还展示了第一个针对Windows 10 VBS的概念验证攻击，暴露了由Credential Guard技术保护的域名。最后从固件和硬件攻击的角度，来分析基于现代虚拟机管理程序的操作系统防御的安全性，并将详细介绍可用于危及Windows 10 VBS的固件辅助攻击向量，还将描述平台供应商和Windows为改善对这些攻击的缓解所做的更改。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-Bulygin-Fractured-Backbone-Breaking-Modern-OS-Defenses-With-Firmware-Attacks.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-Bulygin-Fractured-Backbone-Breaking-Modern-OS-Defenses-With-Firmware-Attacks.pdf</a></p>
+<hr>
+<h3 id="【3】KR-X-COMPREHENSIVE-KERNEL-PROTECTION-AGAINST-JUST-IN-TIME-CODE-REUSE"><a href="#【3】KR-X-COMPREHENSIVE-KERNEL-PROTECTION-AGAINST-JUST-IN-TIME-CODE-REUSE" class="headerlink" title="【3】KR^X: COMPREHENSIVE KERNEL PROTECTION AGAINST JUST-IN-TIME CODE REUSE"></a>【3】KR^X: COMPREHENSIVE KERNEL PROTECTION AGAINST JUST-IN-TIME CODE REUSE</h3><p>PRESENTED BY Marios Pomonis</p>
+<p>Tracks: <strong># Platform Security</strong></p>
+<p>KR^X：针对JUST-IN-TIME代码重用的全面内核保护<br>【摘要】本文提出了一个防止内核代码重用攻击的核心硬化方案，通过将代码多样化与执行“读取XOR执行”（R^X）内存安全策略相结合实现了这一点。展示如何在不使用虚拟机管理程序或超级特权组件的情况下，采用主要以一组GCC插件实现的自强化方法实现此目标。然后讨论了多种方法来防止返回地址泄漏。最后探讨如何利用硬件支持，如现代英特尔®CPU上的MPX来优化性能。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/thursday/us-17-Pomonis-KR%5EX-%20Comprehensive-%20Kernel-Protection-Against-Just-In-Time-Code-Reuse.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/thursday/us-17-Pomonis-KR%5EX-%20Comprehensive-%20Kernel-Protection-Against-Just-In-Time-Code-Reuse.pdf</a></p>
+<hr>
+<h3 id="【4】WELL-THAT-ESCALATED-QUICKLY-HOW-ABUSING-DOCKER-API-LED-TO-REMOTE-CODE-EXECUTION-SAME-ORIGIN-BYPASS-AND-PERSISTENCE-IN-THE-HYPERVISOR-VIA-SHADOW-CONTAINERS"><a href="#【4】WELL-THAT-ESCALATED-QUICKLY-HOW-ABUSING-DOCKER-API-LED-TO-REMOTE-CODE-EXECUTION-SAME-ORIGIN-BYPASS-AND-PERSISTENCE-IN-THE-HYPERVISOR-VIA-SHADOW-CONTAINERS" class="headerlink" title="【4】WELL THAT ESCALATED QUICKLY! HOW ABUSING DOCKER API LED TO REMOTE CODE EXECUTION SAME ORIGIN BYPASS AND PERSISTENCE IN THE HYPERVISOR VIA SHADOW CONTAINERS"></a>【4】WELL THAT ESCALATED QUICKLY! HOW ABUSING DOCKER API LED TO REMOTE CODE EXECUTION SAME ORIGIN BYPASS AND PERSISTENCE IN THE HYPERVISOR VIA SHADOW CONTAINERS</h3><p>PRESENTED BY Michael Cherny  &amp;     Sagie Dulce</p>
+<p>Tracks: <strong># Platform Security</strong>, <strong># Enterprise</strong> </p>
+<p>如何通过Shadow Containers滥用Docker API导致远程执行代码同源旁路和持续攻击虚拟机管理程序<br>【摘要】本文首先显示当开发人员访问恶意网页时，将会如何颠覆他的内部网络，并展示如何在开发者机器上保持持续和隐身而不会被检测到。使用两种新的攻击形式：主机重新绑定和Shadow Containers。主机重新绑定将用于绕过浏览器的同源保护，而Shadow Containers是使用容器的管理程序上的持久性技术。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/thursday/us-17-Cherny-Well-That-Escalated-Quickly-How-Abusing-The-Docker-API-Led-To-Remote-Code-Execution-Same-Origin-Bypass-And-Persistence.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/thursday/us-17-Cherny-Well-That-Escalated-Quickly-How-Abusing-The-Docker-API-Led-To-Remote-Code-Execution-Same-Origin-Bypass-And-Persistence.pdf</a></p>
+<hr>
+<h3 id="【5】BETRAYING-THE-BIOS-WHERE-THE-GUARDIANS-OF-THE-BIOS-ARE-FAILING"><a href="#【5】BETRAYING-THE-BIOS-WHERE-THE-GUARDIANS-OF-THE-BIOS-ARE-FAILING" class="headerlink" title="【5】BETRAYING THE BIOS: WHERE THE GUARDIANS OF THE BIOS ARE FAILING"></a>【5】BETRAYING THE BIOS: WHERE THE GUARDIANS OF THE BIOS ARE FAILING</h3><p>PRESENTED BY Alex Matrosov</p>
+<p>Tracks: <strong># Platform Security</strong>, <strong># Reverse Engineering</strong> </p>
+<p>背叛BIOS：BIOS的监护在哪里失效了<br>【摘要】本文将从攻击者和防御者的竞争角度解释UEFI的安全性。同时介绍一些主题，包括硬件供应商如何将SMM和SPI闪存对rootkit开放;如Intel Boot Guard和BIOS Guard（以及单独的Authenticated Code Module CPU）的技术如何杀死它们；以及这些保护技术的弱点。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-Matrosov-Betraying-The-BIOS-Where-The-Guardians-Of-The-BIOS-Are-Failing.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-Matrosov-Betraying-The-BIOS-Where-The-Guardians-Of-The-BIOS-Are-Failing.pdf</a></p>
+<hr>
+<hr>
+<h2 id="Policy"><a href="#Policy" class="headerlink" title="Policy"></a>Policy</h2><h3 id="【1】SO-YOU-WANT-TO-MARKET-YOUR-SECURITY-PRODUCT…"><a href="#【1】SO-YOU-WANT-TO-MARKET-YOUR-SECURITY-PRODUCT…" class="headerlink" title="【1】SO YOU WANT TO MARKET YOUR SECURITY PRODUCT…"></a>【1】SO YOU WANT TO MARKET YOUR SECURITY PRODUCT…</h3><p>PRESENTED BY Aaron Alva  &amp;     Terrell McSweeny</p>
+<p>Tracks: <strong># Policy</strong>, <strong># Security Development Lifecycle</strong></p>
+<p>所以你想要营销你的安全产品…<br>【摘要】本文讨论联邦贸易委员会（FTC）长期以来的权力，以保护消费者免受不公正和欺骗性的做法。将重点关注欺诈性声明和广告是否违反FTC法案，并就安全公司应该如何避免欺诈性索赔提供指导。还提出研究人员和安全专业人员可以要求向索赔公司做出挑战的问题。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-Alva-So-You-Want-To-Market-Your-Security-Product.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-Alva-So-You-Want-To-Market-Your-Security-Product.pdf</a></p>
+<hr>
+<h3 id="【2】WHAT-THEY’RE-TEACHING-KIDS-THESE-DAYS-COMPARING-SECURITY-CURRICULA-AND-ACCREDITATIONS-TO-INDUSTRY-NEEDS"><a href="#【2】WHAT-THEY’RE-TEACHING-KIDS-THESE-DAYS-COMPARING-SECURITY-CURRICULA-AND-ACCREDITATIONS-TO-INDUSTRY-NEEDS" class="headerlink" title="【2】WHAT THEY’RE TEACHING KIDS THESE DAYS: COMPARING SECURITY CURRICULA AND ACCREDITATIONS TO INDUSTRY NEEDS"></a>【2】WHAT THEY’RE TEACHING KIDS THESE DAYS: COMPARING SECURITY CURRICULA AND ACCREDITATIONS TO INDUSTRY NEEDS</h3><p>PRESENTED BY Chaim Sanders  &amp;     Rob Olson</p>
+<p>Tracks: <strong># Policy</strong>, <strong>#  Applied Security</strong></p>
+<p>他们今天教孩子们的是什么：比较安全课程和对工业需求的认可<br>【摘要】本文将探讨安全课程传统上是如何发展的，以及如何持续受到各种力量的影响。将研究一些提出的认证方案解决方案，并分析其优缺点。随后，我们将尝试确定每种模式的学生是如何产生的，并就如何规范安全教育提出自己的建议。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-Sanders-What-Theyre-Teaching-Kids-These-Days-Comparing-Security-Curricula-And-Accreditations-To-Industry-Needs.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-Sanders-What-Theyre-Teaching-Kids-These-Days-Comparing-Security-Curricula-And-Accreditations-To-Industry-Needs.pdf</a></p>
+<hr>
+<h3 id="【3】WHITE-HAT-PRIVILEGE-THE-LEGAL-LANDSCAPE-FOR-A-CYBERSECURITY-PROFESSIONAL-SEEKING-TO-SAFEGUARD-SENSITIVE-CLIENT-DATA"><a href="#【3】WHITE-HAT-PRIVILEGE-THE-LEGAL-LANDSCAPE-FOR-A-CYBERSECURITY-PROFESSIONAL-SEEKING-TO-SAFEGUARD-SENSITIVE-CLIENT-DATA" class="headerlink" title="【3】WHITE HAT PRIVILEGE: THE LEGAL LANDSCAPE FOR A CYBERSECURITY PROFESSIONAL SEEKING TO SAFEGUARD SENSITIVE CLIENT DATA"></a>【3】WHITE HAT PRIVILEGE: THE LEGAL LANDSCAPE FOR A CYBERSECURITY PROFESSIONAL SEEKING TO SAFEGUARD SENSITIVE CLIENT DATA</h3><p>PRESENTED BY Karen Neuman &amp; Jacob Osborn</p>
+<p>Tracks: <strong># Policy</strong>, <strong>#  Applied Security</strong></p>
+<p>白帽子特权：网络安全专业人士寻求保护敏感客户数据的法律环境<br>【摘要】本文将研究网络安全专业人员寻求保护客户敏感客户数据的法律环境。我们将讨论合同形成，风险分配以及在形成服务合同期间出现的其他法律问题。将重点处理PII，跨境数据转移，知识产权和出口管制问题的法律制度。而且由于安全专业人员不是静态的，我们还将审查边境口岸，包括TSA /海关的权限，以搜索和抓住可能拥有客户数据的设备。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-Osborn-White-Hat-Privilege-The-Legal-Landscape-For-A-Cybersecurity-Professional-Seeking-To-Safeguard-Sensitive-Client-Data.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-Osborn-White-Hat-Privilege-The-Legal-Landscape-For-A-Cybersecurity-Professional-Seeking-To-Safeguard-Sensitive-Client-Data.pdf</a></p>
+<hr>
+<h3 id="【4】BUG-COLLISIONS-MEET-GOVERNMENT-VULNERABILITY-DISCLOSURE"><a href="#【4】BUG-COLLISIONS-MEET-GOVERNMENT-VULNERABILITY-DISCLOSURE" class="headerlink" title="【4】BUG COLLISIONS MEET GOVERNMENT VULNERABILITY DISCLOSURE"></a>【4】BUG COLLISIONS MEET GOVERNMENT VULNERABILITY DISCLOSURE</h3><p>PRESENTED BY Trey Herr  &amp;     Jason Healey  &amp;  Kim Zetter  &amp;     Lillian Ablon  &amp;  Katie Moussouris</p>
+<p>Tracks: <strong># Policy</strong></p>
+<p>Bug的碰撞满足政府的漏洞披露<br>【摘要】脆弱性股票过程（VEP）有助于确定美国政府已知的软件漏洞是否会被泄露或保密。该计算的关键部分是其他方可能发现了同样的漏洞的可能性。本文将分开讨论从这些报告中得到的主要关键信息和其对政府的影响。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/thursday/us-17-Herr-Bug-Collisions-Meet-Government-Vulnerability-Disclosure.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/thursday/us-17-Herr-Bug-Collisions-Meet-Government-Vulnerability-Disclosure.pdf</a></p>
+<hr>
+<hr>
+<h2 id="Exploit-Development"><a href="#Exploit-Development" class="headerlink" title="Exploit Development"></a>Exploit Development</h2><h3 id="【1】MANY-BIRDS-ONE-STONE-EXPLOITING-A-SINGLE-SQLITE-VULNERABILITY-ACROSS-MULTIPLE-SOFTWARE"><a href="#【1】MANY-BIRDS-ONE-STONE-EXPLOITING-A-SINGLE-SQLITE-VULNERABILITY-ACROSS-MULTIPLE-SOFTWARE" class="headerlink" title="【1】MANY BIRDS, ONE STONE: EXPLOITING A SINGLE SQLITE VULNERABILITY ACROSS MULTIPLE SOFTWARE"></a>【1】MANY BIRDS, ONE STONE: EXPLOITING A SINGLE SQLITE VULNERABILITY ACROSS MULTIPLE SOFTWARE</h3><p>PRESENTED BY MSiji Feng  &amp;     Zhi Zhou  &amp;     Kun Yang</p>
+<p>Tracks: <strong>#  Exploit Development</strong></p>
+<p>一石二鸟：利用一个单一的SQLite漏洞穿过多种软件<br>【摘要】本文将研究几个可远程利用的内存损坏情况，以显示SQLite中的危险攻击面。同时介绍几个以前的SQLite问题，并讨论它们如何影响浏览器以及如何修复它们。此外，将提出一个在Pwn2Own 2017中被用来损害Apple Safari的SQLite新漏洞。最后将在PHP SQLite扩展中展示绕过PHP安全限制的SQLite利用。</p>
+<p>Slides：<a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-Feng-Many-Birds-One-Stone-Exploiting-A-Single-SQLite-Vulnerability-Across-Multiple-Software.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-Feng-Many-Birds-One-Stone-Exploiting-A-Single-SQLite-Vulnerability-Across-Multiple-Software.pdf</a></p>
+<hr>
+<h3 id="【2】TAKING-WINDOWS-10-KERNEL-EXPLOITATION-TO-THE-NEXT-LEVEL-–-LEVERAGING-WRITE-WHAT-WHERE-VULNERABILITIES-IN-CREATORS-UPDATE"><a href="#【2】TAKING-WINDOWS-10-KERNEL-EXPLOITATION-TO-THE-NEXT-LEVEL-–-LEVERAGING-WRITE-WHAT-WHERE-VULNERABILITIES-IN-CREATORS-UPDATE" class="headerlink" title="【2】TAKING WINDOWS 10 KERNEL EXPLOITATION TO THE NEXT LEVEL – LEVERAGING WRITE-WHAT-WHERE VULNERABILITIES IN CREATORS UPDATE"></a>【2】TAKING WINDOWS 10 KERNEL EXPLOITATION TO THE NEXT LEVEL – LEVERAGING WRITE-WHAT-WHERE VULNERABILITIES IN CREATORS UPDATE</h3><p>PRESENTED BY Morten Schenk</p>
+<p>Tracks: <strong>#  Exploit Development</strong>, <strong># Platform Security</strong></p>
+<p>把WINDOWS 10 KERNEL漏洞利用带入下一个级别–在CREATORS UPDATE中引用WRITE-WHAT-WHERE 漏洞<br>【摘要】本文回顾了许多强大的读写内核原语，提出的技术包括滥用Microsoft已经尝试多次锁定的内核模式的Window和Bitmap对象，提供一种通用的方法来利用WRITE-WHAT-WHERE 漏洞。将在公开两个Windows 10 Creators Update中以前未知的KASLR旁路，展示如何通过动态逆向工程实现页面表项的一般去随机化。总之，本文全面检查了Windows内核的利用，揭示了将来的内核驱动程序漏洞可以利用的多种通用方法。</p>
+<p>Slides：<a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-Schenk-Taking-Windows-10-Kernel-Exploitation-To-The-Next-Level%E2%80%93Leveraging-Write-What-Where-Vulnerabilities-In-Creators-Update.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-Schenk-Taking-Windows-10-Kernel-Exploitation-To-The-Next-Level%E2%80%93Leveraging-Write-What-Where-Vulnerabilities-In-Creators-Update.pdf</a></p>
+<hr>
+<h3 id="【3】BOCHSPWN-RELOADED-DETECTING-KERNEL-MEMORY-DISCLOSURE-WITH-X86-EMULATION-AND-TAINT-TRACKING"><a href="#【3】BOCHSPWN-RELOADED-DETECTING-KERNEL-MEMORY-DISCLOSURE-WITH-X86-EMULATION-AND-TAINT-TRACKING" class="headerlink" title="【3】BOCHSPWN RELOADED: DETECTING KERNEL MEMORY DISCLOSURE WITH X86 EMULATION AND TAINT TRACKING"></a>【3】BOCHSPWN RELOADED: DETECTING KERNEL MEMORY DISCLOSURE WITH X86 EMULATION AND TAINT TRACKING</h3><p>PRESENTED BY Mateusz Jurczyk</p>
+<p>Tracks: <strong>#  Exploit Development</strong>, <strong># Reverse Engineering</strong></p>
+<p>Bochspwn重新加载：通过x86仿真和跟踪技术检测内核内存泄漏<br>【摘要】本文介绍了一类内核漏洞–将未初始化的栈和堆内存公开给用户模式的应用程序，这种信息泄漏几乎没有足迹，普遍存在于现在的内核（尤其是Windows），可能会被滥用来抵御某些漏洞利用的缓解或者窃取在ring-0中的敏感数据。为了解决这个问题，开发了一种基于初步内核记忆的污迹跟踪的新型Bochspwn。</p>
+<p>Slides：<a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-Jurczyk-Bochspwn-Reloaded-Detecting-Kernel-Memory-Disclosure-With-X86-Emulation-And-Taint-Tracking.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-Jurczyk-Bochspwn-Reloaded-Detecting-Kernel-Memory-Disclosure-With-X86-Emulation-And-Taint-Tracking.pdf</a></p>
+<hr>
+<h3 id="【4】BROADPWN-REMOTELY-COMPROMISING-ANDROID-AND-IOS-VIA-A-BUG-IN-BROADCOM’S-WI-FI-CHIPSETS"><a href="#【4】BROADPWN-REMOTELY-COMPROMISING-ANDROID-AND-IOS-VIA-A-BUG-IN-BROADCOM’S-WI-FI-CHIPSETS" class="headerlink" title="【4】BROADPWN: REMOTELY COMPROMISING ANDROID AND IOS VIA A BUG IN BROADCOM’S WI-FI CHIPSETS"></a>【4】BROADPWN: REMOTELY COMPROMISING ANDROID AND IOS VIA A BUG IN BROADCOM’S WI-FI CHIPSETS</h3><p>PRESENTED BY Nitay Artenstein</p>
+<p>Tracks: <strong>#  Exploit Development</strong>, <strong># Reverse Engineering</strong></p>
+<p>BROADPWN：通过BROADCOM WI-FI芯片组bug远程控制ANDROID和IOS<br>【摘要】Broadpwn，是Broadcom Wi-Fi芯片组中的一个漏洞，可以在没有用户交互的情况下远程触发。本文将深入了解BCM4354,458和4359 Wi-Fi芯片组的内部结构，探讨神秘的封闭源HNDRTE操作系统的运作。然后讲述如何发现了bug并利用它来实现完整的代码执行，以及如何利用对Wi-Fi芯片的控制，以在主应用处理器中运行代码。</p>
+<p>Slides：<a href="https://www.blackhat.com/docs/us-17/thursday/us-17-Artenstein-Broadpwn-Remotely-Compromising-Android-And-iOS-Via-A-Bug-In-Broadcoms-Wifi-Chipsets.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/thursday/us-17-Artenstein-Broadpwn-Remotely-Compromising-Android-And-iOS-Via-A-Bug-In-Broadcoms-Wifi-Chipsets.pdf</a></p>
+<hr>
+<h3 id="【5】THE-ORIGIN-OF-ARRAY-SPECIES-HOW-STANDARDS-DRIVE-BUGS-IN-SCRIPT-ENGINES"><a href="#【5】THE-ORIGIN-OF-ARRAY-SPECIES-HOW-STANDARDS-DRIVE-BUGS-IN-SCRIPT-ENGINES" class="headerlink" title="【5】THE ORIGIN OF ARRAY [@@SPECIES]: HOW STANDARDS DRIVE BUGS IN SCRIPT ENGINES"></a>【5】THE ORIGIN OF ARRAY [@@SPECIES]: HOW STANDARDS DRIVE BUGS IN SCRIPT ENGINES</h3><p>PRESENTED BY Natalie Silvanovich</p>
+<p>Tracks: <strong>#  Exploit Development</strong>, <strong># Platform Security</strong></p>
+<p>数组的起源：标准如何驱动脚本引擎中的错误<br>【摘要】本文讨论了JavaScript的一些更有趣和不寻常的功能，以及它们如何导致各种软件的错误，包括Adobe Flash，Chrome，Microsoft Edge和Safari。</p>
+<p>Slides：<a href="https://www.blackhat.com/docs/us-17/thursday/us-17-Silvanovich-The-Origin-Of-Array-Symbol-Species.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/thursday/us-17-Silvanovich-The-Origin-Of-Array-Symbol-Species.pdf</a></p>
+<hr>
+<hr>
+<h2 id="Human-Factors"><a href="#Human-Factors" class="headerlink" title="Human Factors"></a>Human Factors</h2><h3 id="【1】WIRE-ME-THROUGH-MACHINE-LEARNING"><a href="#【1】WIRE-ME-THROUGH-MACHINE-LEARNING" class="headerlink" title="【1】WIRE ME THROUGH MACHINE LEARNING"></a>【1】WIRE ME THROUGH MACHINE LEARNING</h3><p>PRESENTED BY Ankit Singh  &amp;     Vijay Thaware</p>
+<p>Tracks:  <strong># Human Factors</strong>, <strong># Enterprise</strong></p>
+<p>通过机器学习WIRE ME<br>【摘要】本文将介绍攻击者通过机器学习设计和执行BEC（商业电子邮件妥协）攻击所使用的最重要的策略之一。BEC攻击是高度针对性的攻击，并通过熟练的社会工程进行高水平的研究。还将提供一个关于攻击者的机器学习模型如何在提供给它的信息的帮助下训练自己的演示，最后将讨论在机器学习的帮助下可以实现的缓解措施。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-Singh-Wire-Me-Through-Machine-Learning.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-Singh-Wire-Me-Through-Machine-Learning.pdf</a></p>
+<hr>
+<h3 id="【2】REAL-HUMANS-SIMULATED-ATTACKS-USABILITY-TESTING-WITH-ATTACK-SCENARIOS"><a href="#【2】REAL-HUMANS-SIMULATED-ATTACKS-USABILITY-TESTING-WITH-ATTACK-SCENARIOS" class="headerlink" title="【2】REAL HUMANS, SIMULATED ATTACKS: USABILITY TESTING WITH ATTACK SCENARIOS"></a>【2】REAL HUMANS, SIMULATED ATTACKS: USABILITY TESTING WITH ATTACK SCENARIOS</h3><p>PRESENTED BY Lorrie Cranor</p>
+<p>Tracks:  <strong># Human Factors</strong></p>
+<p>真人模拟攻击：攻击场景的可用性测试<br>【摘要】用户研究对于了解用户如何感知和与安全和隐私软件和功能的交互至关重要。在（模拟）风险的情况下进行用户研究是复杂的，本文将强调安全用户研究的重要性，并讨论在卡内基梅隆大学CyLab可用隐私和安全实验室使用的一些不同的用户研究方法。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-Cranor-Real-Users-Simulated-Attacks.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-Cranor-Real-Users-Simulated-Attacks.pdf</a></p>
+<hr>
+<h3 id="【3】BIG-GAME-THEORY-HUNTING-THE-PECULIARITIES-OF-HUMAN-BEHAVIOR-IN-THE-INFOSEC-GAME"><a href="#【3】BIG-GAME-THEORY-HUNTING-THE-PECULIARITIES-OF-HUMAN-BEHAVIOR-IN-THE-INFOSEC-GAME" class="headerlink" title="【3】BIG GAME THEORY HUNTING: THE PECULIARITIES OF HUMAN BEHAVIOR IN THE INFOSEC GAME"></a>【3】BIG GAME THEORY HUNTING: THE PECULIARITIES OF HUMAN BEHAVIOR IN THE INFOSEC GAME</h3><p>PRESENTED BY Kelly Shortridge</p>
+<p>Tracks:  <strong># Human Factors</strong>, <strong># Network Defense</strong></p>
+<p>大游戏理论探索：在信息安全的博弈中人的行为特点<br>【摘要】本文研究传统的游戏理论，并提出为什么行为博弈理论应该在防御哲学中占有一席之地。同时将解释信息安全游戏的“规则”，从研究中提出新的见解，研究维权者和攻击者如何具体地进行博弈，从理论到实践，看看行为博弈理论如何能够被切实地纳入维权者的战略决策流程。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-Shortridge-Big-Game-Theory-Hunting-The-Peculiarities-Of-Human-Behavior-In-The-Infosec-Game.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-Shortridge-Big-Game-Theory-Hunting-The-Peculiarities-Of-Human-Behavior-In-The-Infosec-Game.pdf</a></p>
+<hr>
+<h3 id="【4】SKYPE-amp-TYPE-KEYSTROKE-LEAKAGE-OVER-VOIP"><a href="#【4】SKYPE-amp-TYPE-KEYSTROKE-LEAKAGE-OVER-VOIP" class="headerlink" title="【4】SKYPE &amp; TYPE: KEYSTROKE LEAKAGE OVER VOIP"></a>【4】SKYPE &amp; TYPE: KEYSTROKE LEAKAGE OVER VOIP</h3><p>PRESENTED BY Daniele Lain  &amp;     Mauro Conti  &amp;     Gene Tsudik  &amp;     Alberto Compagno</p>
+<p>Tracks:  <strong># Human Factors</strong></p>
+<p>Skype＆Type：在VoIP上的按键泄漏<br>【摘要】本文通过观察，在VoIP电话期间，人们经常从事次要活动（包括打字），无意中会让潜在的窃听者充分访问其麦克风。从这些观察中，构建了涉及VoIP软件的被称为Skype＆Type（S＆T）的新攻击。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/thursday/us-17-Lain-Skype-&amp;-Type-Keystroke-Leakage-Over-VoIP.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/thursday/us-17-Lain-Skype-&amp;-Type-Keystroke-Leakage-Over-VoIP.pdf</a></p>
+<hr>
+<h3 id="【5】CYBER-WARGAMING-LESSONS-LEARNED-IN-INFLUENCING-SECURITY-STAKEHOLDERS-INSIDE-AND-OUTSIDE-YOUR-ORGANIZATION"><a href="#【5】CYBER-WARGAMING-LESSONS-LEARNED-IN-INFLUENCING-SECURITY-STAKEHOLDERS-INSIDE-AND-OUTSIDE-YOUR-ORGANIZATION" class="headerlink" title="【5】CYBER WARGAMING: LESSONS LEARNED IN INFLUENCING SECURITY STAKEHOLDERS INSIDE AND OUTSIDE YOUR ORGANIZATION"></a>【5】CYBER WARGAMING: LESSONS LEARNED IN INFLUENCING SECURITY STAKEHOLDERS INSIDE AND OUTSIDE YOUR ORGANIZATION</h3><p>PRESENTED BY Jason Nichols</p>
+<p>Tracks: <strong># Human Factors</strong>, <strong># Policy</strong></p>
+<p>网络战争：在安全利益攸关方内部和外部组织中学习的经验<br>【摘要】本文描述了如何创造一个现实的动手的战争环境，它不仅可以教会参与者攻击和防御，而且能够实现其他的组织优势。并将向感兴趣的技术参与者介绍游戏环境的技术架构。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/thursday/us-17-Nichols-Cyber-Wargaming-Lessons-Learned-In-Influencing-Stakeholders-Inside-And-Outside-Your-Organization.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/thursday/us-17-Nichols-Cyber-Wargaming-Lessons-Learned-In-Influencing-Stakeholders-Inside-And-Outside-Your-Organization.pdf</a></p>
+<hr>
+<hr>
+<h2 id="Internet-of-Things"><a href="#Internet-of-Things" class="headerlink" title="Internet of Things"></a>Internet of Things</h2><h3 id="【1】WHEN-IOT-ATTACKS-UNDERSTANDING-THE-SAFETY-RISKS-ASSOCIATED-WITH-CONNECTED-DEVICES"><a href="#【1】WHEN-IOT-ATTACKS-UNDERSTANDING-THE-SAFETY-RISKS-ASSOCIATED-WITH-CONNECTED-DEVICES" class="headerlink" title="【1】WHEN IOT ATTACKS: UNDERSTANDING THE SAFETY RISKS ASSOCIATED WITH CONNECTED DEVICES"></a>【1】WHEN IOT ATTACKS: UNDERSTANDING THE SAFETY RISKS ASSOCIATED WITH CONNECTED DEVICES</h3><p>PRESENTED BY Billy Rios  &amp;     Jonathan Butts</p>
+<p>Tracks: <strong># Internet of Things</strong>, <strong># Hardware/Embedded</strong></p>
+<p>当物联网攻击时：理解与连接设备相关的安全风险<br>【摘要】 本文将讨论物联网设备被重新利用对毫无戒心的用户进行物理攻击。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-Rios-When-IoT-Attacks-Understanding-The-Safety-Risks-Associated-With-Connected-Devices.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-Rios-When-IoT-Attacks-Understanding-The-Safety-Risks-Associated-With-Connected-Devices.pdf</a></p>
+<hr>
+<h3 id="【2】REDESIGNING-PKI-TO-SOLVE-REVOCATION-EXPIRATION-AND-ROTATION-PROBLEMS"><a href="#【2】REDESIGNING-PKI-TO-SOLVE-REVOCATION-EXPIRATION-AND-ROTATION-PROBLEMS" class="headerlink" title="【2】REDESIGNING PKI TO SOLVE REVOCATION, EXPIRATION, AND ROTATION PROBLEMS"></a>【2】REDESIGNING PKI TO SOLVE REVOCATION, EXPIRATION, AND ROTATION PROBLEMS</h3><p>PRESENTED BY Brian Knopf</p>
+<p>Tracks: <strong># Internet of Things</strong>, <strong># Cryptography</strong></p>
+<p>重新设计PKI解决撤销过期和循环问题<br>【摘要】 本文提出Neustar TDI，一个用于将PKI替换为具有实时撤销，关键循环，密钥重置/替换以及为每个设备，服务器，服务和用户提供个体认证功能的开源框架。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/thursday/us-17-Knopf-Redesigning-PKI-To-Solve-Revocation-Expiration-And-Rotation-Problems.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/thursday/us-17-Knopf-Redesigning-PKI-To-Solve-Revocation-Expiration-And-Rotation-Problems.pdf</a></p>
+<hr>
+<h3 id="【3】HUNTING-GPS-JAMMERS"><a href="#【3】HUNTING-GPS-JAMMERS" class="headerlink" title="【3】HUNTING GPS JAMMERS"></a>【3】HUNTING GPS JAMMERS</h3><p>PRESENTED BY Vlad Gostomelsky</p>
+<p>Tracks: <strong># Internet of Things</strong></p>
+<p>捕获GPS干扰器<br>【摘要】 本文介绍了卫星导航和计时系统的漏洞以及这些漏洞的利用方式。首先介绍基于GPS的系统的具体漏洞 - GPS的主要漏洞是由于卫星信号的信号强度非常低。讨论了RF干扰对卫星导航和定时系统的影响，并介绍了一些由实际干扰事件引起的干扰实例。同时介绍了GPS位置和时序欺骗，表明欺骗可以在RF级别或应用层进行（Pokemon GO游戏被呈现为这种攻击实例），并展示了利用GPS漏洞的实例。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/thursday/us-17-Gostomelsky-Hunting-GPS-Jammers.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/thursday/us-17-Gostomelsky-Hunting-GPS-Jammers.pdf</a></p>
+<hr>
+<h3 id="【4】FREE-FALL-HACKING-TESLA-FROM-WIRELESS-TO-CAN-BUS"><a href="#【4】FREE-FALL-HACKING-TESLA-FROM-WIRELESS-TO-CAN-BUS" class="headerlink" title="【4】FREE-FALL: HACKING TESLA FROM WIRELESS TO CAN BUS"></a>【4】FREE-FALL: HACKING TESLA FROM WIRELESS TO CAN BUS</h3><p>PRESENTED BY Sen Nie  &amp; Ling Liu  &amp;  Yuefeng Du</p>
+<p>Tracks: <strong># Internet of Things</strong>, <strong># Exploit Development</strong></p>
+<p>Free-Fall：从WIRELESS到CAN BUS破解特斯拉<br>【摘要】 本文利用了一系列复杂的漏洞，在停车和驾驶模式下成功实施了特斯拉模型S的远程攻击。攻击从无线（Wi-Fi / Cellular）获得入口，危及许多车载系统如IC，CID和网关，然后将恶意CAN消息插入CAN总线。将首次分享在特斯拉上的整个攻击链细节，然后揭示特斯拉的OTA机制和代码签名功能的实施，并对特斯拉的新缓解措施进行探讨。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/thursday/us-17-Nie-Free-Fall-Hacking-Tesla-From-Wireless-To-CAN-Bus.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/thursday/us-17-Nie-Free-Fall-Hacking-Tesla-From-Wireless-To-CAN-Bus.pdf</a></p>
+<hr>
+<h3 id="【5】TAKING-OVER-THE-WORLD-THROUGH-MQTT-AFTERMATH"><a href="#【5】TAKING-OVER-THE-WORLD-THROUGH-MQTT-AFTERMATH" class="headerlink" title="【5】TAKING OVER THE WORLD THROUGH MQTT - AFTERMATH"></a>【5】TAKING OVER THE WORLD THROUGH MQTT - AFTERMATH</h3><p>PRESENTED BY Lucas Lundgren</p>
+<p>Tracks: <strong># Internet of Things</strong>, <strong># Human Factors</strong></p>
+<p>通过MQTT接管世界 -后果<br>【摘要】 MQTT由许多M2M IoT设备使用，特别是需要低带宽通信的设备。本文发现了一个非常基本的fuzzer和几个关于安全的报告。创建了测试端点的小工具，发现协议数据在大多数时候会被写入SQL数据库，所以还将通过这个协议来看SQL和服务器攻击。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/thursday/us-17-Lundgren-Taking-Over-The-World-Through-Mqtt-Aftermath.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/thursday/us-17-Lundgren-Taking-Over-The-World-Through-Mqtt-Aftermath.pdf</a></p>
+<hr>
+<h3 id="【6】IOTCANDYJAR-TOWARDS-AN-INTELLIGENT-INTERACTION-HONEYPOT-FOR-IOT-DEVICES"><a href="#【6】IOTCANDYJAR-TOWARDS-AN-INTELLIGENT-INTERACTION-HONEYPOT-FOR-IOT-DEVICES" class="headerlink" title="【6】IOTCANDYJAR: TOWARDS AN INTELLIGENT-INTERACTION HONEYPOT FOR IOT DEVICES"></a>【6】IOTCANDYJAR: TOWARDS AN INTELLIGENT-INTERACTION HONEYPOT FOR IOT DEVICES</h3><p>PRESENTED BY Tongbo Luo  &amp;     Zhaoyan Xu  &amp;     Xin Ouyang  &amp;     Xing Jin</p>
+<p>Tracks: <strong># Internet of Things</strong>, <strong># Network Defense</strong></p>
+<p>IOTCANDYJAR：为物联网设备提供智能交互的蜜罐<br>【摘要】 本文专注于改进蜜罐来改善物联网的安全性，并提出为什么我们需要巨大的创新来构建IoT设备的蜜罐。提出了一种自动的方式来学习物联网设备的行为知识，构建“智能交互”蜜罐。并利用多种机器学习技术来提高质量和数量。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/thursday/us-17-Luo-Iotcandyjar-Towards-An-Intelligent-Interaction-Honeypot-For-IoT-Devices.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/thursday/us-17-Luo-Iotcandyjar-Towards-An-Intelligent-Interaction-Honeypot-For-IoT-Devices.pdf</a></p>
+<hr>
+<hr>
+<h2 id="Smart-Grid-Industrial-Security"><a href="#Smart-Grid-Industrial-Security" class="headerlink" title="Smart Grid/Industrial Security"></a>Smart Grid/Industrial Security</h2><h3 id="【1】ADVENTURES-IN-ATTACKING-WIND-FARM-CONTROL-NETWORKS"><a href="#【1】ADVENTURES-IN-ATTACKING-WIND-FARM-CONTROL-NETWORKS" class="headerlink" title="【1】ADVENTURES IN ATTACKING WIND FARM CONTROL NETWORKS"></a>【1】ADVENTURES IN ATTACKING WIND FARM CONTROL NETWORKS</h3><p>PRESENTED BY Jason Staggs</p>
+<p>Tracks: <strong># Smart Grid/Industrial Security</strong>, <strong># Network Defense</strong></p>
+<p>攻击风电农场控制网络的挑战<br>【摘要】 本文说明了风电场控制网络是如何工作的，以及如何对风电场的运行实施攻击，从而产生负面影响。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-Staggs-Adventures-In-Attacking-Wind-Farm-Control-Networks.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-Staggs-Adventures-In-Attacking-Wind-Farm-Control-Networks.pdf</a></p>
+<hr>
+<h3 id="【2】INDUSTROYER-CRASHOVERRIDE-ZERO-THINGS-COOL-ABOUT-A-THREAT-GROUP-TARGETING-THE-POWER-GRID"><a href="#【2】INDUSTROYER-CRASHOVERRIDE-ZERO-THINGS-COOL-ABOUT-A-THREAT-GROUP-TARGETING-THE-POWER-GRID" class="headerlink" title="【2】INDUSTROYER/CRASHOVERRIDE: ZERO THINGS COOL ABOUT A THREAT GROUP TARGETING THE POWER GRID"></a>【2】INDUSTROYER/CRASHOVERRIDE: ZERO THINGS COOL ABOUT A THREAT GROUP TARGETING THE POWER GRID</h3><p>PRESENTED BY Robert Lee  &amp;     Joe Slowik  &amp;  Ben Miller  &amp;     Anton Cherepanov  &amp; Robert Lipovsky</p>
+<p>Tracks: <strong># Smart Grid/Industrial Security</strong>, <strong># Network Defense</strong></p>
+<p>INDUSTROYER/CRASHOVERRIDE:没有事情在针对电力网络的威胁组织上是酷的<br>【摘要】 本文通过乌克兰2015年和2016年的事件，重点关注恶意软件，以及其技术分析，对网格操作的影响。从这样一个重大的威胁中学习，对确保我们的防御系统保持安全至关重要。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-Lee-Industroyer-Crashoverride-Zero-Things-Cool-About-A-Threat-Group-Targeting-The-Power-Grid.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-Lee-Industroyer-Crashoverride-Zero-Things-Cool-About-A-Threat-Group-Targeting-The-Power-Grid.pdf</a></p>
+<hr>
+<h3 id="【3】-IN-SECURITY-IN-BUILDING-AUTOMATION-HOW-TO-CREATE-DARK-BUILDINGS-WITH-LIGHT-SPEED"><a href="#【3】-IN-SECURITY-IN-BUILDING-AUTOMATION-HOW-TO-CREATE-DARK-BUILDINGS-WITH-LIGHT-SPEED" class="headerlink" title="【3】(IN)SECURITY IN BUILDING AUTOMATION: HOW TO CREATE DARK BUILDINGS WITH LIGHT SPEED"></a>【3】(IN)SECURITY IN BUILDING AUTOMATION: HOW TO CREATE DARK BUILDINGS WITH LIGHT SPEED</h3><p>PRESENTED BY Thomas Brandstetter</p>
+<p>Tracks: <strong># Smart Grid/Industrial Security</strong>, <strong># Internet of Things</strong></p>
+<p>建筑自动化中的安全性：如何以光速创造黑暗的建筑物<br>【摘要】 本文通过应该考虑到的建筑自动化系统描述了典型的攻击场景，以及在没有漏洞的情况下，如何利用常见建筑自动化协议中像BACnet/IP和KNXnet/IP的一些协议功能来支持恶意攻击者。还将讨论安全工具箱中值得注意的工具，从建筑自动化工具箱中进行一些攻击或其准备步骤。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-Brandstetter-insecurity-In-Building-Automation-How-To-Create-Dark-Buildings-With-Light-Speed.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-Brandstetter-insecurity-In-Building-Automation-How-To-Create-Dark-Buildings-With-Light-Speed.pdf</a></p>
+<hr>
+<h3 id="【4】BREAKING-THE-LAWS-OF-ROBOTICS-ATTACKING-INDUSTRIAL-ROBOTS"><a href="#【4】BREAKING-THE-LAWS-OF-ROBOTICS-ATTACKING-INDUSTRIAL-ROBOTS" class="headerlink" title="【4】BREAKING THE LAWS OF ROBOTICS: ATTACKING INDUSTRIAL ROBOTS"></a>【4】BREAKING THE LAWS OF ROBOTICS: ATTACKING INDUSTRIAL ROBOTS</h3><p>PRESENTED BY Davide Quarta  &amp;     Marcello Pogliani  &amp;     Mario Polino  &amp;  Federico Maggi  &amp;     Andrea Maria Zanchettin  &amp;     Stefano Zanero</p>
+<p>Tracks: <strong># Smart Grid/Industrial Security</strong>, <strong>#  Hardware/Embedded</strong></p>
+<p>打破机器人的规律：攻击工业机器人<br>【摘要】 工业机器人必须遵循三个基本规律：通过传感器从物理世界准确地“读取”，通过执行器“写”（即执行动作），拒绝执行自我损害的控制逻辑，最重要的是从不伤害人类。本文通过结合在机器人上发现的一组漏洞，将展示远程攻击者如何能够违反这些基本规律。将涵盖深入的技术方面（例如逆向工程和漏洞细节以及攻击PoC），以及对工业路由器和机器人的安全状况的广泛讨论。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/thursday/us-17-Quarta-Breaking-The-Laws-Of-Robotics-Attacking-Industrial-Robots.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/thursday/us-17-Quarta-Breaking-The-Laws-Of-Robotics-Attacking-Industrial-Robots.pdf</a></p>
+<hr>
+<h3 id="【5】EVIL-BUBBLES-OR-HOW-TO-DELIVER-ATTACK-PAYLOAD-VIA-THE-PHYSICS-OF-THE-PROCESS"><a href="#【5】EVIL-BUBBLES-OR-HOW-TO-DELIVER-ATTACK-PAYLOAD-VIA-THE-PHYSICS-OF-THE-PROCESS" class="headerlink" title="【5】EVIL BUBBLES OR HOW TO DELIVER ATTACK PAYLOAD VIA THE PHYSICS OF THE PROCESS"></a>【5】EVIL BUBBLES OR HOW TO DELIVER ATTACK PAYLOAD VIA THE PHYSICS OF THE PROCESS</h3><p>PRESENTED BY  Marina Krotofil</p>
+<p>Tracks: <strong># Smart Grid/Industrial Security</strong>, <strong>#Hardware/Embedded</strong></p>
+<p>邪恶的泡泡，如何通过物理过程传送攻击有效载荷<br>【摘要】 本文将进行实物演示在运行中受到破坏的场景，并通过伪造阀门定位器传感器信号以隐藏操作人员的攻击。然后将讨论对这次攻击的检测。采取过程数据合理性和一致性检查的形式，通过监测泵的健康状况，确定进程的持续不利状态，并准确确定持续的过程及其可能的原因。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-Krotofil-Evil-Bubbles-Or-How-To-Deliver-Attack-Payload-Via-The-Physics-Of-The-Process.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-Krotofil-Evil-Bubbles-Or-How-To-Deliver-Attack-Payload-Via-The-Physics-Of-The-Process.pdf</a></p>
+<hr>
+<h3 id="【6】AND-THEN-THE-SCRIPT-KIDDIE-SAID-“LET-THERE-BE-NO-LIGHT-”-ARE-CYBER-ATTACKS-ON-THE-POWER-GRID-LIMITED-TO-NATION-STATE-ACTORS"><a href="#【6】AND-THEN-THE-SCRIPT-KIDDIE-SAID-“LET-THERE-BE-NO-LIGHT-”-ARE-CYBER-ATTACKS-ON-THE-POWER-GRID-LIMITED-TO-NATION-STATE-ACTORS" class="headerlink" title="【6】AND THEN THE SCRIPT-KIDDIE SAID, “LET THERE BE NO LIGHT.” ARE CYBER-ATTACKS ON THE POWER GRID LIMITED TO NATION-STATE ACTORS?"></a>【6】AND THEN THE SCRIPT-KIDDIE SAID, “LET THERE BE NO LIGHT.” ARE CYBER-ATTACKS ON THE POWER GRID LIMITED TO NATION-STATE ACTORS?</h3><p>PRESENTED BY  Anastasis Keliris  &amp;     Mihalis Maniatakos  &amp;     Charalambos Konstantinou</p>
+<p>Tracks: <strong># Smart Grid/Industrial Security</strong></p>
+<p>Script-kiddie说让这里没有光。对电力网的网络攻击只局限在国家级攻击者的范围吗？<br>【摘要】 本文提供一种用有限预算来攻击电力系统的结构化方法。首先将展示从网络获得的信息，这些信息可用来建模和分析目标电力系统，以及模拟全球的电力系统。然后将展示在电力系统中广泛部署的通用Electric Multilin产品中发现的关键漏洞，还将展示一种通过网络远程指纹影响设备的技术。现场演示如何利用feeder管理中继器漏洞对一个国家产生重大影响。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/thursday/us-17-Keliris-And-Then-The-Script-Kiddie-Said-Let-There-Be-No-Light-Are-Cyberattacks-On-The-Power-Grid-Limited-To-Nation-State-Actors-wp.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/thursday/us-17-Keliris-And-Then-The-Script-Kiddie-Said-Let-There-Be-No-Light-Are-Cyberattacks-On-The-Power-Grid-Limited-To-Nation-State-Actors-wp.pdf</a></p>
+<hr>
+<hr>
+<h2 id="Security-Development-Lifecycle"><a href="#Security-Development-Lifecycle" class="headerlink" title="Security Development Lifecycle"></a>Security Development Lifecycle</h2><h3 id="【1】ORANGE-IS-THE-NEW-PURPLE-HOW-AND-WHY-TO-INTEGRATE-DEVELOPMENT-TEAMS-WITH-RED-BLUE-TEAMS-TO-BUILD-MORE-SECURE-SOFTWARE"><a href="#【1】ORANGE-IS-THE-NEW-PURPLE-HOW-AND-WHY-TO-INTEGRATE-DEVELOPMENT-TEAMS-WITH-RED-BLUE-TEAMS-TO-BUILD-MORE-SECURE-SOFTWARE" class="headerlink" title="【1】ORANGE IS THE NEW PURPLE - HOW AND WHY TO INTEGRATE DEVELOPMENT TEAMS WITH RED/BLUE TEAMS TO BUILD MORE SECURE SOFTWARE"></a>【1】ORANGE IS THE NEW PURPLE - HOW AND WHY TO INTEGRATE DEVELOPMENT TEAMS WITH RED/BLUE TEAMS TO BUILD MORE SECURE SOFTWARE</h3><p>PRESENTED BY April C. Wright</p>
+<p>Tracks: <strong>#  Security Development Lifecycle</strong>, <strong># Platform Security</strong></p>
+<p>橙色是新的紫色-如何以及为什么要以红色/蓝色的方式整合开发团队来建立更安全的软件<br>【摘要】本文引入一个新的范例，将开发人员与进攻和防守团队整合，以加强SDLC。 “Red + Yellow == Orange &amp;&amp; Blue + Yellow == Green”这个新概念重点关注开发人员作为安全保障活动的重要组成部分，与进攻型与防守型队伍相结合。橙色团队通过创建一个永久性攻击性测试和威胁建模的循环，通过高水平的专用交互使软件更加安全，从而增加了SDLC的价值。绿色团队帮助确保软件能够提供良好的DFIR信息时增值。并且评估不同的团队组合如何导致更安全的软件。</p>
+<p>Slides: <a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-Wright-Orange-Is-The-New-Purple.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-Wright-Orange-Is-The-New-Purple.pdf</a></p>
+<hr>
+<h3 id="【2】DELIVERING-JAVASCRIPT-TO-WORLD-DOG"><a href="#【2】DELIVERING-JAVASCRIPT-TO-WORLD-DOG" class="headerlink" title="【2】DELIVERING JAVASCRIPT TO WORLD+DOG"></a>【2】DELIVERING JAVASCRIPT TO WORLD+DOG</h3><p>PRESENTED BY Kyle Randolph</p>
+<p>Tracks: <strong># Security Development Lifecycle</strong>, <strong># Platform Security</strong></p>
+<p>向世界+DOG发送JavaScript<br>【摘要】本文将审查在网络上提供第三方JavaScript的威胁模型，讨论将SDL集中在这些缺陷上的策略。然后将探讨从SaaS平台到CDNs到浏览器中交付架构的关键点，最后分享构建保护JavaScript传递的产品和工程文化的策略。</p>
+<p>Slides：<a href="https://www.blackhat.com/docs/us-17/wednesday/us-17-Randolph-Delivering-Javascript-to-World-Plus-Dog.pdf" target="_blank" rel="external">https://www.blackhat.com/docs/us-17/wednesday/us-17-Randolph-Delivering-Javascript-to-World-Plus-Dog.pdf</a></p>
+
+      
+    </div>
+    
+    
+      <footer class="article-footer">
+        
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Blackhat/">Blackhat</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Notes/">Notes</a></li></ul>
+
+      </footer>
+    
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/20170830/virtulization-vul/" id="article-nav-newer" class="article-nav-link-wrap">
+      <div class="article-nav-title"><span>&lt;</span>&nbsp;
+        
+          虚拟化漏洞总结
+        
+      </div>
+    </a>
+  
+  
+    <a href="/20170822/rop-attack-defense/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">ROP攻与防&nbsp;<span>&gt;</span></div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+
+
+<div class="share_addthis">
+  <div class="sharing addthis_toolbox share">
+    <a class="addthis_button_facebook_like"></a>
+    <a class="addthis_button_tweet"></a>
+    <a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-560c64c35486b3d4" async="async"></script>
+</div>
+
+
+
+
+
+</section>
+    <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2017 Diting0x&nbsp;
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>, theme by <a href="http://github.com/ppoffice">PPOffice</a>
+    </div>
+  </div>
+</footer>
+    
+
+<script src="/js/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+  </div>
+</body>
+</html>
