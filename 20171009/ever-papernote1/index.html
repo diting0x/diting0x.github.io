@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>详细解读：Secure and Efficient Multi-variant Execution Using Hardware-assisted Process Virtualization - 善守者</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="曾经的论文笔记系列 使用硬件辅助进程虚拟化的安全高效的多变体执行—— Koen Koning [Vrije Universiteit Amsterdam] [koen.koning@vu.nl] 摘要多变体执行（MVX）解决方案可以通过在并行运行的各种程序变体中观察到不同行为来潜在地检测任意内存错误利用。然而，之前的MVX由于其严重的性能限制，在安全性方面的没有实际适用性。 本文将介绍MvArmo">
+<meta name="keywords" content="Notes,Virtualization">
+<meta property="og:type" content="article">
+<meta property="og:title" content="详细解读：Secure and Efficient Multi-variant Execution Using Hardware-assisted Process Virtualization">
+<meta property="og:url" content="https://diting0x.github.io/20171009/ever-papernote1/index.html">
+<meta property="og:site_name" content="善守者">
+<meta property="og:description" content="曾经的论文笔记系列 使用硬件辅助进程虚拟化的安全高效的多变体执行—— Koen Koning [Vrije Universiteit Amsterdam] [koen.koning@vu.nl] 摘要多变体执行（MVX）解决方案可以通过在并行运行的各种程序变体中观察到不同行为来潜在地检测任意内存错误利用。然而，之前的MVX由于其严重的性能限制，在安全性方面的没有实际适用性。 本文将介绍MvArmo">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/mvxfig1.png">
+<meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/mvxfig2.png">
+<meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/mvxfig3.png">
+<meta property="og:updated_time" content="2017-12-29T03:33:57.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="详细解读：Secure and Efficient Multi-variant Execution Using Hardware-assisted Process Virtualization">
+<meta name="twitter:description" content="曾经的论文笔记系列 使用硬件辅助进程虚拟化的安全高效的多变体执行—— Koen Koning [Vrije Universiteit Amsterdam] [koen.koning@vu.nl] 摘要多变体执行（MVX）解决方案可以通过在并行运行的各种程序变体中观察到不同行为来潜在地检测任意内存错误利用。然而，之前的MVX由于其严重的性能限制，在安全性方面的没有实际适用性。 本文将介绍MvArmo">
+<meta name="twitter:image" content="http://oij0laovn.bkt.clouddn.com/mvxfig1.png">
+  
+  
+  <link href="/webfonts/ptserif/main.css" rel='stylesheet' type='text/css'>
+  <link href="/webfonts/source-code-pro/main.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <header id="header">
+  <div id="header-outer" class="outer">
+    <div id="header-inner" class="inner">
+      <a id="main-nav-toggle" class="nav-icon" href="javascript:;"></a>
+      <a id="logo" class="logo logo-text" href="/">谛听</a>
+      <nav id="main-nav">
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+          <a class="main-nav-link" href="/timeline">Timeline</a>
+        
+          <a class="main-nav-link" href="/shoulders">Shoulders</a>
+        
+          <a class="main-nav-link" href="/about">About</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        <div id="search-form-wrap">
+          <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://diting0x.github.io"></form>
+        </div>
+      </nav>
+    </div>
+  </div>
+</header>
+    <section id="main" class="outer"><article id="post-ever-papernote1" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      详细解读：Secure and Efficient Multi-variant Execution Using Hardware-assisted Process Virtualization
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/20171009/ever-papernote1/" class="article-date">
+  <time datetime="2017-10-09T03:30:16.000Z" itemprop="datePublished">2017-10-09</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/曾经的论文笔记/">曾经的论文笔记</a>
+  </div>
+
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>曾经的论文笔记系列</p>
+<h2 id="使用硬件辅助进程虚拟化的安全高效的多变体执行"><a href="#使用硬件辅助进程虚拟化的安全高效的多变体执行" class="headerlink" title="使用硬件辅助进程虚拟化的安全高效的多变体执行"></a>使用硬件辅助进程虚拟化的安全高效的多变体执行</h2><p>—— Koen Koning [Vrije Universiteit Amsterdam] [koen.koning@vu.nl]</p>
+<h2 id="摘要"><a href="#摘要" class="headerlink" title="摘要"></a>摘要</h2><p>多变体执行（MVX）解决方案可以通过在并行运行的各种程序变体中观察到不同行为来潜在地检测任意内存错误利用。然而，之前的MVX由于其严重的性能限制，在安全性方面的没有实际适用性。</p>
+<p>本文将介绍<strong>MvArmor</strong>，这是一个MVX系统，它使用<strong>硬件辅助的进程虚拟化</strong>以高效但安全的方式监控变体的不同行为。为了提供针对内存错误利用的全面保护，MvArmor依靠一个<strong>新的MVX感知变体生成策略</strong>。该系统支持用户可配置的安全策略来调整性能和安全性之间的权衡。我们的分析表明，MvArmor即使在保守的检测策略下，仍然可以以适度的性能开销为代价抵御许多类型的现代攻击。</p>
+<hr>
+<h2 id="1-Introduction-介绍"><a href="#1-Introduction-介绍" class="headerlink" title="1.Introduction 介绍"></a>1.Introduction 介绍</h2><p>C和C ++程序中的内存错误仍然是今天最严重的安全问题之一。即使像Heartbleed这样一个不复杂的内存错误利用，也可以轻易地危及全球无数用户的私人数据，并带来严重的后果。</p>
+<p>现代操作系统部署了多种措施来防范内存错误利用：</p>
+<ul>
+<li>数据执行保护（DEP）</li>
+<li>地址空间布局随机化（ASLR）</li>
+<li>堆栈金丝雀</li>
+</ul>
+<p>以上广泛部署的安全防护都可以被现代的<strong>代码重用攻击</strong>绕过。</p>
+<p>研究界提出的更强大的安全防御要么需要<strong>重新编译程序和所有共享库</strong>（可部署性受限），要么<strong>只保护所有可能的内存攻击的子集</strong>（安全性受限）。例如，流行的防止控制流转移攻击的控制流完整性（CFI）解决方案，针对只有数据的攻击（如Heartbleed）和甚至针对依靠程序中合法控制流的控制流分流攻击是无效的。</p>
+<p>防御和防止任意攻击的需求导致需要更全面的解决方案。<strong>MVX系统最早由Cox等人在2006年提出，两种或更多的内存多样化，但在语义上同等的软件变体并行，并从语义上分歧的行为中检测内存攻击。这些变体运行在同一台机器上（利用多核CPU）并在系统调用级别上同步。</strong></p>
+<p><strong>传统MVX缺点</strong>：</p>
+<ul>
+<li>实现运行的实时性能不佳，<strong>系统调用监控机制</strong>开销太大使其在实践中不可用。</li>
+<li>有限的<strong>变体生成策略</strong>通常不能提供足够的保护来防止更复杂的内存攻击。</li>
+</ul>
+<p><strong>MvArmor的贡献</strong>：</p>
+<ul>
+<li><p>我们提出一个<strong>基于硬件辅助进程虚拟化的MVX设计</strong>。我们的设计高效地将MVX监控器的执行与运行的变体和底层内核分开，与之前的相比，提供了卓越的性能和安全设计。</p>
+</li>
+<li><p>我们提出了一种<strong>基于MVX感知分配器抽象的新型变体生成策略</strong>。我们的策略在我们的MVX设计中使用时被证明是有效的，可以提供强大的安全保证，防止传统和现代的内存错误利用。</p>
+</li>
+<li><p>我们提供了一个安全高效的MVX系统MvArmor.MvArmor在Dune之上实现了我们的设计，以保护商业Linux程序，并提供灵活的安全策略来鼓励部署。我们使用标准的基准测试和流行的真实世界的服务器程序评估MVArmor，显示MvArmor提供了强大的防御任意内存攻击的能力，同时比任何现有的安全相关的MVX解决方案性能都要好得多（SPEC CINT2006的开销是9％，服务器应用平均只有55％，即使是最保守的安全政策）。</p>
+</li>
+</ul>
+<hr>
+<h2 id="2-Background-背景知识"><a href="#2-Background-背景知识" class="headerlink" title="2.Background 背景知识"></a>2.Background 背景知识</h2><p>每个MVX系统都包含<strong>两个主要组件</strong>：运行并同步变体的<strong>监控器</strong>和<strong>变体生成策略</strong>，这两者对整个系统的安全性和性能都有很大的影响。</p>
+<h3 id="2-1监控器"><a href="#2-1监控器" class="headerlink" title="2.1监控器"></a>2.1监控器</h3><ul>
+<li><strong>MVX监控器负责比较和同步正在运行的进程变体的执行</strong>。这些变体都运行在同一个系统上，理想情况下每个变体都有专门分配的核-我们假设在现代多核架构中，许多核可以明确地专用于对安全敏感的应用程序。监控器本身可能由几个进程组成，例如每一个变体通过共享内存进行通信的进程。</li>
+<li>完整的MVX系统（包括监控器）被设计为<strong>用户透明</strong>的应用程序。例如，对于在MVX下运行的Web服务器，用户的请求将分发给所有变体。监控器还将组合所有Web服务器变体的响应，并让用户产生直接与单个Web服务器实例进行通信的错觉。</li>
+<li>每当这些响应（或其他操作）在各种变体之间不等同时，监控器就可立即检测到攻击企图（因为正常的操作应该不会触发分歧行为）并且在攻击者可以造成任何伤害之前停止变体。一般来说，MVX不会导致更多的文件系统和套接字I/O，<strong>因为是监控器而不是每个变体来有效地执行所有系统调用。</strong></li>
+</ul>
+<p>在大多数情况下，<strong>系统调用被用作同步点</strong>，因为它们通常是每个进程与环境交互的主要方式（例如文件系统操作或套接字操作）。在系统调用级别运行的监控器可以捕获和控制外部行为，同时仍然允许每个变体执行不同的内部行为。</p>
+<p><strong>监控器必须能够拦截系统调用和它们的参数来比较不同变体的进程行为。它还必须能够重写参数，阻止系统调用并修改返回值（或内存）</strong>，以确保所有变体之间的统一和无副作用的系统调用处理。总的来说，监控器需要<strong>确保所有的变体暴露于相同的环境视图和信息</strong>（例如，PID），以避免无意的分歧行为。</p>
+<p>以前的MVX系统中已经使用了几种策略来拦截系统调用，但是它们都受到重要的性能或安全性限制。为了深入分析这些限制，我们评估了由现有的系统调用插入策略引起的运行时间开销，通过重复发出<strong><em>getpid</em></strong> 系统调用的简单标记。图1给出了我们在<strong>传递（即将原始系统调用转发到底层OS内核）</strong>和<strong>仿真（即立即将结果返回到应用）</strong>模式中的结果。</p>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/mvxfig1" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/mvxfig1.png" width="593"></a><br>    <figcaption></figcaption><br></figure>
+
+<p>如图所示:</p>
+<ul>
+<li><p>基于<strong>可加载内核模块（LKM）</strong>的MVX监控器在两种操作模式下实现了最高效的系统调用插入策略，因为它不引入额外的上下文切换，并且可以直接访问进程状态。早期的MVX系统采用的这个策略的<strong>问题</strong>是监控器完全在内核中运行。这会导致可信计算基础（TCB）的大幅度增加和可部署性降低：监控器中的单个错误会影响整个系统，并且内部的内核API非常不稳定。</p>
+</li>
+<li><p>传统的基于<strong><em>ptrace</em></strong> 的MVX实现依赖于UNIX进程跟踪API来实现可部署但效率非常低的系统调用插入策略。这个策略引入了监控器和被跟踪进程之间在每一个系统调用上的多个上下文切换，从而导致在microbenchmark中的开销最高（高达〜217倍）。在64位系统上，使用<strong><em>ptrace</em></strong> 的监控器不能阻塞系统调用，使得仿真甚至比传递负荷更大。使用<strong><em>ptrace</em></strong> 进行系统调用监控也易受TOCTOU攻击的影响，这些攻击很难解决，因为操作之间的延迟很大，以及监控器与应用程序地址空间之间的访问受到限制。</p>
+</li>
+<li><p>最近的MVX监控器实现依靠<strong>静态二进制工具（SBI）</strong>来重写二进制文件，并用监控器调用替代任何系统调用指令（例如，int $ 0x80或syscall）。如图1所示，这种系统调用插入策略效率更高（基于Dyninst SBI框架，可达到约5倍的时间），因为它不需要上下文切换，甚至在仿真模式下不需要模式切换。不幸的是，这种策略通常不适用于安全应用程序，因为攻击者可以篡改进程内监控器状态，或者简单地运行未检查未对齐的系统调用指令（不是正常指令流的一部分，因为x86不强制对齐）来绕过系统调用插入和逃避检测。</p>
+</li>
+<li>基于<strong>动态二进制翻译（DBT）</strong>的实现将能够检测对齐和未对齐的指令并解决后一个问题，代价是稍高的系统调用插入开销（基于DynamoRIO DBT框架，开销高达9倍），而且在系统调用执行期间也是一个不小的影响。为了充分解决前一个问题，基于DBT的解决方案需要部署额外的工具（例如，基于软件的故障隔离[36]），但这也会进一步增加系统调用执行期间的开销。</li>
+</ul>
+<p>而<strong>MvArmor</strong>则依靠<strong>硬件级的进程虚拟化</strong>来实现系统调用介入。使用<strong>Dune将常规的Linux进程虚拟化</strong>，并将其置于自己的（硬件支持的）虚拟环境中。如图1所示，与其他技术相比，这种策略非常高效（getpid()），并且满足我们所有的安全需求：小型系统的TCB，无进程状态的完全隔离的监控器，不可绕过（基于陷阱）的系统调用介入机制。此外，仿真模式的优异性能和访问特权CPU特性的能力为libOS风格的优化提供了有趣的机会。</p>
+<h3 id="2-2变体生成"><a href="#2-2变体生成" class="headerlink" title="2.2变体生成"></a>2.2变体生成</h3><p>变体生成策略对MVX系统解决的攻击类型具有强大的影响。<strong>理想情况下，任何攻击最终都会导致变体之间的不同行为</strong>。例如，依赖ASLR进行变体生成，使得两个或多个变体共享代码页不太可能在相同的地址上，使得像ROP这样的代码重用攻击更加困难。通过扩展这个策略来使用MVX感知（即不重叠）的地址空间，可以完全防止传统的代码重用攻击。这是因为没有代码指针可能在多个变体中是有效的，因此除了其中一个变体以外，在对其进行解引用时会导致错误。虽然这种方法也将阻止完全依赖于绝对内存对象地址的任意内存读写攻击（例如，数据指针重写）），但它不能阻止仅依赖于内存对象之间的相对距离的攻击。例如，基于栈或堆的缓冲区越界读会揭露私人数据（例如，密钥），溢出破坏敏感的非指针数据（例如，UIDs）仍然无法避免，因为这些攻击只使用相对内存访问。</p>
+<p>可替代的变体生成策略包括颠倒栈的方向和随机化指令集。这些策略增加了一些额外的安全性（例如，分别只解决基于堆栈的和代码注入攻击），并且引入不小的开销。</p>
+<p>相比之下，<strong>MvArmor</strong>依赖于一种新的MVX感知的变体生成策略，该策略旨在尽量减少对运行时性能的影响，同时提供强大的安全保证，以<strong>抵御依赖于内存中绝对和相对访问的任意类别的攻击</strong>。安全策略允许用户在不断增加的保护级别（概率和确定性）之间进行选择，代价是更大的性能开销。</p>
+<p>最后，使用MVX系统的优势在于，它可以以更少的开销同时保护这些攻击类型中的多个（给予足够的备用CPU核心和资源），并且一般不需要访问系统的源或重新编译系统库函数。</p>
+<hr>
+<h2 id="3-威胁模型"><a href="#3-威胁模型" class="headerlink" title="3.威胁模型"></a>3.威胁模型</h2><p>假设一个强大的威胁模型，攻击者可以反复地与目标程序进行交互，利用漏洞从内存读取或写入任意数据。特别地，我们假设攻击者可以依靠<strong>相对</strong>的（如缓冲区读取/溢出和部分指针覆盖）和任意<strong>绝对</strong>的内存读/写原语（如指针覆盖）。我们还假设空间（如缓冲区溢出）和时间（如use-after-free）内存攻击。基于这些基本类型，我们假设攻击者可以追踪以下目标中的任何一个（符合现代特征攻击）：</p>
+<ul>
+<li><p><strong>任意代码执行</strong>：攻击者可以执行任意代码，例如使用ROP或其他代码重用技术发出系统调用。</p>
+</li>
+<li><p><strong>信息泄露</strong>：攻击者可能泄露目标程序中的敏感数据，例如Heartbleed中的加密密钥。</p>
+</li>
+<li><p><strong>信息篡改</strong>：攻击者可能篡改敏感数据，例如UID升级权限，或者装入其他非控制数据攻击。</p>
+</li>
+</ul>
+<hr>
+<h2 id="4-概述"><a href="#4-概述" class="headerlink" title="4.概述"></a>4.概述</h2><figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/mvxfig2.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/mvxfig2.png" width="593"></a><br>    <figcaption></figcaption><br></figure>
+
+<p>图2显示了MvArmor的主要组件，这些组件在虚拟环境中运行。</p>
+<ol>
+<li>在启动时，为了保护应用程序免受所有前面提到的攻击向量，<strong><em>变体生成器（V-A）</em></strong> 使用MVX感知变体生成策略为每个变体生成一个应用程序实例。</li>
+<li><strong><em>安全管理器（V-B）</em></strong>则生成安全策略，为其余组件提供安全性和性能之间的折衷。这些安全策略可以由用户定义，并取决于所考虑的攻击类别。</li>
+<li>当应用程序执行系统调用时，它将陷入<strong><em>系统调用前端（V-C）</em></strong>。这个组件是虚拟环境的监控器和“内核”（ring 0代码）的入口点。<strong><em>系统调用前端</em></strong>还管理应用程序状态的所有访问，如地址空间。</li>
+<li><strong><em>前端</em></strong>将所有系统调用事件转发给<strong><em>变体管理器（V-D）</em></strong>，它负责同步所有变体并执行安全策略。变体管理器使用与Hosek和Cadar提出的类似的<strong><em>环状缓存</em></strong>来相互通信。具体来说，其中一个变体（领导者）执行所有的实际的系统调用，并将相应的事件发送给其他变体（追随者），他们在自己的时间使用事件。追随者也只执行一小部分系统调用（如内存管理），因为大多数I/O应该只发生一次（例如通过套接字发送数据）。<strong>与传统的MVX系统不同，这些变体可以在大多数时间异步运行</strong>，从而消除了运行时变体一致的性能瓶颈。然而，不受约束的异步性并不安全。可以允许一个变体通过像exec这样的调用来实现任意的代码执行，或者像调用write来实现信息泄露。相反，我们使用<strong>安全敏感和非安全敏感的系统调用</strong>之间已知的区别，并<strong>选择性的强制执行同步执行</strong>，其中<strong>敏感调用的集合根据安全策略而变化</strong>。</li>
+<li><strong><em>变体管理器</em></strong> 还负责决定系统调用何时应该被真正执行（领导者），或者何时应该简单地复制结果（追随者）。当<strong><em>变体管理者</em></strong> 决定执行一个系统调用时，它将它发送到<strong><em>系统调用后端（V-E）</em></strong>。在一个初步的实现中，后端将简单地将所有的系统调用转发给真实的内核。但是，Dune中的每个系统调用都需要开销很大的VM exit。为了降低这些开销，我们直接在监控器上实现了一套（内存管理和getpid-like）系统调用。以后libOS风格的优化也是可能的 ，如通过使用用户空间网络栈（如IX），或通过配置系统调用。</li>
+<li><strong><em>变体管理器</em></strong> 使用<strong><em>命名空间管理器（V-F）</em></strong>来确保变体的所有可用信息是相同的（包括PID，文件描述符和时间信息），最后<strong><em>检测器（V-G）</em></strong>在语义上比较变体的执行分歧。</li>
+</ol>
+<hr>
+<h2 id="5-MvArmor-快速安全的MVX"><a href="#5-MvArmor-快速安全的MVX" class="headerlink" title="5.MvArmor: 快速安全的MVX"></a>5.MvArmor: 快速安全的MVX</h2><p>我们现在详细描述每个MvArmor的组件。</p>
+<h3 id="5-1变体生成器"><a href="#5-1变体生成器" class="headerlink" title="5.1变体生成器"></a>5.1变体生成器</h3><p>MVX中的一个<strong>基本问题</strong>是变体应该在多大程度上有所不同。不限制的变化将不可能从分歧中检测到攻击，因为一切都可能不同。相反，变化不足也是不希望的，因为可能没有攻击引起的任何分歧。</p>
+<p><strong>对于内存错误，直接的解决方案是改变地址空间布局，并保持其他所有内容相同</strong>，因为这些差异通常不会影响程序执行，但会对恶意的内存操作产生影响。在本节中，我们确定了对不同类别的内存错误利用提供强有力的保护和检测的技术，并详细说明了我们当前的MvArmor原型中相应的实现策略。为了进行分析，我们的设计基于常见的PIE(position independent execution地址无关执行)二进制组织，但是我们的设计在原则上，还可以通过将静态程序段标记为不可重定位并适当减少安全保证来处理非PIE二进制文件。</p>
+<ol>
+<li><p><strong>首先，通过在不同变体间使用不重叠的地址空间，使任何绝对空间的攻击（即依靠绝对代码/数据地址的攻击）无效</strong>。通过确保变体间内存页不覆盖，指针一次最多只能在一个变体中有效，这样一定会使除此以外的所有其他变体崩溃。这已经阻止了ROP等常见的代码重用攻击和JITROP等信息泄露攻击，因为它们依赖于内存页的绝对位置。<br>为了在不同变体之间实现不重叠的地址空间，我们<strong>使用ASLR随机化每个变体，然后限制ASLR不要在各种变体上重用地址范围</strong>。由于我们的MVX系统在虚拟化环境的ring0级别，因此它可以完全控制页表，从而简化了ASLR的修改。 MvArmor为每个变体中的所有内存区域（即代码，数据，堆栈等）实现这一技术。</p>
+</li>
+<li><p><strong>为了阻止相对空间攻击</strong>（即依赖于相对代码/数据地址的攻击），我们的变体生成策略必须能够提供有力的保证来防止缓冲区溢出/下溢和部分指针覆盖。例如，如果跟随者堆的大小与领导者中的整个（正常和紧凑）堆一样大，则指针加上任何偏移量只能在这些变体的某一个中有效。换句话说，这种设计可以确保不同变体之间的非重叠偏移空间，从而使所有相对空间攻击无效。 为此，<strong><em>策略必须确保内存对象之间的偏移不重叠 。MvArmor通过在领导者中使用标准的“紧凑”分配器和在追随者中使用“稀疏”分配器</em></strong> ，为所有<strong>堆对象</strong>实现了这种技术。原则上，将这种保证扩展到所有其他内存对象是可能的，但是通常需要源代码级的信息来准确地分离栈和数据对象 - 尽管二进制级别的逼近是可能的。？</p>
+</li>
+<li>到目前为止所描述的策略可以提供确定性的保护以抵御所有的<strong>空间攻击</strong>，但它们不足以阻止<strong>时间性的攻击</strong>（例use-after-free攻击）。在没有源代码级别信息的情况下，确保确定性的防范通用的时间攻击是不切实际的。一个实用的二进制级别的选择是<strong>确保概率时间内的安全</strong>。在我们的设计中，这是通过<strong>在不同的变体中使用不同的（随机化的）内存分配器来完成的</strong>，并且为了进一步限制攻击面，通过在二进制级别靠近类型安全的内存重用。？？？<br>MvArmor为所有<strong>堆对象</strong>强制执行概率时间安全性，随机化标准分配器和领导者中的随机对象间隙。另外，MvArmor还可以在追随者的定制分配器中使用persize内存池来进行类型安全的内存重用（但是基于分配时间回溯的更不保守的二进制级近似也是可能的）。？？？</li>
+</ol>
+<p>虽然在一个变体上实现所有提出的保护技术可能会引入大量的开销，但是在大多数情况下，它们的开销可以通过我们的MVX设计在各种变体之间被完全屏蔽。在MvArmor中，因为追随者不执行大部分系统调用，所以比领导者要快，因此会浪费几个周期等待领导者。我们的测量表明，对于我们基于I/O绑定的服务器应用程序的MvArmor实现（即没有启用任何保护），每个跟随者在系统调用期间平均花费约4000个周期等待领导者。特别是当系统调用不需要锁步行为时，空闲时间留给跟随者足够的时间在开销更大的分配器抽象中实现我们的保护技术。这一策略提供了强大的安全性保证，同时减少了端到端解决方案的运行时间开销。</p>
+<h3 id="5-2安全管理器"><a href="#5-2安全管理器" class="headerlink" title="5.2安全管理器"></a>5.2安全管理器</h3><p>安全管理器生成的策略允许用户在安全性和性能之间进行权衡。具体来说，一个策略可以指定<strong>每个系统调用是否被认为是非敏感的</strong>（事件流，意思是领导者可以在没有同步的情况下执行它），<strong>或者是敏感的</strong>（需要与其他变体一起执行锁步执行）。</p>
+<p>安全策略在整体系统级别，单个系统调用级别甚至特定参数级别（例如“如果权限标志中的执行位被设置，然后……”）指定行为。在MvArmor，我们针对上述每一类攻击提出以下策略（存在其他可能的策略）：</p>
+<ul>
+<li>代码执行：对执行权限设置的execve,mprotect/mmap执行全面检查。</li>
+<li>信息泄露：强制对能够泄露数据的I/O系统调用（例如写入）进行全面检查。</li>
+<li>全面：全面检查所有系统调用。</li>
+</ul>
+<p>在实践中，代码执行策略的执行效率与没有系统调用被认为是敏感的策略一样，因为代码执行策略考虑的系统调用在大多数应用程序中很少被执行。</p>
+<p>全面的安全策略对于提供一个通用的策略（以及性能下限）是有用的，但是考虑到目标威胁模型，可以为诸如代码执行和信息泄露等定制的更精简的策略提供可比较的安全性。关键是这样的安全策略可能会延迟检测到失败的攻击，但是它们的确可以确定并立即停止所有在威胁模型中考虑到的攻击的成功尝试。</p>
+<h3 id="5-3系统调用前端"><a href="#5-3系统调用前端" class="headerlink" title="5.3系统调用前端"></a>5.3系统调用前端</h3><p>当应用程序执行一条syscall指令时，执行将会从ring 3陷入到ring 0的内核空间。<strong>通过在虚拟化环境中运行应用程序和监视器，所有的系统调用都将陷入监视器而不是实际的内核</strong>。MvArmor基于<strong>Dune，它利用虚拟化以安全的方式为应用程序提供对特权CPU特性的访问</strong>。为此，Dune依靠Intel VT-x扩展来允许内核通过Dune管理程序临时从正常内核（VMX root）切换到<strong>虚拟化模式（VMX non-root）</strong>。 Dune为ring 0代码设置了VMX root 和非root模式，如图3所示。由于我们的监控器运行在特权模式下，因此它还可以访问其他功能，例如页表和中断。虽然内核模块直接修改内核可以达到同样的效果，但MvArmor将监控器与系统其他部分完全分开，而不增加系统范围内的TCB。</p>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/lares4.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/mvxfig3.png" width="493"></a><br>    <figcaption></figcaption><br></figure>
+
+<p><strong>系统调用前端从libDune接收系统调用陷阱并将其转发给变体管理器。另外，前端负责访问应用程序状态，例如读取和写入其地址空间。</strong></p>
+<p>并不是所有的系统调用都会在现代Linux系统上产生陷入;在每个应用程序中，内核都会建立一个共享库（虚拟动态共享对象，即vDSO），它包含执行挑选出的不会陷入内核的系统调用代码。使用Dune，我们仍然可以拦截vDSO调用，通过映射到我们自己的包含系统调用指令的代码来代替原始的vDSO。</p>
+<h3 id="5-4变体管理器"><a href="#5-4变体管理器" class="headerlink" title="5.4变体管理器"></a>5.4变体管理器</h3><p><strong>从前端收到系统调用事件后，变体管理器将与其他变体同步</strong>。每个进程都有一个<strong>环形缓冲区</strong>，<strong>与其他变体中的各个进程共享</strong>。系统调用完成后，领导者将系统调用连同其参数和返回值一起压入环形缓冲区。追随者比较他们的参数与领导者的，要么自己执行系统调用，要么使用领导者提供的返回值。具体来说，<strong>变体管理器有一个per-syscall表来确定适当的行为。某些系统调用应该只执行一次（例如，与套接字相关的系统调用），而另一些系统调用应该在不同的变体执行（例如，内存管理调用）。</strong>对于前者，追随者只是复制领导者的返回值。</p>
+<p>环形缓冲区提供了无需锁定的有效通信，我们使用原子操作来更新环形缓冲区入口并处于busy-waiting状态，直到消耗它们。由于像select和epoll_wait这样的系统调用可能会阻塞很长时间，所以追随者在一段时间后停止busy-waiting，然后进入睡眠状态。由于睡眠和唤醒呼叫所需VM exit，这样做开销很大。假设不缺少核，更高效的解决方案就是使用<strong>英特尔的监控器/等待指示来休眠</strong>，因为它们不会导致VM exit。由于我们的<strong>基于Dune的虚拟化环境以特权模式运行，因此它可以在普通应用程序无法使用的情况下轻松使用cpu特性</strong>。</p>
+<p><strong>安全策略确定每个系统调用是否应该以锁步方式运行，在这种情况下，领导者在将参数推入环形缓冲区后将等待所有的跟随者，然后跟随者比较系统调用，然后在系统调用完成时暂停</strong>。对于每个系统调用（最保守的安全策略）这样做都会有更高的性能影响。</p>
+<p>对于多线程应用程序，我们强制追随者去追随领导者系统调用的顺序。该策略旨在防止由于非确定性调度决策而产生的分歧行为。这种松散形式的确定性多线程（DMT）被证明对于以前的MVX系统是足够的。如果发生问题（例如由于良性数据竞争引起的分歧），则可以使用完整的DMT语义，代价是更大的开销。</p>
+<h3 id="5-5系统调用后端"><a href="#5-5系统调用后端" class="headerlink" title="5.5系统调用后端"></a>5.5系统调用后端</h3><p><strong>当一个变体需要执行一个系统调用时，它会将调用转发到系统调用后端。将系统调用转发到内核需要开销很大的VM exit，所以系统调用后端尽可能在本地执行系统调用</strong>。目前，这是为<strong>内存管理的系统调用</strong>而实现的，但是可以扩展到包括用户空间网络栈，比如IX  - 也是基于Dune的。除了消除VM exit，用户空间网络栈也提高了应用程序的整体性能。？？</p>
+<p>MVX监控器可能容易受到TOCTOU(time-of-check-to-time-of-use)攻击的影响，攻击者在监控器检查参数之后但在内核读取参数之前，从另一个线程更改内存中系统调用的参数。因为传递给系统调用的参数通常是指向应用程序地址空间中的缓冲区或结构的指针，由监控器（用于检查）和内核（用于执行）单独拷贝。我们<strong>通过将指针直接传递给复制的数据结构（在监控器中）来解决这个问题</strong>。由于不需要额外的复制，因此不会引起性能开销。</p>
+<h3 id="5-6命名空间管理器"><a href="#5-6命名空间管理器" class="headerlink" title="5.6命名空间管理器"></a>5.6命名空间管理器</h3><p>如果变体能够访问内核分配的PID或时间信息，它们可以（直接或间接）在条件变量中使用这些数据，导致不同的行为。因此<strong>命名空间管理器</strong>为了确保变体不会产生意外的偏离行为，<strong>使用分层结构为每个进程和线程分配虚拟PID和TID</strong>：当一个变体快速连续创建线程时，它们必须在所有变体中获得相同的虚拟TID，而不管它们实际出现在系统上的顺序，还是早期执行其克隆操作的线程。</p>
+<p>我们类似地<strong>虚拟文件描述符</strong>，因为只有领导者才能访问所有的文件描述符。例如，追随者无法访问打开可写的套接字或文件，由于内核在每个进程中以增量方式分配文件描述符，并且追随者比领导者打开更少的文件（例如，只读文件），所以这些数字开始偏离。因此，<strong>命名空间管理器维护虚拟化文件描述符到真实（每个变体）文件描述符的映射</strong>。对于与epoll相关的标识符（包括用户数据字段）也是如此。当套接字有I/O事件时，epoll_wait系统调用返回先前注册的用户定义的数据。由于这些值可以是指针（每个变体不同），因此必须将它们映射回套接字，然后映射到应该为该套接字返回的变体特定的用户数据。</p>
+<p><strong>时间信息在变体之间也不应该有差异</strong>，因为这通常用于记录或播种随机数发生器。由于MvArmor可以完全控制应用程序的页表，所以它可以很容易地拦截所有的vDSO系统调用。通过<strong>禁用了rdtsc指令，使其陷入监控器</strong>。</p>
+<p>通过只允许领导者打开像/dev/random这样的文件来确保随机数生成中的确定性。伪随机数生成器通常用已经由命名空间管理器虚拟化的信息播种，不需要额外的努力来正确地工作。我们类似地限制领导者对/ proc文件系统的访问。没有二进制检测，就没有简单的方法来插入rdrand指令。通过禁用管理程序的cpuid实现中的相应位，大多数正常的应用程序和库将不会使用它（例如，OpenSSL）。虽然我们没有观察到需要进一步检查，但我们也可以配置虚拟环境，以便在执行指令时（通过虚拟环境的控制结构中的一个位）陷入虚拟机管理程序。</p>
+<h3 id="5-7检测器"><a href="#5-7检测器" class="headerlink" title="5.7检测器"></a>5.7检测器</h3><p>由于系统调用的参数不能超过6个，因此很多调用都希望指向包含更多信息（例如缓冲区或结构）的数据结构。<strong>为了在变体之间进行全面比较，监控器因此对这些参数进行深层语义复制和比较。在MvArmor中，检测器组件执行这两个功能。</strong></p>
+<h3 id="5-8实现"><a href="#5-8实现" class="headerlink" title="5.8实现"></a>5.8实现</h3><p>除了前端和后端外，MvArmor还包含一个实现我们设计中所有组件的库。我们开发了这些组件的两个实现：使用Dune沙箱的高性能硬件虚拟化方法和用于开发和调试的ptrace实现。这些实现为每个系统调用调用我们的共享库，并公开了几个函数，如如何访问受监控的应用程序的地址空间以及如何分配变体之间的内存。库本身由大约5,000行C代码组成，而前端和后端则各包含大约500行C代码。</p>
+<p>用于实现MvArmor的默认前端和后端的Dune沙箱允许任意应用程序在Dune中运行。沙箱使用自己的加载程序加载给定的二进制文件。它还对传递给系统调用的任何指针执行边界检查，以防止沙箱应用程序访问ring 0的状态，例如沙箱本身，Dune库或监控器。我们稍微修改了Dune和沙箱，以满足我们对监控器的要求，比如安全修复和更多的回调。</p>
+<p>为了实现在5.1节中讨论的保护技术，我们使用了<strong>libumem的修改版本</strong>，它是Solaris slab分配器的Linux用户空间端口。这个实现作为我们自定义的<strong>“稀疏”分配器</strong>的基础。具体来说，<strong>通过限制每个slab允许的对象的数量（即1个对象），并向每个slab添加填充（即领导者最大堆的大小），我们实现了领导者和追随者之间的非重叠偏移空间</strong>。通过保留libumem每个尺寸原本的池化架构，我们使得类型安全的内存重用成为可能。此外，由于我们希望在领导者中保留标准（随机）分配器（为了保持安全性，还要在较慢领导者中保证性能），我们假设标准和我们的自定义分配器都是可信的，以防止监控器检测到由不同的分配器引起的分歧（例如，不同的系统调用来映射内存）。</p>
+<hr>
+<h2 id="6-限制"><a href="#6-限制" class="headerlink" title="6.限制"></a>6.限制</h2><p>在撰写本文时，我们的MvArmor原型有以下限制：</p>
+<ul>
+<li>MvArmor的自定义分配器受到Dune对每个进程最大虚拟内存大小的限制，目前要求在内存密集型应用程序中放宽slab间填充（以及安全性）的大小限制。</li>
+<li>虽然MvArmor可以保护通用堆对象，但没有源级信息，它不能解耦每个对象内部由自定义内存分配器管理的内部结构缓冲区或块，这是所有二进制级堆强化解决方案的基础限制。</li>
+<li>尽管MvArmor的MVX库支持类似于最近MVX解决方案的线程化，但它目前不能运行多线程应用程序。扩展我们当前的MVArmor原型以支持任意多线程应用程序面临两个挑战：（i）支持Dune（当前线程不安全）中的线程安全性，并且当良性数据竞态存在时（即线程同步而没有系统调用例如futex） （ii）用更严格的DMT形式保护正确的MVX语义。</li>
+</ul>
+<hr>
+<h2 id="7-评估"><a href="#7-评估" class="headerlink" title="7.评估"></a>7.评估</h2><hr>
+<h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><p><a href="https://github.com/vusec/mvarmor" target="_blank" rel="external">Secure and Efficient Multi-variant Execution Using Hardware-assisted Process Virtualization -DSN 2016-VUSec</a></p>
+
+      
+    </div>
+    
+    
+      <footer class="article-footer">
+        
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Notes/">Notes</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Virtualization/">Virtualization</a></li></ul>
+
+      </footer>
+    
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/20171022/ever-papernote2/" id="article-nav-newer" class="article-nav-link-wrap">
+      <div class="article-nav-title"><span>&lt;</span>&nbsp;
+        
+          详细解读：Digtool:A Virtualization-Based Framwork for Detecting Kernel Vulnerabilities
+        
+      </div>
+    </a>
+  
+  
+    <a href="/20170830/bypassaslr-end/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">绕过ASLR方法综述&nbsp;<span>&gt;</span></div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+
+
+<div class="share_addthis">
+  <div class="sharing addthis_toolbox share">
+    <a class="addthis_button_facebook_like"></a>
+    <a class="addthis_button_tweet"></a>
+    <a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-560c64c35486b3d4" async="async"></script>
+</div>
+
+
+
+
+
+</section>
+    <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2017 Diting0x&nbsp;
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>, theme by <a href="http://github.com/ppoffice">PPOffice</a>
+    </div>
+  </div>
+</footer>
+    
+
+<script src="/js/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+  </div>
+</body>
+</html>

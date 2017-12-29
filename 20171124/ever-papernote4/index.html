@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>详细解读：Thwarting Memory Disclosure with Efficient Hypervisor-enforced Intra-domain Isolation - 善守者</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="通过有效的强制虚拟机管理程序的域内隔离来防止内存泄漏 SeCage 摘要内存泄漏 -&amp;gt; 内存任意读 主要问题：所有的数据都驻留在同一块内存区域  攻击者可以读被攻击进程的内存 Rootkit可以读整个系统的内存  提出对策:隔离处理关键秘密的代码到一个隔离的执行环境中去执行。  为关键数据创建一个分区 将这个分区与其他分区隔离  现有方法：  当内核受到攻击后，不能进行保护 提供的粗粒度保护">
+<meta name="keywords" content="Virtualization,Infoleak">
+<meta property="og:type" content="article">
+<meta property="og:title" content="详细解读：Thwarting Memory Disclosure with Efficient Hypervisor-enforced Intra-domain Isolation">
+<meta property="og:url" content="https://diting0x.github.io/20171124/ever-papernote4/index.html">
+<meta property="og:site_name" content="善守者">
+<meta property="og:description" content="通过有效的强制虚拟机管理程序的域内隔离来防止内存泄漏 SeCage 摘要内存泄漏 -&amp;gt; 内存任意读 主要问题：所有的数据都驻留在同一块内存区域  攻击者可以读被攻击进程的内存 Rootkit可以读整个系统的内存  提出对策:隔离处理关键秘密的代码到一个隔离的执行环境中去执行。  为关键数据创建一个分区 将这个分区与其他分区隔离  现有方法：  当内核受到攻击后，不能进行保护 提供的粗粒度保护">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/secage1.png">
+<meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/secage5.png">
+<meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/secage6.png">
+<meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/secage2.png">
+<meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/secage7.png">
+<meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/secage23.png">
+<meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/secage8.png">
+<meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/secage4.png">
+<meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/secage9.png">
+<meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/secage10.png">
+<meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/secage13.png">
+<meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/secage11.png">
+<meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/secage14.png">
+<meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/secage12.png">
+<meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/secage15.png">
+<meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/secage16.png">
+<meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/secage17.png">
+<meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/secage18.png">
+<meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/secage19.png">
+<meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/secage20.png">
+<meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/secage21.png">
+<meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/secage22.png">
+<meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/secage24.png">
+<meta property="og:updated_time" content="2017-12-29T04:16:47.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="详细解读：Thwarting Memory Disclosure with Efficient Hypervisor-enforced Intra-domain Isolation">
+<meta name="twitter:description" content="通过有效的强制虚拟机管理程序的域内隔离来防止内存泄漏 SeCage 摘要内存泄漏 -&amp;gt; 内存任意读 主要问题：所有的数据都驻留在同一块内存区域  攻击者可以读被攻击进程的内存 Rootkit可以读整个系统的内存  提出对策:隔离处理关键秘密的代码到一个隔离的执行环境中去执行。  为关键数据创建一个分区 将这个分区与其他分区隔离  现有方法：  当内核受到攻击后，不能进行保护 提供的粗粒度保护">
+<meta name="twitter:image" content="http://oij0laovn.bkt.clouddn.com/secage1.png">
+  
+  
+  <link href="/webfonts/ptserif/main.css" rel='stylesheet' type='text/css'>
+  <link href="/webfonts/source-code-pro/main.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <header id="header">
+  <div id="header-outer" class="outer">
+    <div id="header-inner" class="inner">
+      <a id="main-nav-toggle" class="nav-icon" href="javascript:;"></a>
+      <a id="logo" class="logo logo-text" href="/">谛听</a>
+      <nav id="main-nav">
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+          <a class="main-nav-link" href="/timeline">Timeline</a>
+        
+          <a class="main-nav-link" href="/shoulders">Shoulders</a>
+        
+          <a class="main-nav-link" href="/about">About</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        <div id="search-form-wrap">
+          <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://diting0x.github.io"></form>
+        </div>
+      </nav>
+    </div>
+  </div>
+</header>
+    <section id="main" class="outer"><article id="post-ever-papernote4" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      详细解读：Thwarting Memory Disclosure with Efficient Hypervisor-enforced Intra-domain Isolation
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/20171124/ever-papernote4/" class="article-date">
+  <time datetime="2017-11-24T12:37:29.000Z" itemprop="datePublished">2017-11-24</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/曾经的论文笔记/">曾经的论文笔记</a>
+  </div>
+
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>通过有效的强制虚拟机管理程序的域内隔离来防止内存泄漏</p>
+<p>SeCage</p>
+<h2 id="摘要"><a href="#摘要" class="headerlink" title="摘要"></a>摘要</h2><p>内存泄漏 -&gt; 内存任意读</p>
+<p>主要问题：所有的数据都驻留在同一块内存区域</p>
+<ul>
+<li>攻击者可以读被攻击进程的内存</li>
+<li>Rootkit可以读整个系统的内存</li>
+</ul>
+<p>提出对策:隔离处理关键秘密的代码到一个隔离的执行环境中去执行。</p>
+<ul>
+<li>为关键数据创建一个分区</li>
+<li>将这个分区与其他分区隔离</li>
+</ul>
+<p>现有方法：</p>
+<ul>
+<li>当内核受到攻击后，不能进行保护</li>
+<li>提供的粗粒度保护不足以抵御域内攻击、</li>
+<li>需要底层软件（如os,hypervisor）的过度干预</li>
+<li>不适用于大型软件（几百万行代码）</li>
+</ul>
+<p>SeCage：虚拟机管理程序实施的域内隔离</p>
+<ul>
+<li>strong isolation强大的隔离：可以在很大的攻击面进行保护</li>
+<li>practical实际的：使用静态分析与动态分析相结合的混合分析方法将大型软件分解为不同的隔间</li>
+<li>efficient高效的：利用商业硬件功能（VMFUNC）从调用中分离出策略来最小化VM Traps<ul>
+<li>改进了VMFUNC机制，并在英特尔处理器中嵌套分页，以透明地为不同的隔间提供不同的内存视图，同时允许跨域的低成本和透明的调用，而无需管理程序干预。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="1-介绍"><a href="#1-介绍" class="headerlink" title="1 介绍"></a>1 介绍</h2><p>基于虚拟机管理程序的保护方案仅在应用程序级别提供保护，因此受害者应用程序内部仍然存在漏洞;针对应用程序逻辑片（PAL）的方法要求PAL是独立的，因此不允许与应用程序的其他部分进行交互。</p>
+<p>此外，由于安全性和功能性的紧密结合，以前的方法通常需要特权系统（例如管理程序）的频繁干预，迫使用户在安全性和性能之间进行权衡。</p>
+<p><strong>我们的解决方案：在本文中，我们利用混合分析的特权分离思路（主要）自动将整体软件系统分解成一组隔间，每个秘密隔间包含一组秘密及其相应的代码，一个主隔间处理其余部分的应用逻辑。这确保只有秘密区域内的函数才能访问秘密。</strong></p>
+<p><strong>混合分析</strong>：</p>
+<ul>
+<li>静态分析：不准确，会引入一个很大的代码base到秘密隔间中</li>
+<li>动态分析：提取最常使用的函数</li>
+<li>覆盖率问题：为了处理可能的覆盖问题，SeCage基于静态分析结果和运行时信息使用运行时异常处理来检测访问是否合法。</li>
+</ul>
+<p><strong>硬件虚拟化技术</strong>：即使在应用程序甚至操作系统受到攻击者的控制的强大对手模式下，利用硬件虚拟化技术来强化机密隔间和主隔间之间的强大隔离。</p>
+<ul>
+<li><strong>嵌套式分页</strong>：SeCage为每个隔离区分配一个完全隔离的地址空间，并利用硬件辅助的嵌套式分页来强制隔离。</li>
+<li><strong>VMFUNC</strong>：为了在组件之间提供安全高效的通信，SeCage采用了英特尔硬件辅助虚拟化支持的VMFUNC特性，将控制平面与数据平面分离开来。</li>
+</ul>
+<p><strong>减少hypervisor的干预</strong>：SeCage首先指定可以将一个秘密隔间通过另一个隔间调用到CPU的安全策略，然后允许这样的调用在没有管理程序干预的情况下完成。这大大降低了由于频繁陷入管理程序而导致的开销。</p>
+<hr>
+<h2 id="2-概览"><a href="#2-概览" class="headerlink" title="2 概览"></a>2 概览</h2><p>SeCage的目标：</p>
+<ul>
+<li><strong>主要目标</strong>：为用户特定的机密（例如，私钥）提供强有力的保密性保证，即使面对有漏洞的应用程序或恶意操作系统。</li>
+<li><strong>第二个目标</strong>：使SeCage的方法具有实用性，因此可以用于开销较小的大型软件系统。</li>
+</ul>
+<h3 id="2-1-方法概览"><a href="#2-1-方法概览" class="headerlink" title="2.1 方法概览"></a>2.1 <strong>方法概览</strong></h3><ul>
+<li><p>将关键数据和代码分区</p>
+<ul>
+<li>使用混合分析来提取秘密闭包</li>
+<li>从其他上下文中隔离秘密闭包</li>
+</ul>
+</li>
+<li><p>利用虚拟机管理程序强制执行内存隔离</p>
+<ul>
+<li>秘密分区驻留在不同的内存区域</li>
+<li>非法秘密内存访问触发违规至VMExit</li>
+</ul>
+</li>
+</ul>
+<p><br><br><br></p>
+<h4 id="2-1-1-混合分析来提取秘密闭包"><a href="#2-1-1-混合分析来提取秘密闭包" class="headerlink" title="2.1.1 混合分析来提取秘密闭包"></a>2.1.1 <strong>混合分析来提取秘密闭包</strong></h4><p>由于秘密可能会在其整个生命周期中被复制和传播，因此仅仅保证秘密的存储是远远不够的。相反，SeCage必须提供一个全面的机制，以防止在整个应用程序执行期间泄露秘密及其来源，而不影响秘密的正常使用。因此，SeCage需要找到可能操纵秘密的所有函数的闭包。</p>
+<p>一种直观的方法是使用静态分析来发现代码的闭包。然而，由于诸如指针混叠之类的问题，静态分析对于以C / C++编写的大型软件仍然存在精确性问题。这可能容易导致比必要的更大的闭包，可能会扩大秘密区的代码库并增加大量不必要的上下文切换。另一种方法是重写与秘密有关的代码，并将秘密的操作解耦成一个独立的服务，甚至是一个可信的第三方节点。但是，这可能涉及高昂的人力，对于OpenSSL等大规模软件来说可能会非常困难。</p>
+<p><strong>SeCage改为结合静态和动态分析来提取与秘密有关函数的闭包</strong>。它首先使用静态分析来发现与秘密相关的潜在函数。为了减少秘密封闭的大小，它使用一组训练输入来重新进行动态分析，从而获得紧凑而精确的与秘密有关的函数。为了处理覆盖问题，即一个函数可能合法的触及秘密，但被排除在秘密区间之外，SeCage根据静态分析结果和运行时异常处理过程中的执行上下文自适应地将这个功能包含到秘密部分。</p>
+<h4 id="2-1-2-虚拟机管理程序强制保护"><a href="#2-1-2-虚拟机管理程序强制保护" class="headerlink" title="2.1.2 虚拟机管理程序强制保护"></a>2.1.2 <strong>虚拟机管理程序强制保护</strong></h4><p>面对恶意操作系统这样强大的对手模型，SeCage利用<strong>可信的虚拟机管理程序</strong>来保护隐私。具体来说，SeCage将一个特定的秘密闭包放到一个单独的隔离区运行，并利用硬件虚拟化支持来提供不同隔间之间的强大隔离。</p>
+<h4 id="2-1-3-分离控制和数据平面"><a href="#2-1-3-分离控制和数据平面" class="headerlink" title="2.1.3 分离控制和数据平面"></a>2.1.3 <strong>分离控制和数据平面</strong></h4><p>由于每个分区仍然需要互相通信，虚拟机管理程序似乎不可避免地需要频繁干预这种通信。但是，这会导致频繁的VMExits，从而导致高额开销。为了缓解这种情况，SeCage利用分离控制台数据平面的想法来最小化管理程序干预。</p>
+<p>具体而言，SeCage只需要虚拟机管理程序定义两个隔间之间的调用是否合法（控制平面），同时让两个隔间之间的通信符合预定义的策略（数据平面）。在每个隔间的入口处，可以进一步检查调用者，看是否允许通信。SeCage通过利用被称为VMFUNC的商用硬件功能（3.1节），实现了这种方案。</p>
+<h4 id="2-1-4-架构概览"><a href="#2-1-4-架构概览" class="headerlink" title="2.1.4 架构概览"></a>2.1.4 <strong>架构概览</strong></h4><p>图1显示了SeCage的架构概述。受保护的应用程序分为一个主隔间和一组秘密隔间。每个秘密隔间都包含一组秘密和相应的敏感函数。我们并不认为隔间是独用的，里面的函数可以和应用程序的主隔间相互作用。但是，<strong>SeCage保证一个分区中的秘密不能被同一应用程序的其他分区和底层软件访问</strong>。</p>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/secage1.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/secage1.png" width="593"></a><br>    <figcaption></figcaption><br></figure>
+
+
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/secage5.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/secage5.png" width="593"></a><br>    <figcaption></figcaption><br></figure>
+
+<p>一旦隔间生成（步骤1），在应用程序初始化阶段（步骤2），虚拟机管理程序负责为每个隔间设置一个隔离的存储器，并保证只有相应隔间的函数才能访问这些秘密。在运行期间，秘密隔间被限制为通过蹦床机制（步骤3）与主隔间相互作用，而不会陷入管理程序。只有当秘密隔间（例如主隔间）之外的函数试图访问秘密时，将会通知虚拟机管理程序处理这种违规行为。</p>
+<h3 id="2-2-威胁模型和假设"><a href="#2-2-威胁模型和假设" class="headerlink" title="2.2 威胁模型和假设"></a>2.2 <strong>威胁模型和假设</strong></h3><ul>
+<li><strong>信任虚拟机管理程序，不信任应用程序中的操作系统或其他分区</strong></li>
+<li><strong>不考虑DoS和侧信道攻击</strong></li>
+</ul>
+<p>SeCage旨在保护来自恶意应用程序和恶意操作系统的重要秘密。</p>
+<p>对于易受攻击的应用程序，我们认为对手有能力阻止，注入或修改网络流量，以便能够进行所有众所周知的攻击，以便非法访问位于隐藏应用程序的内存空间中的任何数据。具体来说，攻击者可以像HeartBleed bug 一样利用缓冲区过度读取进行攻击，或者尝试使用复杂的控制流劫持攻击来使访问控制策略失效或绕过权限检查，并读取位于相同地址空间的敏感数据。</p>
+<p>底层的系统软件（如操作系统）是不可信的，它们可以进行任意的恶意行为，从而泄露应用程序的秘密。我们与其他相关系统共享这种攻击者模型。此外，SeCage还考虑了Iago攻击，恶意操作系统可能通过操纵系统服务的返回值（例如systemcall）以及回滚攻击导致应用程序自身受到伤害，其中特权软件通过强制内存快照回滚可以回滚至应用程序的关键状态。</p>
+<p>SeCage假设受保护的机密应该只在应用程序中使用，秘密隔间内部的函数不会自动将他们发送出去。对于像OpenSSL这样的商业软件来说，这是正确的，因为软件本身就是为了保持这种秘密而设计的。即使不是这样，在SeCage的静态和动态阶段，当产生秘密隔间时，也可以检测到这一点。</p>
+<p>此外，SeCage不会试图阻止目标不是泄露数据的DoS攻击。它不会试图防止侧信道攻击，以及通过程序控制流程泄漏信息的隐式流程攻击，因为它们通常很难部署，在我们的案例中，用于泄露数据的带宽容忍度非常有限。最后，SeCage没有考虑面对恶意操作系统时应用程序的可用性。</p>
+<hr>
+<h2 id="3-实时隔离强制实施"><a href="#3-实时隔离强制实施" class="headerlink" title="3.实时隔离强制实施"></a>3.实时隔离强制实施</h2><p>在本节中，我们将介绍如何在应用程序运行时强制实施SeCage保护，包括内存保护，运行时执行流程的机制等方面。</p>
+<h3 id="3-1-内存保护"><a href="#3-1-内存保护" class="headerlink" title="3.1 内存保护"></a>3.1 内存保护</h3><p>在SeCage中，二层分页机制保证了隔离区的隔离。通常，客户虚拟机只能看到客户虚拟地址（GVA）到客户物理地址（GPA）的映射，而虚拟机管理程序为每个客户虚拟机维护一个较低级别的扩展页表（EPT），EPT将GPA映射到主机物理地址（HPA）。</p>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/secage6.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/secage6.png" width="593"></a><br>    <figcaption></figcaption><br></figure>
+
+<ul>
+<li>虚拟机管理程序控制客户虚拟机访问物理地址的方式</li>
+<li>任何违反EPT的行为都会触发VMExit陷入虚拟机管理程序</li>
+</ul>
+<p>在SeCage的初始化阶段，除了针对整个访客虚拟机的原始EPT EPT-N之外，管理程序还为每个受保护的秘密分区初始化另一个EPT，称为EPT-S。</p>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/secage2.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/secage2.png" width="593"></a><br>    <figcaption></figcaption><br></figure>
+
+<p>如图2所示，SeCage将内存分为两部分：数据和代码。  </p>
+<ul>
+<li>对于数据部分，EPT-S映射包括秘密的所有数据，而EPT-N具有除秘密之外的数据。 </li>
+<li>对于代码段，蹦床代码被映射到这两个EPT中，并设为只读。 此外，EPT-S只包含秘密区域中的敏感函数代码，而EPT-N映射除了敏感函数之外的代码。</li>
+</ul>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/secage7.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/secage7.png" width="593"></a><br>    <figcaption></figcaption><br></figure>
+
+<ul>
+<li>数据段：从主EPT中移除有关秘密的内存</li>
+<li>代码段：敏感函数只存在于秘密EPT中</li>
+</ul>
+<p>通过上述的EPT配置，SeCage确保EPT-N中不会存在秘密，只有敏感函数的代码才能访问相应的秘密。这些<strong>代码页</strong>在设置阶段被验证，并且EPT条目被设置为<strong>可执行</strong>和<strong>只读</strong>。同时，EPT-S中的<strong>数据页</strong>面被设置为<strong>不可执行</strong>，因此可以防御攻击者的注入代码攻击。因此，恶意应用程序和恶意操作系统都无法访问秘密。</p>
+<p><strong>Q：为什么要将整个数据段映射到EPT-S？</strong><br>需要注意的是，如果我们只将秘密放在秘密区域中，则由于敏感函数除了秘密之外还可以访问其他数据存储器，所以可能会有过多的上下文切换。 为了简单起见，由于敏感函数的代码片段非常小并且被认为是我们的威胁模型中可信的，所以SeCage将整个数据段映射到秘密区域中。</p>
+<h4 id="EPTP-Switching-VMFUNC"><a href="#EPTP-Switching-VMFUNC" class="headerlink" title="EPTP Switching VMFUNC"></a><strong>EPTP Switching VMFUNC</strong></h4><ul>
+<li><strong>VM Functions:</strong> 英特尔虚拟化扩展<br>非根客户虚拟机可以直接调用一些函数而不触发VM exit</li>
+<li><strong>VM Function 0: EPTP Switching:</strong> 允许客户虚拟机中的软件（在内核或用户模式下）直接加载新的EPT指针（EPTP），从而建立不同的EPT分页结构层次。</li>
+</ul>
+<p><strong>只能从虚拟机管理程序事先配置的潜在EPTP值列表中选择EPTP</strong>，虚拟机管理程序充当定义客户虚拟机应符合规则的控制平面。在运行期间，管理程序不会干扰客户虚拟机内的执行流程。</p>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/secage23.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/secage23.png" width="593"></a><br>    <figcaption></figcaption><br></figure>
+
+<p>图3显示了为了使用<strong>VM Function 0: EPTP Switching</strong>，虚拟机管理程序需要进行的示例配置：除了一些功能位之外，虚拟机管理程序需要在VM Function VMCS字段设置位0（EPTP切换位），并将EPT指针配置到由EPTP LIST ADDR VMCS字段指向的存储器。</p>
+<p>在运行期间，非root用户软件调用EAX设置为0的VMFUNC指令来触发EPTP切换VM功能，ECX从EPTP列表中选择一个条目。 目前，EPTP切换支持最多512个EPTP条目，这意味着SeCage最多可以为每个客户虚拟机支持512个分区。</p>
+<h4 id="分离控制平面与数据平面"><a href="#分离控制平面与数据平面" class="headerlink" title="分离控制平面与数据平面"></a>分离控制平面与数据平面</h4><figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/secage8.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/secage8.png" width="693"></a><br>    <figcaption></figcaption><br></figure>
+
+<ul>
+<li>控制平面（策略）：虚拟机管理程序预先配置不同隔间使用的EPT</li>
+<li>数据平面（调用）：应用程序可以直接切换EPT而无需hypervisor干预</li>
+</ul>
+<h3 id="3-2-确保执行流程"><a href="#3-2-确保执行流程" class="headerlink" title="3.2 确保执行流程"></a>3.2 确保执行流程</h3><p>SeCage将逻辑划分为<strong>敏感函数</strong>，<strong>蹦床</strong>和<strong>其他代码</strong>（包括应用程序代码和系统软件代码）。只有秘密分区的敏感函数才能访问秘密，而蹦床代码则用来在秘密部分和主要部分之间切换。</p>
+<p>在运行期间，主分区中的函数可以调用敏感函数，而敏感函数也可以调用秘密分区之外的函数。</p>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/secage4.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/secage4.png" width="693"></a><br>    <figcaption></figcaption><br></figure>
+
+<p>图4显示了在运行时可能的执行流程。根据调用方向将蹦床代码分类为蹦床和跳板。图4的上半部分示出了蹦床的位置：<strong>当主分区中的代码调用一个秘密隔间中的一个函数时，不是直接调用敏感函数，而是调用相应的蹦床代码。</strong></p>
+<ol>
+<li>首先执行VMFUNC指令加载秘密区间内存；</li>
+<li>然后栈指针被修改为指向安全栈页面。</li>
+<li>如果参数数目大于6（寄存器支持的最大参数数目），则其余参数应复制到安全栈中。</li>
+<li>一切准备就绪，将调用真正的敏感函数。</li>
+<li>一旦这个函数返回，蹦床代码就会消除安全堆栈的内容，将ESP恢复到前一个栈位置，反向执行VMFUNC指令并将结果返回给调用者。</li>
+</ol>
+<h4 id="3-2-1-主分区调用敏感函数"><a href="#3-2-1-主分区调用敏感函数" class="headerlink" title="3.2.1 主分区调用敏感函数"></a>3.2.1 <strong>主分区调用敏感函数</strong></h4><figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/secage9.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/secage9.png" width="693"></a><br>    <figcaption></figcaption><br></figure>
+
+<h4 id="3-2-2-秘密隔间可以调用普通函数"><a href="#3-2-2-秘密隔间可以调用普通函数" class="headerlink" title="3.2.2 秘密隔间可以调用普通函数"></a>3.2.2 <strong>秘密隔间可以调用普通函数</strong></h4><p>（例如，系统调用，库调用等）</p>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/secage10.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/secage10.png" width="693"></a><br>    <figcaption></figcaption><br></figure>
+
+<h4 id="3-2-3-使用蹦床和跳板来切换上下文"><a href="#3-2-3-使用蹦床和跳板来切换上下文" class="headerlink" title="3.2.3 使用蹦床和跳板来切换上下文"></a>3.2.3 <strong>使用蹦床和跳板来切换上下文</strong></h4><p>不同分区有不同的上下文，使用<strong>蹦床</strong>和<strong>跳板</strong>来切换上下文，<strong>上下文切换使用VMFUNC完成</strong></p>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/secage13.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/secage13.png" width="693"></a><br>    <figcaption></figcaption><br></figure>
+
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/secage11.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/secage11.png" width="693"></a><br>    <figcaption></figcaption><br></figure>
+
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/secage14.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/secage14.png" width="693"></a><br>    <figcaption></figcaption><br></figure>
+
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/secage12.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/secage12.png" width="693"></a><br>    <figcaption></figcaption><br></figure>
+
+
+<h3 id="3-3-其他杂项"><a href="#3-3-其他杂项" class="headerlink" title="3.3 其他杂项"></a>3.3 其他杂项</h3><h4 id="3-3-1-存储"><a href="#3-3-1-存储" class="headerlink" title="3.3.1 存储"></a>3.3.1 存储</h4><p>在初始化阶段，可以从独立配置文件，可执行二进制文件或数据库模式读取机密。这样的存储总是可以被系统软件访问，没有有效的方法来保护它们。</p>
+<p>SeCage通过另一种方法解决了这个问题，确保在这些存储中不会有任何秘密。<strong>存储中的秘密被替换为一些虚拟数据，在应用程序启动时，虚拟数据将被恢复为真实的秘密</strong>。在运行时，SeCage确保在敏感功能中不会发生I/O写入，从而保证秘密不会泄漏到存储器中。</p>
+<h4 id="3-3-2-中断处理"><a href="#3-3-2-中断处理" class="headerlink" title="3.3.2 中断处理"></a>3.3.2 中断处理</h4><p>在秘密区间执行期间，在EPT-S上下文中不存在操作系统支持，因此不允许将中断注入到客户虚拟机。</p>
+<p>当一个非root的客户虚拟机由于中断而陷入虚拟机管理程序时，SeCage中相应的处理程序检查它是否在EPT-S的上下文中，以及它是什么样的中断。如果在敏感函数的执行过程中发生中断，它只是丢弃某些中断（例如定时器中断），并延迟其他中断（例如NMI，IPI）直到回到EPT-N上下文为止。</p>
+<h4 id="3-3-3-多线程"><a href="#3-3-3-多线程" class="headerlink" title="3.3.3 多线程"></a>3.3.3 多线程</h4><p>SeCage支持多线程程序。如果只有一个VCPU运行所有线程，由于我们将EPT-S VCPU上的定时器中断丢弃，EPT-S上下文不会被其他线程抢占，直到它返回到EPT-N环境。</p>
+<p>如果有多个VCPU，则由于每个VCPU都有自己的EPT，如果一个VCPU在EPT-S上下文中，则其他VCPU可以在EPT-N上下文中运行，并且不允许在EPT-S中读取秘密。</p>
+<h3 id="3-4-对秘密隔间整个生命周期的保护"><a href="#3-4-对秘密隔间整个生命周期的保护" class="headerlink" title="3.4 对秘密隔间整个生命周期的保护"></a>3.4 对秘密隔间整个生命周期的保护</h3><p>图5显示了秘密隔间的生命周期保护。SeCage增加了三个hypercalls，如表2所示。</p>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/secage15.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/secage15.png" width="693"></a><br>    <figcaption></figcaption><br></figure>
+
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/secage16.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/secage16.png" width="693"></a><br>    <figcaption></figcaption><br></figure>
+
+<h4 id="3-4-1-Creation-创建"><a href="#3-4-1-Creation-创建" class="headerlink" title="3.4.1 Creation 创建"></a>3.4.1 Creation 创建</h4><p>在应用程序加载到客户虚拟机之前，SeCage利用应用程序分解框架来分析应用程序，并将其<strong>分解</strong>为主分区和几个秘密分区。</p>
+<p>根据秘密加载的方式，<strong>秘密</strong>在配置文件，可执行二进制文件或数据库等持久性存储中<strong>被替换为伪数据</strong>。例如，如果秘密在运行期间从文件（例如OpenSSL）或数据库加载，则存储中的秘密被替换。否则，应用程序在用伪数据替换源代码中的秘密之后被编译。</p>
+<p>同时，开发者需要通过预定义的安全离线通道将<strong>秘密和伪数据的映射</strong>（例如，&lt; key，length&gt;→secret binding）<strong>提供给hypervisor</strong>。通过这种方式，hypervisor可以在部署阶段将真实的秘密加载到安全内存中。</p>
+<h4 id="3-4-2-Deployment-部署"><a href="#3-4-2-Deployment-部署" class="headerlink" title="3.4.2 Deployment 部署"></a>3.4.2 Deployment 部署</h4><p>应用程序部署的过程包括以下步骤：</p>
+<ol>
+<li><p>启动应用程序时，检测代码发出SECAGE INIT超级调用，它将虚拟地址起始位置和敏感函数页面数以及蹦床代码作为参数传递。管理程序首先检查敏感函数和蹦床代码的完整性，以及设置如3.1节所述的EPT-N和EPT-S。值得注意的是，EPT-S映射了几个从EPT-N中不可见的保留页面，这些页面将在稍后被用作安全堆栈。</p>
+</li>
+<li><p>管理程序调用VMENTER来恢复不可信的应用程序执行。当不可信代码为秘密伪造的副本调用内存分配函数时，它将被重定向到敏感函数中的secure_malloc以从安全的堆中分配页面。</p>
+</li>
+<li><p>在将伪造秘密复制到敏感函数中的安全堆之后，发出SECRET LOAD调用。虚拟机管理程序然后扫描安全的堆内存，并根据用户提供的伪秘密与秘密的映射关系将伪数据替换为真实的秘密。</p>
+</li>
+</ol>
+<p>通过上述应用程序部署协议，SeCage确保了在SECRET LOAD之前，内存中不存在任何秘密，因此即使执行环境不可信，也不会泄露任何秘密。在SECRET LOAD之后，秘密只能在秘密隔间内访问，因此主分区中的代码也无法泄露秘密数据。尽管不可信的代码可能违反协议，通过跳过调用超级调用或者不遵守安全malloc的规则，管理程序可以检测到这样的违规，并且在这种情况下秘密不会被加载到内存中。</p>
+<h4 id="3-4-3-Runtime-运行"><a href="#3-4-3-Runtime-运行" class="headerlink" title="3.4.3 Runtime 运行"></a>3.4.3 Runtime 运行</h4><p>在运行时，主分区和秘密分区中的代码将同时执行。<br>SeCage机制确保：（1）秘密及其副本只存在于EPT-S映射中，（2）秘密及其副本只能在敏感函数执行过程中使用。如果主分区中的代码尝试访问秘密内存，则会由于违反EPT而发生VMExit，然后通知Hypervisoris检查访问模式。</p>
+<p>如果访问请求源自主分区代码到秘密，并且从静态分析提取的函数中不包括相应的函数，则可能发生了攻击，在这种情况下，管理程序应该停止应用程序的执行并通知用户该异常的访问请求。如果该访问请求根据静态分析的结果和执行上下文符合预定义的策略，则管理程序将相应的函数包含到秘密区间的敏感函数闭包。</p>
+<h4 id="3-4-4-Termination-终止"><a href="#3-4-4-Termination-终止" class="headerlink" title="3.4.4 Termination 终止"></a>3.4.4 Termination 终止</h4><p>当应用程序终止时，秘密也应该被清除。如果应用程序正常退出，它会发出SECAGE RESTORE超级调用，以便虚拟机管理程序帮助删除秘密隔间的EPT-S。即使应用程序异常退出，或者应用程序或操作系统拒绝通知虚拟机管理程序，秘密信息也只存在于EPT-S中，因此不会被泄露。</p>
+<hr>
+<h2 id="4-应用程序分解"><a href="#4-应用程序分解" class="headerlink" title="4. 应用程序分解"></a>4. 应用程序分解</h2><figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/secage17.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/secage17.png" width="693"></a><br>    <figcaption></figcaption><br></figure>
+
+<p>上图显示了应用程序分析和分解的一般过程。给定一个应用程序和用户定义的秘密，我们需要分析秘密的数据流，以及可能访问这些秘密数据的敏感函数。虽然静态分析可以对程序的所有可能的执行路径进行全面的分析，但是它具有精确性问题，可能会导致更大的TCB和更高的开销。</p>
+<p>我们观察到在大多数情况下，<strong>操纵秘密的执行流程是相对固定的</strong>。基于这一观察，我们采用混合方法来提取秘密闭包。具体而言，我们采用<strong>动态方法来实现灵活的信息流控制（IFC）分析，以获得最常见但可能不完全的秘密闭包</strong>（步骤a），并且还依靠静态分析的综合结果来避免一些角落的情况（步骤bcd）。另一方面，它提供了一系列在<strong>编译期间自动分解应用程序的机制</strong>。然后，SeCage将这些秘密和敏感的功能分解成一个独立的秘密分区，可以由虚拟机管理程序单独保护（步骤（ef））。</p>
+<h3 id="4-1-混合秘密闭包提取"><a href="#4-1-混合秘密闭包提取" class="headerlink" title="4.1 混合秘密闭包提取"></a>4.1 混合秘密闭包提取</h3><p>静态方法：像指针混叠一样的精确问题</p>
+<ul>
+<li>导致明显大于必要的闭包</li>
+<li>可能会引入更大的TCB和更差的性能</li>
+</ul>
+<p>动态方法：完整性问题</p>
+<ul>
+<li>可能会引入大量的误报</li>
+</ul>
+<h4 id="4-1-1-静态污点分析"><a href="#4-1-1-静态污点分析" class="headerlink" title="4.1.1 静态污点分析"></a>4.1.1 静态污点分析</h4><p>我们利用<strong>CIL</strong>对<strong>应用程序的中间表示</strong>进行静态污点分析。 我们将这组秘密数据表示为{s}，对秘密的引用集合作为{s ref}被提供。 我们的目标是找到所有可能的指令，这些指令表示为sink，即解引用变量x ∈ {s ref}。</p>
+<p>以下的数据流将被跟踪：</p>
+<ol>
+<li>秘密数据引用的传播将被追踪；</li>
+<li>将秘密数据的引用作为函数的参数传递时被跟踪；</li>
+<li>将秘密数据的引用作为函数的返回值时被跟踪；</li>
+<li>对秘密数据引用解引用时被跟踪，sink指令被记录。</li>
+</ol>
+<p>根据多变量分析，功能分析多次。在我们的方法中，{s}和{s ref}在整个过程中不断变化，当程序到达一个固定点时，我们停止分析，而秘密和参考集不再改变。<strong>通过这种污点分析，我们可以获得大量潜在的敏感函数。</strong></p>
+<h4 id="4-1-2-动态闭包提取"><a href="#4-1-2-动态闭包提取" class="headerlink" title="4.1.2 动态闭包提取"></a>4.1.2 动态闭包提取</h4><ul>
+<li>发现：执行秘密数据的流程相对固定</li>
+<li>目标：获得最常见但可能不完全的紧凑的秘密闭包</li>
+<li>方法：结合mprotect和debug异常技术</li>
+</ul>
+<p>为了获得紧凑的封闭闭合，我们采用了mprotect和debug exception技术的创新组合，采用简单但精确的动态分析。</p>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/secage18.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/secage18.png" width="693"></a><br>    <figcaption></figcaption><br></figure>
+
+<p>图7显示了动态敏感函数提取的过程。一开始，应用程序被安装使用安全的malloc来为秘密数据分配内存。然后，使用<strong>mprotect</strong>系统调用来保护安全内存（paddr），并<strong>注册一个用户模式处理程序</strong>来处理违规时产生的相应的段错误。<br>① 只要sink指令访问受保护的内存，它就会陷入段错误处理程序；<br>② 该处理程序记录发生错误的sink指令地址；<br>③ 并向内核模块发出一个IOCTL系统调用，该调用将调试寄存器0（DR0）中的下一条指令设置为断点。之后，处理程序撤销对paddr的mprotect以继续进行，然后sink指令可以在段错误处理程序返回后成功访问内存。<br>④ 但程序会立即在下一条指令中捕获到预定义的调试异常处理程序，在这种情况下，异常处理程序可以再次将mprotect设置为paddr。</p>
+<p>我们在不同的工作量下多次运行应用程序。例如，对于Nginx服务器的情况，我们可以发送不同类型的请求，直到sink指令的集合固定。那么我们可以得到大部分的sink指令，以及相应的敏感函数。</p>
+<h4 id="4-1-3-混合方法提取闭包"><a href="#4-1-3-混合方法提取闭包" class="headerlink" title="4.1.3 混合方法提取闭包"></a>4.1.3 <strong>混合方法提取闭包</strong></h4><p>分解应用程序的混合方法：</p>
+<ul>
+<li>通过动态方法提取秘密闭包</li>
+<li>编译期间自动分解</li>
+<li>使用静态方法获取完整的潜在敏感函数，用于在运行时避免角落情况</li>
+</ul>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/secage19.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/secage19.png" width="693"></a><br>    <figcaption></figcaption><br></figure>
+
+<h3 id="4-2-应用程序自动分解"><a href="#4-2-应用程序自动分解" class="headerlink" title="4.2 应用程序自动分解"></a>4.2 应用程序自动分解</h3><h4 id="4-2-1-利用CIL将-fs-调用替换为-ft-调用"><a href="#4-2-1-利用CIL将-fs-调用替换为-ft-调用" class="headerlink" title="4.2.1 利用CIL将{fs}调用替换为{ft}调用"></a>4.2.1 利用CIL将{fs}调用替换为{ft}调用</h4><p>由于{fs}中的敏感函数并不是独立的，因此SeCage使用蹦床机制来实现{f s}与主隔间中定义为{fn}的函数之间的通信。</p>
+<p>对于每个函数调用f，f_caller和 f_callee分别表示调用者函数和被调用者函数。 当且仅当f_caller和f_callee中的一个属于{f s}时，需要定义一个相应的蹦床函数t(f)，该函数在下一个阶段用来代替f。形式定义如下：</p>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/secage20.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/secage20.png" width="493"></a><br>    <figcaption></figcaption><br></figure>
+
+<p>如果有{fn}到{fs}的任何函数调用，我们定义一个蹦床函数f_in。 同样，从{fs}到{fn}的每个函数调用都定义了一个跳板函数f_out。 我们注意到{ft}是f_in和f_out的集合。</p>
+<h4 id="4-2-2-利用GCC-section属性来创建内存区域"><a href="#4-2-2-利用GCC-section属性来创建内存区域" class="headerlink" title="4.2.2 利用GCC section属性来创建内存区域"></a>4.2.2 利用GCC section属性来创建内存区域</h4><p>我们将应用程序分解为秘密和主要隔间以实现SeCage保护。总共涉及三个步骤。</p>
+<ul>
+<li>1 首先，相应地将3个超级调用添加到应用程序中（3.4节）。</li>
+<li>2 其次，使用自动化脚本生成一个定义和声明蹦床函数{ft}的文件，并使用GCC的section属性修改{fs}中敏感函数sfunc和{ft}中蹦床函数tfunc的定义：</li>
+</ul>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/secage21.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/secage21.png" width="493"></a><br>    <figcaption></figcaption><br></figure>
+
+<p>通常情况下，GCC编译器将代码组织到.text部分。附加节属性指定sfunc和tfunc存在于两个特定的.se和.tr节的内存区域中，这些内存区域与{fn}的内存隔离。因此，SeCage可以在页面粒度中保护它们。</p>
+<ul>
+<li>3 最后，在编译阶段， CIL解析整个应用程序，用{ft}中相应的蹦床函数调用替换{fs}涉及的函数调用。</li>
+</ul>
+<h4 id="4-2-3-修改链接器来从主区域中区分秘密数据"><a href="#4-2-3-修改链接器来从主区域中区分秘密数据" class="headerlink" title="4.2.3 修改链接器来从主区域中区分秘密数据"></a>4.2.3 修改链接器来从主区域中区分秘密数据</h4><p>SeCage还需要修改链接器，将新创建的.se和.tr部分链接到预定义的内存位置，以便SECAGE INIT超级调用可以传递适当的内存地址作为虚拟机管理程序保护的秘密分区内存。</p>
+<hr>
+<h2 id="5-实现与评估"><a href="#5-实现与评估" class="headerlink" title="5. 实现与评估"></a>5. 实现与评估</h2><h3 id="5-1-实现"><a href="#5-1-实现" class="headerlink" title="5.1 实现"></a>5.1 实现</h3><ul>
+<li><p>在Intel Haswell机器上实现</p>
+<ul>
+<li>支持VMFUNC的Haswell处理器</li>
+<li>4个内核（使用超线程的8个硬件线程），32 GB内存</li>
+</ul>
+</li>
+<li><p>软件环境</p>
+<ul>
+<li>带有KVM的Linux 3.13.7</li>
+<li>客户虚拟机：Linux 3.16.1</li>
+<li>2个虚拟内核和4GB内存</li>
+</ul>
+</li>
+<li><p>应用程序分析和分解</p>
+<ul>
+<li>CIL框架，OCaml扩展，bash脚本</li>
+</ul>
+</li>
+</ul>
+<h3 id="5-2-使用方案"><a href="#5-2-使用方案" class="headerlink" title="5.2 使用方案"></a>5.2 使用方案</h3><ul>
+<li><p>保护Nginx免受从HeartBleed攻击</p>
+<ul>
+<li>保护素数（p和q）和私钥指数（d）</li>
+</ul>
+</li>
+<li><p>保护OpenSSH免受Rootkit攻击</p>
+<ul>
+<li>保护OpenSSH的私钥（和Nginx一样）</li>
+</ul>
+</li>
+<li><p>保护CryptoLoop(进行文件系统加密的一个内核API)免受内核内存泄露</p>
+<ul>
+<li>保护AES密钥</li>
+</ul>
+</li>
+</ul>
+<h3 id="5-3-安全性分析"><a href="#5-3-安全性分析" class="headerlink" title="5.3 安全性分析"></a>5.3 安全性分析</h3><ul>
+<li>Secrets exposure elimination</li>
+</ul>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/secage22.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/secage22.png" width="693"></a><br>    <figcaption></figcaption><br></figure>
+
+<ul>
+<li>Reduced attack surfaces<ul>
+<li>秘密隔间中很小的代码库</li>
+<li>用于OpenSSL的只有1350 LoC，用于CryptoLoop的只有430 LoC</li>
+<li>敏感函数的限制（如没有I/O操作等）</li>
+</ul>
+</li>
+</ul>
+<h3 id="5-4-性能分析"><a href="#5-4-性能分析" class="headerlink" title="5.4 性能分析"></a>5.4 性能分析</h3><ul>
+<li>Nginx throughput and latency<ul>
+<li>Use ab benchmark</li>
+<li>Simulate 20 clients</li>
+<li>N KeepAlive requests</li>
+<li>X bytes per request</li>
+</ul>
+</li>
+</ul>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/secage24.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/secage24.png" width="393"></a><br>    <figcaption></figcaption><br></figure>
+
+<ul>
+<li>OpenSSH latency<ul>
+<li>SSH to the server and execute common Linux commands </li>
+<li>Average latency overhead:  6 ms (3%) </li>
+</ul>
+</li>
+<li>CryptoLoop I/O bandwidth<ul>
+<li>Use fio benchmark with sequential read/write configurations </li>
+<li>Average slowdown: 4%</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><p><a href="http://ipads.se.sjtu.edu.cn/lib/exe/fetch.php?media=publications:secage-ccs15.pdf" target="_blank" rel="external">Thwarting Memory Disclosure with Efficient Hypervisor-enforced Intra-domain Isolation-CCS’15 Liu et al,</a></p>
+
+      
+    </div>
+    
+    
+      <footer class="article-footer">
+        
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Infoleak/">Infoleak</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Virtualization/">Virtualization</a></li></ul>
+
+      </footer>
+    
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/21111111/welcome/" id="article-nav-newer" class="article-nav-link-wrap">
+      <div class="article-nav-title"><span>&lt;</span>&nbsp;
+        
+          「善守者 敌不知其所攻」
+        
+      </div>
+    </a>
+  
+  
+    <a href="/20171022/ever-papernote2/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">详细解读：Digtool:A Virtualization-Based Framwork for Detecting Kernel Vulnerabilities&nbsp;<span>&gt;</span></div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+
+
+<div class="share_addthis">
+  <div class="sharing addthis_toolbox share">
+    <a class="addthis_button_facebook_like"></a>
+    <a class="addthis_button_tweet"></a>
+    <a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-560c64c35486b3d4" async="async"></script>
+</div>
+
+
+
+
+
+</section>
+    <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2017 Diting0x&nbsp;
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>, theme by <a href="http://github.com/ppoffice">PPOffice</a>
+    </div>
+  </div>
+</footer>
+    
+
+<script src="/js/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+  </div>
+</body>
+</html>

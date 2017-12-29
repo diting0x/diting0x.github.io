@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>详细解读：Digtool:A Virtualization-Based Framwork for Detecting Kernel Vulnerabilities - 善守者</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="Digtool：一个基于虚拟化的检测内核漏洞的框架1 摘要Digtool是一个有效的，针对二进制代码的内核漏洞检测框架。通过在一个研发的虚拟化监测监控器上实现，可以截获内核执行期间的大量动态行为，例如内核对象分配，内核内存访问，线程调度，函数调用等。Digtool已经证实了windows内核和驱动中的45个0-day漏洞。 2 背景介绍检测漏洞主要分为两个方面：  路径探索：尽可能探测到更多代码分">
+<meta name="keywords" content="Notes,Virtualization,Vulnerabilities,Binary">
+<meta property="og:type" content="article">
+<meta property="og:title" content="详细解读：Digtool:A Virtualization-Based Framwork for Detecting Kernel Vulnerabilities">
+<meta property="og:url" content="https://diting0x.github.io/20171022/ever-papernote2/index.html">
+<meta property="og:site_name" content="善守者">
+<meta property="og:description" content="Digtool：一个基于虚拟化的检测内核漏洞的框架1 摘要Digtool是一个有效的，针对二进制代码的内核漏洞检测框架。通过在一个研发的虚拟化监测监控器上实现，可以截获内核执行期间的大量动态行为，例如内核对象分配，内核内存访问，线程调度，函数调用等。Digtool已经证实了windows内核和驱动中的45个0-day漏洞。 2 背景介绍检测漏洞主要分为两个方面：  路径探索：尽可能探测到更多代码分">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/f1.png">
+<meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/f2.png">
+<meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/f3.png">
+<meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/f4.png">
+<meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/f5.png">
+<meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/f6.png">
+<meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/f7.png">
+<meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/f8.png">
+<meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/f9.png">
+<meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/f10.png">
+<meta property="og:updated_time" content="2017-12-29T04:03:10.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="详细解读：Digtool:A Virtualization-Based Framwork for Detecting Kernel Vulnerabilities">
+<meta name="twitter:description" content="Digtool：一个基于虚拟化的检测内核漏洞的框架1 摘要Digtool是一个有效的，针对二进制代码的内核漏洞检测框架。通过在一个研发的虚拟化监测监控器上实现，可以截获内核执行期间的大量动态行为，例如内核对象分配，内核内存访问，线程调度，函数调用等。Digtool已经证实了windows内核和驱动中的45个0-day漏洞。 2 背景介绍检测漏洞主要分为两个方面：  路径探索：尽可能探测到更多代码分">
+<meta name="twitter:image" content="http://oij0laovn.bkt.clouddn.com/f1.png">
+  
+  
+  <link href="/webfonts/ptserif/main.css" rel='stylesheet' type='text/css'>
+  <link href="/webfonts/source-code-pro/main.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <header id="header">
+  <div id="header-outer" class="outer">
+    <div id="header-inner" class="inner">
+      <a id="main-nav-toggle" class="nav-icon" href="javascript:;"></a>
+      <a id="logo" class="logo logo-text" href="/">谛听</a>
+      <nav id="main-nav">
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+          <a class="main-nav-link" href="/timeline">Timeline</a>
+        
+          <a class="main-nav-link" href="/shoulders">Shoulders</a>
+        
+          <a class="main-nav-link" href="/about">About</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        <div id="search-form-wrap">
+          <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://diting0x.github.io"></form>
+        </div>
+      </nav>
+    </div>
+  </div>
+</header>
+    <section id="main" class="outer"><article id="post-ever-papernote2" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      详细解读：Digtool:A Virtualization-Based Framwork for Detecting Kernel Vulnerabilities
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/20171022/ever-papernote2/" class="article-date">
+  <time datetime="2017-10-22T03:37:11.000Z" itemprop="datePublished">2017-10-22</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/曾经的论文笔记/">曾经的论文笔记</a>
+  </div>
+
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="Digtool：一个基于虚拟化的检测内核漏洞的框架"><a href="#Digtool：一个基于虚拟化的检测内核漏洞的框架" class="headerlink" title="Digtool：一个基于虚拟化的检测内核漏洞的框架"></a>Digtool：一个基于虚拟化的检测内核漏洞的框架</h2><h2 id="1-摘要"><a href="#1-摘要" class="headerlink" title="1 摘要"></a>1 摘要</h2><p>Digtool是一个有效的，针对二进制代码的内核漏洞检测框架。通过在一个研发的虚拟化监测监控器上实现，可以截获内核执行期间的大量动态行为，例如内核对象分配，内核内存访问，线程调度，函数调用等。Digtool已经证实了windows内核和驱动中的45个0-day漏洞。</p>
+<h2 id="2-背景介绍"><a href="#2-背景介绍" class="headerlink" title="2 背景介绍"></a>2 背景介绍</h2><p>检测漏洞主要分为两个方面：</p>
+<ul>
+<li>路径探索：尽可能探测到更多代码分支</li>
+<li>漏洞验证：记录探索到的路径中出现的异常</li>
+</ul>
+<p>Digtool重点关注内核漏洞验证这一方面。</p>
+<h3 id="2-1-现有技术"><a href="#2-1-现有技术" class="headerlink" title="2.1 现有技术"></a>2.1 现有技术</h3><ul>
+<li>linux内核漏洞检测工具，依赖于实现的细节以及系统的源代码，很难用于像windows这种闭源的操作系统。</li>
+<li>Driver Verifier:微软自己开发的一个集成系统，不是一个专用的工具。并且无法验证某些漏洞，比如TOCTOU.</li>
+<li>基于虚拟化的漏洞检测工具可以支持不同的操作系统，而目前基于虚拟化的漏洞验证工具只能用来检测一种具体类型的漏洞，也不能验证0-day漏洞。</li>
+</ul>
+<p>对于像windows这种闭源的OS，开发一个漏洞检测工具既不能像在linux上的那些工具在编译期间插入检测代码，也无法像Driver Verifier那样改写或者调整系统源代码。<br>因此，采用虚拟化技术来隐藏windows操作系统内部细节，在一个更低的level，也就是hypervisor层来实行检测。Digtool就是通过虚拟化技术来捕获动态行为特征来发现windows操作系统中的内核漏洞。</p>
+<h3 id="2-2-常见内核漏洞"><a href="#2-2-常见内核漏洞" class="headerlink" title="2.2 常见内核漏洞"></a>2.2 常见内核漏洞</h3><p>UNPROBE,TOCTTOU,UAF,和OOB是四种在许多项目中（包括操作系统内核）经常出现的漏洞。他们可以导致拒绝服务攻击，本地权限提升，甚至是远程代码执行，直接影响着受害系统的稳定和安全。</p>
+<ul>
+<li>UNPROBE:No checking of a user pointer to an input buffer.对用户指向输入缓冲区的指针没有进行检查。许多内核模块省略了对用户指针的检查，尤其是当指针嵌套在复杂的结构中时，这会导致无效的内存参考，任意内存读/写。</li>
+<li>TOCTTOU:Time of check to time of use.通常系统调用程序获取一个参数，会不止一次地从用户内存中取一个值，第一次检查，第二次使用。如果在两次取值之间，篡改了参数的值，就会导致该漏洞。</li>
+<li>UAF:Use after free.使用释放过的内存。</li>
+<li>OOB：Out of boundaries.越界访问，访问超过已分配的堆或者内存对象边界的内存。UAF和OOB都可以导致权限提升。</li>
+</ul>
+<h3 id="2-3-Digtool的优点"><a href="#2-3-Digtool的优点" class="headerlink" title="2.3 Digtool的优点"></a>2.3 Digtool的优点</h3><ul>
+<li>可检测windows操作系统中不同类型的内核级漏洞</li>
+<li>不会crash操作系统，只是提取内核执行过程中的上下文和截获漏洞</li>
+<li>不依赖内核源代码</li>
+<li>不依赖任何现有的虚拟化平台</li>
+<li>设计了基于虚拟化的检测算法，可发现四种类型的漏洞(UNPROBE,TOCTTOU,UAF,OOB)</li>
+<li>发现了45个windows的内核代码和驱动程序的0-day漏洞</li>
+</ul>
+<h2 id="3-概述"><a href="#3-概述" class="headerlink" title="3 概述"></a>3 概述</h2><p>Digtool的整体架构如figure 1所示，digtool的子系统和模块分别位于用户空间，内核空间以及hypervisor层。细的箭头代表直接的调用关系或者模块之间有传递消息的直接通道。粗的箭头表示通过事件触发机制间接地互相作用。</p>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/f1.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/f1.png" width="593"></a><br>    <figcaption></figcaption><br></figure>
+
+<h3 id="3-1-Hypervisor组成"><a href="#3-1-Hypervisor组成" class="headerlink" title="3.1 Hypervisor组成"></a>3.1 Hypervisor组成</h3><p> Hypervisor最重要的工作就是监控虚拟内存访问，这是接口检测和内存检测的基础。</p>
+<ul>
+<li>Tracing memory access outside guest OS：由于大多数工程运行在虚拟地址空间，因此要着重关注虚拟地址。<br>Xenpwn使用扩展页表EPT追踪物理地址是不适用的，尤其是在windows系统中，因为虚拟地址和物理地址的映射是非线性的。<br>Bochspwn使用了一个全栈的仿真器，效果不好，开销大。</li>
+<li>基于硬件虚拟化的SPT（shadow page table)技术可以用来监视虚拟内存访问与Xenpwn和Bochspwn从设计和实现都非常不同。</li>
+</ul>
+<p>Digtool不依赖现有的hypervisor(Xen or KVM),自主设计的hypervisor包含VMM infrastructure,接口检测和内存检测三个组成部分。</p>
+<h4 id="3-1-1-VMM-Infrastructure"><a href="#3-1-1-VMM-Infrastructure" class="headerlink" title="3.1.1 VMM Infrastructure"></a>3.1.1 VMM Infrastructure</h4><ul>
+<li>首先检查硬件环境和操作系统版本来保证兼容性；</li>
+<li>然后初始化hypervisor，将原先的操作系统加载到虚拟机中；初始化操作包括以下：<ul>
+<li>建立SPTs来监控客户操作系统中的虚拟机内存访问；</li>
+<li>初始化跟踪进程调度的模块；</li>
+<li>建立操作系统内核与hypervisor的通信</li>
+</ul>
+</li>
+</ul>
+<p>接口检测和内存检测都是基于VMM infrastructure.</p>
+<h4 id="3-1-2-接口检测"><a href="#3-1-2-接口检测" class="headerlink" title="3.1.2 接口检测"></a>3.1.2 接口检测</h4><p>监控系统调用执行时从用户态中传入的参数，跟踪参数的使用和检查来发现潜在的漏洞。</p>
+<p>因为系统调用总是在内核态被执行，所以不用监测处理器在用户态运行时的用户空间，SPTs只需用来监控在系统调用期间的用户内存空间。由于许多VMEXIT事件会被触发影响效果，所以接口检测可以通过相关的服务接口来配置待监测的系统调用的范围。</p>
+<h4 id="3-1-3-内存检测"><a href="#3-1-3-内存检测" class="headerlink" title="3.1.3 内存检测"></a>3.1.3 内存检测</h4><p>监控客户机操作系统中内核内存来检测非法内存访问。SPTs用来监控内核内存。</p>
+<p>为了检测具体类型的漏洞，内存检测可以通过相关服务接口，设置监控的内存区域，配置监测的对象，当截获到内存分配和释放的事件时动态调整监控的内存区域，从而在内存访问过程中得到潜在漏洞的准确特征。</p>
+<h3 id="3-2-内核空间组成"><a href="#3-2-内核空间组成" class="headerlink" title="3.2 内核空间组成"></a>3.2 内核空间组成</h3><p>在内核空间主要工作有：</p>
+<ul>
+<li>设置监控的内存区域：取决于待检测的漏洞类型，同时会随着一些内核事件的出现（如分配和释放）而改变，因此这些事件需要被跟踪。</li>
+<li>和hypervisor进行通信：内核代码调用digtool输出的服务接口向hypervisor请求服务；也可以通过共享内存传递消息。</li>
+<li>截获某些特定的内核函数：需要hook一些操作系统的内核函数来跟踪一些特殊的事件。</li>
+</ul>
+<p>中间件位于客户操作系统的内核空间，用来连接hypervisor子系统与用户空间的项目。流程如下：</p>
+<ol>
+<li>首先在加载fuzzer之前，通过配置文件来设置系统调用的检测范围；</li>
+<li>中间件将配置信息和从加载器那来的fuzzer进程信息传递给hypervisor；</li>
+<li>hypervisor可以检测在fuzzer进程中的漏洞。</li>
+</ol>
+<h4 id="3-2-1-中间件for接口检测"><a href="#3-2-1-中间件for接口检测" class="headerlink" title="3.2.1 中间件for接口检测"></a>3.2.1 中间件for接口检测</h4><p>中间件通过一个工作线程将所有的行为事件记录到日志文件中，记录的数据包括系统调用编号（仅检测范围内的系统调用），事件类型，事件时间，指令地址以及事件所访问的内存。<br>日志分析器可以通过日志文件来检测潜在的<strong>UNPROBE</strong>和<strong>TOCTTOU</strong>漏洞。</p>
+<h4 id="3-2-2-中间件for内存检测"><a href="#3-2-2-中间件for内存检测" class="headerlink" title="3.2.2 中间件for内存检测"></a>3.2.2 中间件for内存检测</h4><p>中间件通过hook一些特殊的内存函数来动态调整监测的内存区域。</p>
+<p>通过调用服务接口来限制监测的内存区域和内核代码。如果发现一个潜在漏洞，中间件会记录下来，通过单步调试的模式或者软中断来中断OS。客户操作系统与类似于windbg的调试工具连接，可以获取准确的上下文用于分析漏洞。</p>
+<h3 id="3-3-用户空间组成"><a href="#3-3-用户空间组成" class="headerlink" title="3.3 用户空间组成"></a>3.3 用户空间组成</h3><p>加载器loader，fuzzer,日志分析器放在用户空间，可以简化代码，使系统更稳定。加载器用来激活hypervisor，加载用来进行路径探索的fuzzer,在路径探索过程中的行为特征被记录下来，用于记录分析。</p>
+<h4 id="3-3-1-加载器"><a href="#3-3-1-加载器" class="headerlink" title="3.3.1 加载器"></a>3.3.1 加载器</h4><p>Loader 用于加载目标程序，digtool提供运行环境来检测漏洞。通过配置文件限制系统调用的检测范围，为ProbeAccess事件设置虚拟地址的边界。</p>
+<h4 id="3-3-2-Fuzzer"><a href="#3-3-2-Fuzzer" class="headerlink" title="3.3.2 Fuzzer"></a>3.3.2 Fuzzer</h4><p>Fuzzer用于发现代码分支，由加载器加载。在digtool中，fuzzer需要通过调整参数尽可能的调用检测范围内的系统调用，发现其分支。</p>
+<h4 id="3-3-3-日志分析器"><a href="#3-3-3-日志分析器" class="headerlink" title="3.3.3 日志分析器"></a>3.3.3 日志分析器</h4><p>分析器用于从大量的与漏洞特征相关的记录数据中提取有价值的信息。因为不同漏洞采用了不同的策略来检测，日志分析器的漏洞检测算法需要根据待检测漏洞的类型进行改变。</p>
+<h2 id="4-实现"><a href="#4-实现" class="headerlink" title="4 实现"></a>4 实现</h2><p>介绍digtool的实现细节。</p>
+<h3 id="4-1-VMM-Infrastructure"><a href="#4-1-VMM-Infrastructure" class="headerlink" title="4.1 VMM Infrastructure"></a>4.1 VMM Infrastructure</h3><p>主要是初始化hypervisor，提供基础设施。初始化过程如下：</p>
+<ul>
+<li>Digtool作为驱动被加载进OS内核，通过CPUID指令检查处理器是否支持硬件虚拟化。</li>
+<li>通过初始化一些数据结构（如VMCS）和寄存器（如CR4）为每个处理器启动hypervisor</li>
+<li>根据原先的操作系统状态设置客户操作系统的CPU状态，这样原先的操作系统就成为了运行在虚拟机上的客户操作系统。</li>
+</ul>
+<h4 id="4-1-1-虚拟页监视器"><a href="#4-1-1-虚拟页监视器" class="headerlink" title="4.1.1 虚拟页监视器"></a>4.1.1 虚拟页监视器</h4><p>Digtool用SPTs来监控虚拟内存访问，为了减小开销，SPTs只会被监视的线程使用，对于未监控的线程使用客户机操作系统原始的页表。<br>Figure 2展示了对一个监视的线程，虚拟页监视器的工作流程。</p>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/f2.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/f2.png" width="593"></a><br>    <figcaption></figcaption><br></figure>
+
+<ul>
+<li>采用一个稀疏位图Bitmap来跟踪进程空间的虚拟页，位值为1表示对应的页需要被监控，同时SPT页表中的P flag被清除；</li>
+<li>当要访问被监控的页时会触发一个#PF异常；</li>
+<li>当#PF异常被Hypervisor截获，hypervisor中的异常处理程序先去检查Bimap中对应位值是否为1：<ul>
+<li>若为0，说明这个页不需监控，SPT直接从GPT中更新对应的页，指令便继续执行</li>
+<li>若为1，异常处理模块将会处理异常：1&gt;记录异常；2&gt;向客户机操作系统注入一个中断，此中断处理程序会记录一些关于#PF异常的信息（如访问的内存地址，导致#PF的指令）；3&gt;通过触发另一个异常（软件中断）来连接客户机操作系统中的调试工具，digtool通过设置hypervisor中的MTF/TF单步调试客户机操作系统中的指令，同时SPT从GPT中更新页，使导致异常的指令再次执行。</li>
+</ul>
+</li>
+<li>由于MTF/TF，VMEXIT会在客户机操作系统每次指令执行后被触发，hypervisor重新拿到控制权，MTF/TF处理程序可以清除P flag，使虚拟页再次被监视。<br><br></li>
+</ul>
+<h4 id="4-1-2-进程调度监视器"><a href="#4-1-2-进程调度监视器" class="headerlink" title="4.1.2 进程调度监视器"></a>4.1.2 进程调度监视器</h4><p>Digtool只关注被监视的线程，因此需要跟踪线程调度来检测被监视的线程，不检测不需监视的进程。</p>
+<p>在windows操作系统中，_KPRCB结构提供了正在运行的线程信息给对应的处理器，而_KPRCB是通过_KPCR结构获得，_KPCR的地址又可以通过FS寄存器（64位系统中的GS寄存器）得到。故正在运行的线程可以通过以下的关系得到：</p>
+<blockquote>
+<p>FS–&gt;_KPCR–&gt;_KPRCB–&gt;CurrentThread.</p>
+</blockquote>
+<p>注意，关于如何获得_KPRCB，有其他的方法。在这里digtool使用了人工逆向和windows内核的知识来得到。</p>
+<p>获得_KPRCB后，在_KPRCB中的当前线程被监控，任何对当前线程的写操作意味着一个新的线程将会处于运行态，被hypervisor截获后激活虚拟页监视器，进行漏洞检测。</p>
+<h4 id="4-1-3-内核与Hypervisor间的通信"><a href="#4-1-3-内核与Hypervisor间的通信" class="headerlink" title="4.1.3 内核与Hypervisor间的通信"></a>4.1.3 内核与Hypervisor间的通信</h4><p>包含两个主要的方面：</p>
+<ul>
+<li>内核请求服务，hypervisor提供服务。通过服务接口来实现，而服务接口基于一个VMCALL指令，引发VMEXIT,hypervisor拿到控制权，处理请求。</li>
+<li>Hypervisor向内核组件发送消息，组件处理消息。通过共享内存实现，hypervisor将获得的行为信息写入共享内存并通知内核。</li>
+</ul>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/f3.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/f3.png" width="593"></a><br>    <figcaption></figcaption><br></figure>
+
+<p>根据Figure3中的箭头得到下面的指令流程：</p>
+<ol>
+<li>当被检测的目标模块触发一个被hypervisor监视的事件时，VMEXIT将会被hypervisor截获；</li>
+<li>Hypervisor将事件信息记录到共享内存。当共享内存满了，将会注入一段代码到客户机操作系统，通知工作线程处理共享内存的数据（读取共享内存中的信息并写入日志文件）；否则直接跳回目标模块；</li>
+<li>通知工作线程后，跳回目标程序，重新执行引起VMEXIT的指令。</li>
+</ol>
+<h3 id="4-2-通过系统调用接口检测漏洞"><a href="#4-2-通过系统调用接口检测漏洞" class="headerlink" title="4.2 通过系统调用接口检测漏洞"></a>4.2 通过系统调用接口检测漏洞</h3><p>接口检测需要追踪系统调用执行的过程，监控从用户态进程传入的参数，然后判断这些参数的检查和使用是否会产生潜在的漏洞：</p>
+<ul>
+<li>监控系统调用执行的整个过程，从进入内核态的point到返回用户态的point；</li>
+<li>监控内核代码对用户内存的处理；</li>
+<li>记录行为特征，用来分析潜在漏洞。</li>
+</ul>
+<h4 id="4-2-1-事件监视器"><a href="#4-2-1-事件监视器" class="headerlink" title="4.2.1 事件监视器"></a>4.2.1 事件监视器</h4><p>接口检测的实现是通过定义和截获系统调用过程中不同的行为事件，这些事件和截获其方法构成了事件监视器。</p>
+<p>事件监视器定义了十种行为事件：Syscall,Trap2b,Trap2e,RetUser,MemAccess, ProbeAccess,ProbeRead,ProbeWrite,GetPebTeb,AllocVirtualMemory.这些事件的结合可以定位一个潜在的漏洞。</p>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/f4.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/f4.png" width="593"></a><br>    <figcaption></figcaption><br></figure>
+
+<p>如Figure 4所示，在一个系统调用的执行过程中行为事件将会以这样的形式记录下来。方框上面的数字代表事件时间，只是记录了顺序，不代表实际的间隔。方框下面的Mi/Mj代表该事件访问的内存地址。</p>
+<ul>
+<li>Syscall/Trap2b/Trap2e:不同的从用户态进入内核态的系统调用方式，通过截获中断向量表中相应的入口来跟踪–监控系统调用</li>
+<li>RetUser：返回到用户空间，由于返回用户态之前，处理器会预先从用户内存提取指令，所以通过监控用户空间的页面访问来追踪 -SPT监控页面访问</li>
+<li>MemAccess: 内存访问 –SPT监控内存空间</li>
+<li>ProbeRead/ProbeWrite: 通过调用ProbeForRead/ProbeForWrite函数记录用户内存地址是否被内核检测过 –Hook内核函数</li>
+<li>ProbeAccess：通过指令直接对比检测用户内存地址是否合法（不能直接hook）-CPU模拟器</li>
+<li>AllocVirtualMemory/GetPebTeb: 确保用户内存地址合法，针对一些不需要检查的用户内存。 –Hook内核函数</li>
+</ul>
+<h4 id="4-2-2-CPU模拟器"><a href="#4-2-2-CPU模拟器" class="headerlink" title="4.2.2 CPU模拟器"></a>4.2.2 CPU模拟器</h4><p> ProbeAccess事件通过指令直接对比（比较待检测内存与用户内存空间的边界）检测用户内存地址是否合法，由于没有直接可以hook的内核函数，也没有访问用户内存空间的权限，提出了CPU模拟器。</p>
+<p> CPU模拟器放在hypervisor用来获取难以用一般方法获得的行为特征。通过解释并执行一段客户机操作系统的内核代码来实现。工作流程如Figure 5所示：<br> <figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/f5.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/f5.png" width="593"></a><br>    <figcaption></figcaption><br></figure></p>
+<ul>
+<li>#DR 寄存器中存储着目标内存，即用来检测用户内存地址的边界，这个值可以通过来自加载器的配置文件以及中间件与hypervisor的通信进行设置。</li>
+<li>当客户机操作系统访问目标内存时，hypervisor的DR处理程序会捕捉到异常，根据客户机的CPU更新CPU模拟器的状态</li>
+<li>CPU模拟器被激活，截获和执行客户机操作系统中导致调试异常的指令。CPU模拟器的起始地址就是客户机操作系统EIP寄存器中指令地址的的前一条指令。</li>
+<li>CPU模拟器主要关注cmp指令和执行客户机操作系统的代码。通过CMP指令捕获ProbAccess事件，记录到共享内存。</li>
+</ul>
+<h4 id="4-2-3-检测UNPROBE漏洞"><a href="#4-2-3-检测UNPROBE漏洞" class="headerlink" title="4.2.3 检测UNPROBE漏洞"></a>4.2.3 检测UNPROBE漏洞</h4><p>前面已经提到过，在使用从用户状态传来的指针之前，系统调用处理程序需要对其进行检查，确保该指针指向的是用户空间。所以这意味着在MemAccess事件之前会先触发ProbeRead/ProbeWrite/ProbeAccess.因此如果在MemAccess之前没有其他类型的检查事件，就说明可能有潜在的漏洞。</p>
+<p>检测UNPROBE漏洞主要关注两个方面： </p>
+<ul>
+<li>在系统调用执行过程中，MemAccess事件之前是否有检查事件；</li>
+<li>两个事件中的虚拟内存地址是否是同一个。</li>
+</ul>
+<p>从Figure 4可以看出，在n+3时刻，内核代码访问用户内存触发了MemAccess事件，而在这之前并没有任何ProbeRead/ProbeWrite/ProbeAccess事件，也没有AllocVirtualMemory/GetPebTeb事件表明该用户地址是合法的，说明该处可能有潜在的漏洞。</p>
+<h4 id="4-2-4-检测TOCTTOU漏洞"><a href="#4-2-4-检测TOCTTOU漏洞" class="headerlink" title="4.2.4 检测TOCTTOU漏洞"></a>4.2.4 检测TOCTTOU漏洞</h4><p>检测TOCTTOU漏洞也有两个关键点：</p>
+<ul>
+<li>一个是从用户态工程传来的参数应该是一个指针；</li>
+<li>同一系统调用处理程序不止一次地从用户内存取参数。</li>
+</ul>
+<p>从Figure 4可以看出，内核代码在n+2和n+3时刻访问了同一用户内存。</p>
+<p>当发现系统调用处理程序不止一次地从用户内存取参数时，通过比较Syscall/Trap2b/Trap2e和RetUser事件判断是否是同一个系统调用，从而判断是否存在TOCTTOU漏洞。</p>
+<h3 id="4-3-通过内存追踪检测漏洞"><a href="#4-3-通过内存追踪检测漏洞" class="headerlink" title="4.3 通过内存追踪检测漏洞"></a>4.3 通过内存追踪检测漏洞</h3><p>内存检测是通过跟踪内存分配，释放和访问等行为来检测内核内存的非法使用。主要关注两种内存的非法使用：</p>
+<ul>
+<li>越界访问分配的堆，会导致OOB漏洞；</li>
+<li>参考freed memory，会导致UAF漏洞。</li>
+</ul>
+<p>为了捕获漏洞的动态特征，需要监控已分配，未分配和已free的内存。Digtool通过虚拟页面监视器来监控内核内存。非法内存访问会产生page fault，hypervisor可以截获并记录下内存访问错误，然后提交到内核的调试工具进行调试，这样内核执行过程准确的上下文会被记录下来，用于漏洞检测。<br>为了跟踪已分配和已free的内存，digtool对由于分配内存和free内存的内存函数进行了hook，digtool可以通过内存分配函数的参数直接得到内存地址和内存大小。<br>注意，在digtool加载之前的内存分配是无法截获的，因此为了更准确的检测，digtool越早加载越好。</p>
+<h4 id="4-3-1-检测UAF漏洞"><a href="#4-3-1-检测UAF漏洞" class="headerlink" title="4.3.1 检测UAF漏洞"></a>4.3.1 检测UAF漏洞</h4><p>通过Hook ExAllocatePoolWithTag/ExFreePoolWithTag/ExAllocateHeap/InterlockedPushEntrySList/InterlockedPopEntrySList函数，任何在已free的内存上操作的指令都认为是UAF漏洞。</p>
+<p>同时digtool通过延迟释放freed内存来延长检测时间。（防止这种情况：用p指向已分配的内存block A–&gt;free A–&gt;另一个进程分配block B覆盖A（这样A那块区域是已分配状态）–&gt;仍然可以通过p指针操作blockA）</p>
+<h4 id="4-3-2-检测OOB漏洞"><a href="#4-3-2-检测OOB漏洞" class="headerlink" title="4.3.2 检测OOB漏洞"></a>4.3.2 检测OOB漏洞</h4><p>为了检测OOB漏洞，需要将监控的内存范围限制在未被分配的内存。任何对未分配内存的访问都会产生一个OOB漏洞。</p>
+<p>在检测过程中，digtool会搜索已分配和未分配内存区域的记录，并建立一个AVL树。如果内存区域被分配就会在AVL树中增加一个节点，如果内存被free，就会删除相应的节点。当被监视的页面被访问时，digtool会搜索AVL树来找到访问的区域，如果相关节点不存在，说明存在OOB漏洞。</p>
+<p>Digtool会在调用分配内存函数分配内存时多分配M字节，而这M字节不计入AVL的节点，这样可以避免内存块A,B相邻，而越界访问A的问题。</p>
+<h2 id="5-评估"><a href="#5-评估" class="headerlink" title="5 评估"></a>5 评估</h2><h3 id="5-1-效果"><a href="#5-1-效果" class="headerlink" title="5.1 效果"></a>5.1 效果</h3><h4 id="5-1-1-检测UNPROBE漏洞"><a href="#5-1-1-检测UNPROBE漏洞" class="headerlink" title="5.1.1 检测UNPROBE漏洞"></a>5.1.1 检测UNPROBE漏洞</h4><figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/f6.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/f6.png" width="593"></a><br>    <figcaption></figcaption><br></figure><br>#### 5.1.2 检测TOCTTOU漏洞<br><figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/f7.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/f7.png" width="593"></a><br>    <figcaption></figcaption><br></figure><br>#### 5.1.3 检测UAF漏洞<br><figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/f8.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/f8.png" width="593"></a><br>    <figcaption></figcaption><br></figure><br><figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/f9.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/f9.png" width="593"></a><br>    <figcaption></figcaption><br></figure><br>#### 5.1.4 检测OOB漏洞<br><figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/f10.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/f10.png" width="593"></a><br>    <figcaption></figcaption><br></figure>
+
+<h3 id="5-2-性能"><a href="#5-2-性能" class="headerlink" title="5.2 性能"></a>5.2 性能</h3><ul>
+<li>比Windows慢2.18-5.03倍</li>
+<li>比模拟器Boch快45.4-156.5倍</li>
+</ul>
+<hr>
+<h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><p><a href="https://www.usenix.org/system/files/conference/usenixsecurity17/sec17-pan.pdf" target="_blank" rel="external">Digtool:A Virtualization-Based Framwork for Detecting Kernel Vulnerabilities –Jianfeng Pan,Guanglu Yan,Xiaocao Fan-IceSword Lab,360 Internet Security Center</a></p>
+<p><a href="https://www.usenix.org/sites/default/files/conference/protected-files/usenixsecurity17_slides_guanglu_yan.pdf" target="_blank" rel="external">usenixsecurity17_slides_guanglu_yan.pdf</a></p>
+
+      
+    </div>
+    
+    
+      <footer class="article-footer">
+        
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Binary/">Binary</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Notes/">Notes</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Virtualization/">Virtualization</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Vulnerabilities/">Vulnerabilities</a></li></ul>
+
+      </footer>
+    
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/20171124/ever-papernote4/" id="article-nav-newer" class="article-nav-link-wrap">
+      <div class="article-nav-title"><span>&lt;</span>&nbsp;
+        
+          详细解读：Thwarting Memory Disclosure with Efficient Hypervisor-enforced Intra-domain Isolation
+        
+      </div>
+    </a>
+  
+  
+    <a href="/20171009/ever-papernote1/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">详细解读：Secure and Efficient Multi-variant Execution Using Hardware-assisted Process Virtualization&nbsp;<span>&gt;</span></div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+
+
+<div class="share_addthis">
+  <div class="sharing addthis_toolbox share">
+    <a class="addthis_button_facebook_like"></a>
+    <a class="addthis_button_tweet"></a>
+    <a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-560c64c35486b3d4" async="async"></script>
+</div>
+
+
+
+
+
+</section>
+    <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2017 Diting0x&nbsp;
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>, theme by <a href="http://github.com/ppoffice">PPOffice</a>
+    </div>
+  </div>
+</footer>
+    
+
+<script src="/js/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+  </div>
+</body>
+</html>

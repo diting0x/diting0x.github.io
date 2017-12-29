@@ -92,6 +92,771 @@
 
 
     
+      <article id="post-ever-papernote4" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/20171124/ever-papernote4/">详细解读：Thwarting Memory Disclosure with Efficient Hypervisor-enforced Intra-domain Isolation</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/20171124/ever-papernote4/" class="article-date">
+  <time datetime="2017-11-24T12:37:29.000Z" itemprop="datePublished">2017-11-24</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/曾经的论文笔记/">曾经的论文笔记</a>
+  </div>
+
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>通过有效的强制虚拟机管理程序的域内隔离来防止内存泄漏</p>
+<p>SeCage</p>
+<h2 id="摘要"><a href="#摘要" class="headerlink" title="摘要"></a>摘要</h2><p>内存泄漏 -&gt; 内存任意读</p>
+<p>主要问题：所有的数据都驻留在同一块内存区域</p>
+<ul>
+<li>攻击者可以读被攻击进程的内存</li>
+<li>Rootkit可以读整个系统的内存</li>
+</ul>
+<p>提出对策:隔离处理关键秘密的代码到一个隔离的执行环境中去执行。</p>
+<ul>
+<li>为关键数据创建一个分区</li>
+<li>将这个分区与其他分区隔离</li>
+</ul>
+<p>现有方法：</p>
+<ul>
+<li>当内核受到攻击后，不能进行保护</li>
+<li>提供的粗粒度保护不足以抵御域内攻击、</li>
+<li>需要底层软件（如os,hypervisor）的过度干预</li>
+<li>不适用于大型软件（几百万行代码）</li>
+</ul>
+<p>SeCage：虚拟机管理程序实施的域内隔离</p>
+<ul>
+<li>strong isolation强大的隔离：可以在很大的攻击面进行保护</li>
+<li>practical实际的：使用静态分析与动态分析相结合的混合分析方法将大型软件分解为不同的隔间</li>
+<li>efficient高效的：利用商业硬件功能（VMFUNC）从调用中分离出策略来最小化VM Traps<ul>
+<li>改进了VMFUNC机制，并在英特尔处理器中嵌套分页，以透明地为不同的隔间提供不同的内存视图，同时允许跨域的低成本和透明的调用，而无需管理程序干预。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="1-介绍"><a href="#1-介绍" class="headerlink" title="1 介绍"></a>1 介绍</h2><p>基于虚拟机管理程序的保护方案仅在应用程序级别提供保护，因此受害者应用程序内部仍然存在漏洞;针对应用程序逻辑片（PAL）的方法要求PAL是独立的，因此不允许与应用程序的其他部分进行交互。</p>
+<p>此外，由于安全性和功能性的紧密结合，以前的方法通常需要特权系统（例如管理程序）的频繁干预，迫使用户在安全性和性能之间进行权衡。</p>
+<p><strong>我们的解决方案：在本文中，我们利用混合分析的特权分离思路（主要）自动将整体软件系统分解成一组隔间，每个秘密隔间包含一组秘密及其相应的代码，一个主隔间处理其余部分的应用逻辑。这确保只有秘密区域内的函数才能访问秘密。</strong></p>
+<p><strong>混合分析</strong>：</p>
+<ul>
+<li>静态分析：不准确，会引入一个很大的代码base到秘密隔间中</li>
+<li>动态分析：提取最常使用的函数</li>
+<li>覆盖率问题：为了处理可能的覆盖问题，SeCage基于静态分析结果和运行时信息使用运行时异常处理来检测访问是否合法。</li>
+</ul>
+<p><strong>硬件虚拟化技术</strong>：即使在应用程序甚至操作系统受到攻击者的控制的强大对手模式下，利用硬件虚拟化技术来强化机密隔间和主隔间之间的强大隔离。</p>
+<ul>
+<li><strong>嵌套式分页</strong>：SeCage为每个隔离区分配一个完全隔离的地址空间，并利用硬件辅助的嵌套式分页来强制隔离。</li>
+<li><strong>VMFUNC</strong>：为了在组件之间提供安全高效的通信，SeCage采用了英特尔硬件辅助虚拟化支持的VMFUNC特性，将控制平面与数据平面分离开来。</li>
+</ul>
+<p><strong>减少hypervisor的干预</strong>：SeCage首先指定可以将一个秘密隔间通过另一个隔间调用到CPU的安全策略，然后允许这样的调用在没有管理程序干预的情况下完成。这大大降低了由于频繁陷入管理程序而导致的开销。</p>
+<hr>
+<h2 id="2-概览"><a href="#2-概览" class="headerlink" title="2 概览"></a>2 概览</h2><p>SeCage的目标：</p>
+<ul>
+<li><strong>主要目标</strong>：为用户特定的机密（例如，私钥）提供强有力的保密性保证，即使面对有漏洞的应用程序或恶意操作系统。</li>
+<li><strong>第二个目标</strong>：使SeCage的方法具有实用性，因此可以用于开销较小的大型软件系统。</li>
+</ul>
+<h3 id="2-1-方法概览"><a href="#2-1-方法概览" class="headerlink" title="2.1 方法概览"></a>2.1 <strong>方法概览</strong></h3><ul>
+<li><p>将关键数据和代码分区</p>
+<ul>
+<li>使用混合分析来提取秘密闭包</li>
+<li>从其他上下文中隔离秘密闭包</li>
+</ul>
+</li>
+<li><p>利用虚拟机管理程序强制执行内存隔离</p>
+<ul>
+<li>秘密分区驻留在不同的内存区域</li>
+<li>非法秘密内存访问触发违规至VMExit</li>
+</ul>
+</li>
+</ul>
+<p><br><br><br></p>
+<h4 id="2-1-1-混合分析来提取秘密闭包"><a href="#2-1-1-混合分析来提取秘密闭包" class="headerlink" title="2.1.1 混合分析来提取秘密闭包"></a>2.1.1 <strong>混合分析来提取秘密闭包</strong></h4><p>由于秘密可能会在其整个生命周期中被复制和传播，因此仅仅保证秘密的存储是远远不够的。相反，SeCage必须提供一个全面的机制，以防止在整个应用程序执行期间泄露秘密及其来源，而不影响秘密的正常使用。因此，SeCage需要找到可能操纵秘密的所有函数的闭包。</p>
+<p>一种直观的方法是使用静态分析来发现代码的闭包。然而，由于诸如指针混叠之类的问题，静态分析对于以C / C++编写的大型软件仍然存在精确性问题。这可能容易导致比必要的更大的闭包，可能会扩大秘密区的代码库并增加大量不必要的上下文切换。另一种方法是重写与秘密有关的代码，并将秘密的操作解耦成一个独立的服务，甚至是一个可信的第三方节点。但是，这可能涉及高昂的人力，对于OpenSSL等大规模软件来说可能会非常困难。</p>
+<p><strong>SeCage改为结合静态和动态分析来提取与秘密有关函数的闭包</strong>。它首先使用静态分析来发现与秘密相关的潜在函数。为了减少秘密封闭的大小，它使用一组训练输入来重新进行动态分析，从而获得紧凑而精确的与秘密有关的函数。为了处理覆盖问题，即一个函数可能合法的触及秘密，但被排除在秘密区间之外，SeCage根据静态分析结果和运行时异常处理过程中的执行上下文自适应地将这个功能包含到秘密部分。</p>
+<h4 id="2-1-2-虚拟机管理程序强制保护"><a href="#2-1-2-虚拟机管理程序强制保护" class="headerlink" title="2.1.2 虚拟机管理程序强制保护"></a>2.1.2 <strong>虚拟机管理程序强制保护</strong></h4><p>面对恶意操作系统这样强大的对手模型，SeCage利用<strong>可信的虚拟机管理程序</strong>来保护隐私。具体来说，SeCage将一个特定的秘密闭包放到一个单独的隔离区运行，并利用硬件虚拟化支持来提供不同隔间之间的强大隔离。</p>
+<h4 id="2-1-3-分离控制和数据平面"><a href="#2-1-3-分离控制和数据平面" class="headerlink" title="2.1.3 分离控制和数据平面"></a>2.1.3 <strong>分离控制和数据平面</strong></h4><p>由于每个分区仍然需要互相通信，虚拟机管理程序似乎不可避免地需要频繁干预这种通信。但是，这会导致频繁的VMExits，从而导致高额开销。为了缓解这种情况，SeCage利用分离控制台数据平面的想法来最小化管理程序干预。</p>
+<p>具体而言，SeCage只需要虚拟机管理程序定义两个隔间之间的调用是否合法（控制平面），同时让两个隔间之间的通信符合预定义的策略（数据平面）。在每个隔间的入口处，可以进一步检查调用者，看是否允许通信。SeCage通过利用被称为VMFUNC的商用硬件功能（3.1节），实现了这种方案。</p>
+<h4 id="2-1-4-架构概览"><a href="#2-1-4-架构概览" class="headerlink" title="2.1.4 架构概览"></a>2.1.4 <strong>架构概览</strong></h4><p>图1显示了SeCage的架构概述。受保护的应用程序分为一个主隔间和一组秘密隔间。每个秘密隔间都包含一组秘密和相应的敏感函数。我们并不认为隔间是独用的，里面的函数可以和应用程序的主隔间相互作用。但是，<strong>SeCage保证一个分区中的秘密不能被同一应用程序的其他分区和底层软件访问</strong>。</p>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/secage1.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/secage1.png" width="593"></a><br>    <figcaption></figcaption><br></figure>
+
+
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/secage5.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/secage5.png" width="593"></a><br>    <figcaption></figcaption><br></figure>
+
+<p>一旦隔间生成（步骤1），在应用程序初始化阶段（步骤2），虚拟机管理程序负责为每个隔间设置一个隔离的存储器，并保证只有相应隔间的函数才能访问这些秘密。在运行期间，秘密隔间被限制为通过蹦床机制（步骤3）与主隔间相互作用，而不会陷入管理程序。只有当秘密隔间（例如主隔间）之外的函数试图访问秘密时，将会通知虚拟机管理程序处理这种违规行为。</p>
+<h3 id="2-2-威胁模型和假设"><a href="#2-2-威胁模型和假设" class="headerlink" title="2.2 威胁模型和假设"></a>2.2 <strong>威胁模型和假设</strong></h3><ul>
+<li><strong>信任虚拟机管理程序，不信任应用程序中的操作系统或其他分区</strong></li>
+<li><strong>不考虑DoS和侧信道攻击</strong></li>
+</ul>
+<p>SeCage旨在保护来自恶意应用程序和恶意操作系统的重要秘密。</p>
+<p>对于易受攻击的应用程序，我们认为对手有能力阻止，注入或修改网络流量，以便能够进行所有众所周知的攻击，以便非法访问位于隐藏应用程序的内存空间中的任何数据。具体来说，攻击者可以像HeartBleed bug 一样利用缓冲区过度读取进行攻击，或者尝试使用复杂的控制流劫持攻击来使访问控制策略失效或绕过权限检查，并读取位于相同地址空间的敏感数据。</p>
+<p>底层的系统软件（如操作系统）是不可信的，它们可以进行任意的恶意行为，从而泄露应用程序的秘密。我们与其他相关系统共享这种攻击者模型。此外，SeCage还考虑了Iago攻击，恶意操作系统可能通过操纵系统服务的返回值（例如systemcall）以及回滚攻击导致应用程序自身受到伤害，其中特权软件通过强制内存快照回滚可以回滚至应用程序的关键状态。</p>
+<p>SeCage假设受保护的机密应该只在应用程序中使用，秘密隔间内部的函数不会自动将他们发送出去。对于像OpenSSL这样的商业软件来说，这是正确的，因为软件本身就是为了保持这种秘密而设计的。即使不是这样，在SeCage的静态和动态阶段，当产生秘密隔间时，也可以检测到这一点。</p>
+<p>此外，SeCage不会试图阻止目标不是泄露数据的DoS攻击。它不会试图防止侧信道攻击，以及通过程序控制流程泄漏信息的隐式流程攻击，因为它们通常很难部署，在我们的案例中，用于泄露数据的带宽容忍度非常有限。最后，SeCage没有考虑面对恶意操作系统时应用程序的可用性。</p>
+<hr>
+<h2 id="3-实时隔离强制实施"><a href="#3-实时隔离强制实施" class="headerlink" title="3.实时隔离强制实施"></a>3.实时隔离强制实施</h2><p>在本节中，我们将介绍如何在应用程序运行时强制实施SeCage保护，包括内存保护，运行时执行流程的机制等方面。</p>
+<h3 id="3-1-内存保护"><a href="#3-1-内存保护" class="headerlink" title="3.1 内存保护"></a>3.1 内存保护</h3><p>在SeCage中，二层分页机制保证了隔离区的隔离。通常，客户虚拟机只能看到客户虚拟地址（GVA）到客户物理地址（GPA）的映射，而虚拟机管理程序为每个客户虚拟机维护一个较低级别的扩展页表（EPT），EPT将GPA映射到主机物理地址（HPA）。</p>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/secage6.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/secage6.png" width="593"></a><br>    <figcaption></figcaption><br></figure>
+
+<ul>
+<li>虚拟机管理程序控制客户虚拟机访问物理地址的方式</li>
+<li>任何违反EPT的行为都会触发VMExit陷入虚拟机管理程序</li>
+</ul>
+<p>在SeCage的初始化阶段，除了针对整个访客虚拟机的原始EPT EPT-N之外，管理程序还为每个受保护的秘密分区初始化另一个EPT，称为EPT-S。</p>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/secage2.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/secage2.png" width="593"></a><br>    <figcaption></figcaption><br></figure>
+
+<p>如图2所示，SeCage将内存分为两部分：数据和代码。  </p>
+<ul>
+<li>对于数据部分，EPT-S映射包括秘密的所有数据，而EPT-N具有除秘密之外的数据。 </li>
+<li>对于代码段，蹦床代码被映射到这两个EPT中，并设为只读。 此外，EPT-S只包含秘密区域中的敏感函数代码，而EPT-N映射除了敏感函数之外的代码。</li>
+</ul>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/secage7.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/secage7.png" width="593"></a><br>    <figcaption></figcaption><br></figure>
+
+<ul>
+<li>数据段：从主EPT中移除有关秘密的内存</li>
+<li>代码段：敏感函数只存在于秘密EPT中</li>
+</ul>
+<p>通过上述的EPT配置，SeCage确保EPT-N中不会存在秘密，只有敏感函数的代码才能访问相应的秘密。这些<strong>代码页</strong>在设置阶段被验证，并且EPT条目被设置为<strong>可执行</strong>和<strong>只读</strong>。同时，EPT-S中的<strong>数据页</strong>面被设置为<strong>不可执行</strong>，因此可以防御攻击者的注入代码攻击。因此，恶意应用程序和恶意操作系统都无法访问秘密。</p>
+<p><strong>Q：为什么要将整个数据段映射到EPT-S？</strong><br>需要注意的是，如果我们只将秘密放在秘密区域中，则由于敏感函数除了秘密之外还可以访问其他数据存储器，所以可能会有过多的上下文切换。 为了简单起见，由于敏感函数的代码片段非常小并且被认为是我们的威胁模型中可信的，所以SeCage将整个数据段映射到秘密区域中。</p>
+<h4 id="EPTP-Switching-VMFUNC"><a href="#EPTP-Switching-VMFUNC" class="headerlink" title="EPTP Switching VMFUNC"></a><strong>EPTP Switching VMFUNC</strong></h4><ul>
+<li><strong>VM Functions:</strong> 英特尔虚拟化扩展<br>非根客户虚拟机可以直接调用一些函数而不触发VM exit</li>
+<li><strong>VM Function 0: EPTP Switching:</strong> 允许客户虚拟机中的软件（在内核或用户模式下）直接加载新的EPT指针（EPTP），从而建立不同的EPT分页结构层次。</li>
+</ul>
+<p><strong>只能从虚拟机管理程序事先配置的潜在EPTP值列表中选择EPTP</strong>，虚拟机管理程序充当定义客户虚拟机应符合规则的控制平面。在运行期间，管理程序不会干扰客户虚拟机内的执行流程。</p>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/secage23.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/secage23.png" width="593"></a><br>    <figcaption></figcaption><br></figure>
+
+<p>图3显示了为了使用<strong>VM Function 0: EPTP Switching</strong>，虚拟机管理程序需要进行的示例配置：除了一些功能位之外，虚拟机管理程序需要在VM Function VMCS字段设置位0（EPTP切换位），并将EPT指针配置到由EPTP LIST ADDR VMCS字段指向的存储器。</p>
+<p>在运行期间，非root用户软件调用EAX设置为0的VMFUNC指令来触发EPTP切换VM功能，ECX从EPTP列表中选择一个条目。 目前，EPTP切换支持最多512个EPTP条目，这意味着SeCage最多可以为每个客户虚拟机支持512个分区。</p>
+<h4 id="分离控制平面与数据平面"><a href="#分离控制平面与数据平面" class="headerlink" title="分离控制平面与数据平面"></a>分离控制平面与数据平面</h4><figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/secage8.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/secage8.png" width="693"></a><br>    <figcaption></figcaption><br></figure>
+
+<ul>
+<li>控制平面（策略）：虚拟机管理程序预先配置不同隔间使用的EPT</li>
+<li>数据平面（调用）：应用程序可以直接切换EPT而无需hypervisor干预</li>
+</ul>
+<h3 id="3-2-确保执行流程"><a href="#3-2-确保执行流程" class="headerlink" title="3.2 确保执行流程"></a>3.2 确保执行流程</h3><p>SeCage将逻辑划分为<strong>敏感函数</strong>，<strong>蹦床</strong>和<strong>其他代码</strong>（包括应用程序代码和系统软件代码）。只有秘密分区的敏感函数才能访问秘密，而蹦床代码则用来在秘密部分和主要部分之间切换。</p>
+<p>在运行期间，主分区中的函数可以调用敏感函数，而敏感函数也可以调用秘密分区之外的函数。</p>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/secage4.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/secage4.png" width="693"></a><br>    <figcaption></figcaption><br></figure>
+
+<p>图4显示了在运行时可能的执行流程。根据调用方向将蹦床代码分类为蹦床和跳板。图4的上半部分示出了蹦床的位置：<strong>当主分区中的代码调用一个秘密隔间中的一个函数时，不是直接调用敏感函数，而是调用相应的蹦床代码。</strong></p>
+<ol>
+<li>首先执行VMFUNC指令加载秘密区间内存；</li>
+<li>然后栈指针被修改为指向安全栈页面。</li>
+<li>如果参数数目大于6（寄存器支持的最大参数数目），则其余参数应复制到安全栈中。</li>
+<li>一切准备就绪，将调用真正的敏感函数。</li>
+<li>一旦这个函数返回，蹦床代码就会消除安全堆栈的内容，将ESP恢复到前一个栈位置，反向执行VMFUNC指令并将结果返回给调用者。</li>
+</ol>
+<h4 id="3-2-1-主分区调用敏感函数"><a href="#3-2-1-主分区调用敏感函数" class="headerlink" title="3.2.1 主分区调用敏感函数"></a>3.2.1 <strong>主分区调用敏感函数</strong></h4><figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/secage9.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/secage9.png" width="693"></a><br>    <figcaption></figcaption><br></figure>
+
+<h4 id="3-2-2-秘密隔间可以调用普通函数"><a href="#3-2-2-秘密隔间可以调用普通函数" class="headerlink" title="3.2.2 秘密隔间可以调用普通函数"></a>3.2.2 <strong>秘密隔间可以调用普通函数</strong></h4><p>（例如，系统调用，库调用等）</p>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/secage10.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/secage10.png" width="693"></a><br>    <figcaption></figcaption><br></figure>
+
+<h4 id="3-2-3-使用蹦床和跳板来切换上下文"><a href="#3-2-3-使用蹦床和跳板来切换上下文" class="headerlink" title="3.2.3 使用蹦床和跳板来切换上下文"></a>3.2.3 <strong>使用蹦床和跳板来切换上下文</strong></h4><p>不同分区有不同的上下文，使用<strong>蹦床</strong>和<strong>跳板</strong>来切换上下文，<strong>上下文切换使用VMFUNC完成</strong></p>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/secage13.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/secage13.png" width="693"></a><br>    <figcaption></figcaption><br></figure>
+
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/secage11.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/secage11.png" width="693"></a><br>    <figcaption></figcaption><br></figure>
+
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/secage14.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/secage14.png" width="693"></a><br>    <figcaption></figcaption><br></figure>
+
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/secage12.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/secage12.png" width="693"></a><br>    <figcaption></figcaption><br></figure>
+
+
+<h3 id="3-3-其他杂项"><a href="#3-3-其他杂项" class="headerlink" title="3.3 其他杂项"></a>3.3 其他杂项</h3><h4 id="3-3-1-存储"><a href="#3-3-1-存储" class="headerlink" title="3.3.1 存储"></a>3.3.1 存储</h4><p>在初始化阶段，可以从独立配置文件，可执行二进制文件或数据库模式读取机密。这样的存储总是可以被系统软件访问，没有有效的方法来保护它们。</p>
+<p>SeCage通过另一种方法解决了这个问题，确保在这些存储中不会有任何秘密。<strong>存储中的秘密被替换为一些虚拟数据，在应用程序启动时，虚拟数据将被恢复为真实的秘密</strong>。在运行时，SeCage确保在敏感功能中不会发生I/O写入，从而保证秘密不会泄漏到存储器中。</p>
+<h4 id="3-3-2-中断处理"><a href="#3-3-2-中断处理" class="headerlink" title="3.3.2 中断处理"></a>3.3.2 中断处理</h4><p>在秘密区间执行期间，在EPT-S上下文中不存在操作系统支持，因此不允许将中断注入到客户虚拟机。</p>
+<p>当一个非root的客户虚拟机由于中断而陷入虚拟机管理程序时，SeCage中相应的处理程序检查它是否在EPT-S的上下文中，以及它是什么样的中断。如果在敏感函数的执行过程中发生中断，它只是丢弃某些中断（例如定时器中断），并延迟其他中断（例如NMI，IPI）直到回到EPT-N上下文为止。</p>
+<h4 id="3-3-3-多线程"><a href="#3-3-3-多线程" class="headerlink" title="3.3.3 多线程"></a>3.3.3 多线程</h4><p>SeCage支持多线程程序。如果只有一个VCPU运行所有线程，由于我们将EPT-S VCPU上的定时器中断丢弃，EPT-S上下文不会被其他线程抢占，直到它返回到EPT-N环境。</p>
+<p>如果有多个VCPU，则由于每个VCPU都有自己的EPT，如果一个VCPU在EPT-S上下文中，则其他VCPU可以在EPT-N上下文中运行，并且不允许在EPT-S中读取秘密。</p>
+<h3 id="3-4-对秘密隔间整个生命周期的保护"><a href="#3-4-对秘密隔间整个生命周期的保护" class="headerlink" title="3.4 对秘密隔间整个生命周期的保护"></a>3.4 对秘密隔间整个生命周期的保护</h3><p>图5显示了秘密隔间的生命周期保护。SeCage增加了三个hypercalls，如表2所示。</p>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/secage15.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/secage15.png" width="693"></a><br>    <figcaption></figcaption><br></figure>
+
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/secage16.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/secage16.png" width="693"></a><br>    <figcaption></figcaption><br></figure>
+
+<h4 id="3-4-1-Creation-创建"><a href="#3-4-1-Creation-创建" class="headerlink" title="3.4.1 Creation 创建"></a>3.4.1 Creation 创建</h4><p>在应用程序加载到客户虚拟机之前，SeCage利用应用程序分解框架来分析应用程序，并将其<strong>分解</strong>为主分区和几个秘密分区。</p>
+<p>根据秘密加载的方式，<strong>秘密</strong>在配置文件，可执行二进制文件或数据库等持久性存储中<strong>被替换为伪数据</strong>。例如，如果秘密在运行期间从文件（例如OpenSSL）或数据库加载，则存储中的秘密被替换。否则，应用程序在用伪数据替换源代码中的秘密之后被编译。</p>
+<p>同时，开发者需要通过预定义的安全离线通道将<strong>秘密和伪数据的映射</strong>（例如，&lt; key，length&gt;→secret binding）<strong>提供给hypervisor</strong>。通过这种方式，hypervisor可以在部署阶段将真实的秘密加载到安全内存中。</p>
+<h4 id="3-4-2-Deployment-部署"><a href="#3-4-2-Deployment-部署" class="headerlink" title="3.4.2 Deployment 部署"></a>3.4.2 Deployment 部署</h4><p>应用程序部署的过程包括以下步骤：</p>
+<ol>
+<li><p>启动应用程序时，检测代码发出SECAGE INIT超级调用，它将虚拟地址起始位置和敏感函数页面数以及蹦床代码作为参数传递。管理程序首先检查敏感函数和蹦床代码的完整性，以及设置如3.1节所述的EPT-N和EPT-S。值得注意的是，EPT-S映射了几个从EPT-N中不可见的保留页面，这些页面将在稍后被用作安全堆栈。</p>
+</li>
+<li><p>管理程序调用VMENTER来恢复不可信的应用程序执行。当不可信代码为秘密伪造的副本调用内存分配函数时，它将被重定向到敏感函数中的secure_malloc以从安全的堆中分配页面。</p>
+</li>
+<li><p>在将伪造秘密复制到敏感函数中的安全堆之后，发出SECRET LOAD调用。虚拟机管理程序然后扫描安全的堆内存，并根据用户提供的伪秘密与秘密的映射关系将伪数据替换为真实的秘密。</p>
+</li>
+</ol>
+<p>通过上述应用程序部署协议，SeCage确保了在SECRET LOAD之前，内存中不存在任何秘密，因此即使执行环境不可信，也不会泄露任何秘密。在SECRET LOAD之后，秘密只能在秘密隔间内访问，因此主分区中的代码也无法泄露秘密数据。尽管不可信的代码可能违反协议，通过跳过调用超级调用或者不遵守安全malloc的规则，管理程序可以检测到这样的违规，并且在这种情况下秘密不会被加载到内存中。</p>
+<h4 id="3-4-3-Runtime-运行"><a href="#3-4-3-Runtime-运行" class="headerlink" title="3.4.3 Runtime 运行"></a>3.4.3 Runtime 运行</h4><p>在运行时，主分区和秘密分区中的代码将同时执行。<br>SeCage机制确保：（1）秘密及其副本只存在于EPT-S映射中，（2）秘密及其副本只能在敏感函数执行过程中使用。如果主分区中的代码尝试访问秘密内存，则会由于违反EPT而发生VMExit，然后通知Hypervisoris检查访问模式。</p>
+<p>如果访问请求源自主分区代码到秘密，并且从静态分析提取的函数中不包括相应的函数，则可能发生了攻击，在这种情况下，管理程序应该停止应用程序的执行并通知用户该异常的访问请求。如果该访问请求根据静态分析的结果和执行上下文符合预定义的策略，则管理程序将相应的函数包含到秘密区间的敏感函数闭包。</p>
+<h4 id="3-4-4-Termination-终止"><a href="#3-4-4-Termination-终止" class="headerlink" title="3.4.4 Termination 终止"></a>3.4.4 Termination 终止</h4><p>当应用程序终止时，秘密也应该被清除。如果应用程序正常退出，它会发出SECAGE RESTORE超级调用，以便虚拟机管理程序帮助删除秘密隔间的EPT-S。即使应用程序异常退出，或者应用程序或操作系统拒绝通知虚拟机管理程序，秘密信息也只存在于EPT-S中，因此不会被泄露。</p>
+<hr>
+<h2 id="4-应用程序分解"><a href="#4-应用程序分解" class="headerlink" title="4. 应用程序分解"></a>4. 应用程序分解</h2><figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/secage17.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/secage17.png" width="693"></a><br>    <figcaption></figcaption><br></figure>
+
+<p>上图显示了应用程序分析和分解的一般过程。给定一个应用程序和用户定义的秘密，我们需要分析秘密的数据流，以及可能访问这些秘密数据的敏感函数。虽然静态分析可以对程序的所有可能的执行路径进行全面的分析，但是它具有精确性问题，可能会导致更大的TCB和更高的开销。</p>
+<p>我们观察到在大多数情况下，<strong>操纵秘密的执行流程是相对固定的</strong>。基于这一观察，我们采用混合方法来提取秘密闭包。具体而言，我们采用<strong>动态方法来实现灵活的信息流控制（IFC）分析，以获得最常见但可能不完全的秘密闭包</strong>（步骤a），并且还依靠静态分析的综合结果来避免一些角落的情况（步骤bcd）。另一方面，它提供了一系列在<strong>编译期间自动分解应用程序的机制</strong>。然后，SeCage将这些秘密和敏感的功能分解成一个独立的秘密分区，可以由虚拟机管理程序单独保护（步骤（ef））。</p>
+<h3 id="4-1-混合秘密闭包提取"><a href="#4-1-混合秘密闭包提取" class="headerlink" title="4.1 混合秘密闭包提取"></a>4.1 混合秘密闭包提取</h3><p>静态方法：像指针混叠一样的精确问题</p>
+<ul>
+<li>导致明显大于必要的闭包</li>
+<li>可能会引入更大的TCB和更差的性能</li>
+</ul>
+<p>动态方法：完整性问题</p>
+<ul>
+<li>可能会引入大量的误报</li>
+</ul>
+<h4 id="4-1-1-静态污点分析"><a href="#4-1-1-静态污点分析" class="headerlink" title="4.1.1 静态污点分析"></a>4.1.1 静态污点分析</h4><p>我们利用<strong>CIL</strong>对<strong>应用程序的中间表示</strong>进行静态污点分析。 我们将这组秘密数据表示为{s}，对秘密的引用集合作为{s ref}被提供。 我们的目标是找到所有可能的指令，这些指令表示为sink，即解引用变量x ∈ {s ref}。</p>
+<p>以下的数据流将被跟踪：</p>
+<ol>
+<li>秘密数据引用的传播将被追踪；</li>
+<li>将秘密数据的引用作为函数的参数传递时被跟踪；</li>
+<li>将秘密数据的引用作为函数的返回值时被跟踪；</li>
+<li>对秘密数据引用解引用时被跟踪，sink指令被记录。</li>
+</ol>
+<p>根据多变量分析，功能分析多次。在我们的方法中，{s}和{s ref}在整个过程中不断变化，当程序到达一个固定点时，我们停止分析，而秘密和参考集不再改变。<strong>通过这种污点分析，我们可以获得大量潜在的敏感函数。</strong></p>
+<h4 id="4-1-2-动态闭包提取"><a href="#4-1-2-动态闭包提取" class="headerlink" title="4.1.2 动态闭包提取"></a>4.1.2 动态闭包提取</h4><ul>
+<li>发现：执行秘密数据的流程相对固定</li>
+<li>目标：获得最常见但可能不完全的紧凑的秘密闭包</li>
+<li>方法：结合mprotect和debug异常技术</li>
+</ul>
+<p>为了获得紧凑的封闭闭合，我们采用了mprotect和debug exception技术的创新组合，采用简单但精确的动态分析。</p>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/secage18.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/secage18.png" width="693"></a><br>    <figcaption></figcaption><br></figure>
+
+<p>图7显示了动态敏感函数提取的过程。一开始，应用程序被安装使用安全的malloc来为秘密数据分配内存。然后，使用<strong>mprotect</strong>系统调用来保护安全内存（paddr），并<strong>注册一个用户模式处理程序</strong>来处理违规时产生的相应的段错误。<br>① 只要sink指令访问受保护的内存，它就会陷入段错误处理程序；<br>② 该处理程序记录发生错误的sink指令地址；<br>③ 并向内核模块发出一个IOCTL系统调用，该调用将调试寄存器0（DR0）中的下一条指令设置为断点。之后，处理程序撤销对paddr的mprotect以继续进行，然后sink指令可以在段错误处理程序返回后成功访问内存。<br>④ 但程序会立即在下一条指令中捕获到预定义的调试异常处理程序，在这种情况下，异常处理程序可以再次将mprotect设置为paddr。</p>
+<p>我们在不同的工作量下多次运行应用程序。例如，对于Nginx服务器的情况，我们可以发送不同类型的请求，直到sink指令的集合固定。那么我们可以得到大部分的sink指令，以及相应的敏感函数。</p>
+<h4 id="4-1-3-混合方法提取闭包"><a href="#4-1-3-混合方法提取闭包" class="headerlink" title="4.1.3 混合方法提取闭包"></a>4.1.3 <strong>混合方法提取闭包</strong></h4><p>分解应用程序的混合方法：</p>
+<ul>
+<li>通过动态方法提取秘密闭包</li>
+<li>编译期间自动分解</li>
+<li>使用静态方法获取完整的潜在敏感函数，用于在运行时避免角落情况</li>
+</ul>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/secage19.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/secage19.png" width="693"></a><br>    <figcaption></figcaption><br></figure>
+
+<h3 id="4-2-应用程序自动分解"><a href="#4-2-应用程序自动分解" class="headerlink" title="4.2 应用程序自动分解"></a>4.2 应用程序自动分解</h3><h4 id="4-2-1-利用CIL将-fs-调用替换为-ft-调用"><a href="#4-2-1-利用CIL将-fs-调用替换为-ft-调用" class="headerlink" title="4.2.1 利用CIL将{fs}调用替换为{ft}调用"></a>4.2.1 利用CIL将{fs}调用替换为{ft}调用</h4><p>由于{fs}中的敏感函数并不是独立的，因此SeCage使用蹦床机制来实现{f s}与主隔间中定义为{fn}的函数之间的通信。</p>
+<p>对于每个函数调用f，f_caller和 f_callee分别表示调用者函数和被调用者函数。 当且仅当f_caller和f_callee中的一个属于{f s}时，需要定义一个相应的蹦床函数t(f)，该函数在下一个阶段用来代替f。形式定义如下：</p>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/secage20.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/secage20.png" width="493"></a><br>    <figcaption></figcaption><br></figure>
+
+<p>如果有{fn}到{fs}的任何函数调用，我们定义一个蹦床函数f_in。 同样，从{fs}到{fn}的每个函数调用都定义了一个跳板函数f_out。 我们注意到{ft}是f_in和f_out的集合。</p>
+<h4 id="4-2-2-利用GCC-section属性来创建内存区域"><a href="#4-2-2-利用GCC-section属性来创建内存区域" class="headerlink" title="4.2.2 利用GCC section属性来创建内存区域"></a>4.2.2 利用GCC section属性来创建内存区域</h4><p>我们将应用程序分解为秘密和主要隔间以实现SeCage保护。总共涉及三个步骤。</p>
+<ul>
+<li>1 首先，相应地将3个超级调用添加到应用程序中（3.4节）。</li>
+<li>2 其次，使用自动化脚本生成一个定义和声明蹦床函数{ft}的文件，并使用GCC的section属性修改{fs}中敏感函数sfunc和{ft}中蹦床函数tfunc的定义：</li>
+</ul>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/secage21.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/secage21.png" width="493"></a><br>    <figcaption></figcaption><br></figure>
+
+<p>通常情况下，GCC编译器将代码组织到.text部分。附加节属性指定sfunc和tfunc存在于两个特定的.se和.tr节的内存区域中，这些内存区域与{fn}的内存隔离。因此，SeCage可以在页面粒度中保护它们。</p>
+<ul>
+<li>3 最后，在编译阶段， CIL解析整个应用程序，用{ft}中相应的蹦床函数调用替换{fs}涉及的函数调用。</li>
+</ul>
+<h4 id="4-2-3-修改链接器来从主区域中区分秘密数据"><a href="#4-2-3-修改链接器来从主区域中区分秘密数据" class="headerlink" title="4.2.3 修改链接器来从主区域中区分秘密数据"></a>4.2.3 修改链接器来从主区域中区分秘密数据</h4><p>SeCage还需要修改链接器，将新创建的.se和.tr部分链接到预定义的内存位置，以便SECAGE INIT超级调用可以传递适当的内存地址作为虚拟机管理程序保护的秘密分区内存。</p>
+<hr>
+<h2 id="5-实现与评估"><a href="#5-实现与评估" class="headerlink" title="5. 实现与评估"></a>5. 实现与评估</h2><h3 id="5-1-实现"><a href="#5-1-实现" class="headerlink" title="5.1 实现"></a>5.1 实现</h3><ul>
+<li><p>在Intel Haswell机器上实现</p>
+<ul>
+<li>支持VMFUNC的Haswell处理器</li>
+<li>4个内核（使用超线程的8个硬件线程），32 GB内存</li>
+</ul>
+</li>
+<li><p>软件环境</p>
+<ul>
+<li>带有KVM的Linux 3.13.7</li>
+<li>客户虚拟机：Linux 3.16.1</li>
+<li>2个虚拟内核和4GB内存</li>
+</ul>
+</li>
+<li><p>应用程序分析和分解</p>
+<ul>
+<li>CIL框架，OCaml扩展，bash脚本</li>
+</ul>
+</li>
+</ul>
+<h3 id="5-2-使用方案"><a href="#5-2-使用方案" class="headerlink" title="5.2 使用方案"></a>5.2 使用方案</h3><ul>
+<li><p>保护Nginx免受从HeartBleed攻击</p>
+<ul>
+<li>保护素数（p和q）和私钥指数（d）</li>
+</ul>
+</li>
+<li><p>保护OpenSSH免受Rootkit攻击</p>
+<ul>
+<li>保护OpenSSH的私钥（和Nginx一样）</li>
+</ul>
+</li>
+<li><p>保护CryptoLoop(进行文件系统加密的一个内核API)免受内核内存泄露</p>
+<ul>
+<li>保护AES密钥</li>
+</ul>
+</li>
+</ul>
+<h3 id="5-3-安全性分析"><a href="#5-3-安全性分析" class="headerlink" title="5.3 安全性分析"></a>5.3 安全性分析</h3><ul>
+<li>Secrets exposure elimination</li>
+</ul>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/secage22.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/secage22.png" width="693"></a><br>    <figcaption></figcaption><br></figure>
+
+<ul>
+<li>Reduced attack surfaces<ul>
+<li>秘密隔间中很小的代码库</li>
+<li>用于OpenSSL的只有1350 LoC，用于CryptoLoop的只有430 LoC</li>
+<li>敏感函数的限制（如没有I/O操作等）</li>
+</ul>
+</li>
+</ul>
+<h3 id="5-4-性能分析"><a href="#5-4-性能分析" class="headerlink" title="5.4 性能分析"></a>5.4 性能分析</h3><ul>
+<li>Nginx throughput and latency<ul>
+<li>Use ab benchmark</li>
+<li>Simulate 20 clients</li>
+<li>N KeepAlive requests</li>
+<li>X bytes per request</li>
+</ul>
+</li>
+</ul>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/secage24.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/secage24.png" width="393"></a><br>    <figcaption></figcaption><br></figure>
+
+<ul>
+<li>OpenSSH latency<ul>
+<li>SSH to the server and execute common Linux commands </li>
+<li>Average latency overhead:  6 ms (3%) </li>
+</ul>
+</li>
+<li>CryptoLoop I/O bandwidth<ul>
+<li>Use fio benchmark with sequential read/write configurations </li>
+<li>Average slowdown: 4%</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><p><a href="http://ipads.se.sjtu.edu.cn/lib/exe/fetch.php?media=publications:secage-ccs15.pdf" target="_blank" rel="external">Thwarting Memory Disclosure with Efficient Hypervisor-enforced Intra-domain Isolation-CCS’15 Liu et al,</a></p>
+
+      
+    </div>
+    
+    
+      <footer class="article-footer">
+        
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Infoleak/">Infoleak</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Virtualization/">Virtualization</a></li></ul>
+
+      </footer>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+
+    
+      <article id="post-ever-papernote2" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/20171022/ever-papernote2/">详细解读：Digtool:A Virtualization-Based Framwork for Detecting Kernel Vulnerabilities</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/20171022/ever-papernote2/" class="article-date">
+  <time datetime="2017-10-22T03:37:11.000Z" itemprop="datePublished">2017-10-22</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/曾经的论文笔记/">曾经的论文笔记</a>
+  </div>
+
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="Digtool：一个基于虚拟化的检测内核漏洞的框架"><a href="#Digtool：一个基于虚拟化的检测内核漏洞的框架" class="headerlink" title="Digtool：一个基于虚拟化的检测内核漏洞的框架"></a>Digtool：一个基于虚拟化的检测内核漏洞的框架</h2><h2 id="1-摘要"><a href="#1-摘要" class="headerlink" title="1 摘要"></a>1 摘要</h2><p>Digtool是一个有效的，针对二进制代码的内核漏洞检测框架。通过在一个研发的虚拟化监测监控器上实现，可以截获内核执行期间的大量动态行为，例如内核对象分配，内核内存访问，线程调度，函数调用等。Digtool已经证实了windows内核和驱动中的45个0-day漏洞。</p>
+<h2 id="2-背景介绍"><a href="#2-背景介绍" class="headerlink" title="2 背景介绍"></a>2 背景介绍</h2><p>检测漏洞主要分为两个方面：</p>
+<ul>
+<li>路径探索：尽可能探测到更多代码分支</li>
+<li>漏洞验证：记录探索到的路径中出现的异常</li>
+</ul>
+<p>Digtool重点关注内核漏洞验证这一方面。</p>
+<h3 id="2-1-现有技术"><a href="#2-1-现有技术" class="headerlink" title="2.1 现有技术"></a>2.1 现有技术</h3><ul>
+<li>linux内核漏洞检测工具，依赖于实现的细节以及系统的源代码，很难用于像windows这种闭源的操作系统。</li>
+<li>Driver Verifier:微软自己开发的一个集成系统，不是一个专用的工具。并且无法验证某些漏洞，比如TOCTOU.</li>
+<li>基于虚拟化的漏洞检测工具可以支持不同的操作系统，而目前基于虚拟化的漏洞验证工具只能用来检测一种具体类型的漏洞，也不能验证0-day漏洞。</li>
+</ul>
+<p>对于像windows这种闭源的OS，开发一个漏洞检测工具既不能像在linux上的那些工具在编译期间插入检测代码，也无法像Driver Verifier那样改写或者调整系统源代码。<br>因此，采用虚拟化技术来隐藏windows操作系统内部细节，在一个更低的level，也就是hypervisor层来实行检测。Digtool就是通过虚拟化技术来捕获动态行为特征来发现windows操作系统中的内核漏洞。</p>
+<h3 id="2-2-常见内核漏洞"><a href="#2-2-常见内核漏洞" class="headerlink" title="2.2 常见内核漏洞"></a>2.2 常见内核漏洞</h3><p>UNPROBE,TOCTTOU,UAF,和OOB是四种在许多项目中（包括操作系统内核）经常出现的漏洞。他们可以导致拒绝服务攻击，本地权限提升，甚至是远程代码执行，直接影响着受害系统的稳定和安全。</p>
+<ul>
+<li>UNPROBE:No checking of a user pointer to an input buffer.对用户指向输入缓冲区的指针没有进行检查。许多内核模块省略了对用户指针的检查，尤其是当指针嵌套在复杂的结构中时，这会导致无效的内存参考，任意内存读/写。</li>
+<li>TOCTTOU:Time of check to time of use.通常系统调用程序获取一个参数，会不止一次地从用户内存中取一个值，第一次检查，第二次使用。如果在两次取值之间，篡改了参数的值，就会导致该漏洞。</li>
+<li>UAF:Use after free.使用释放过的内存。</li>
+<li>OOB：Out of boundaries.越界访问，访问超过已分配的堆或者内存对象边界的内存。UAF和OOB都可以导致权限提升。</li>
+</ul>
+<h3 id="2-3-Digtool的优点"><a href="#2-3-Digtool的优点" class="headerlink" title="2.3 Digtool的优点"></a>2.3 Digtool的优点</h3><ul>
+<li>可检测windows操作系统中不同类型的内核级漏洞</li>
+<li>不会crash操作系统，只是提取内核执行过程中的上下文和截获漏洞</li>
+<li>不依赖内核源代码</li>
+<li>不依赖任何现有的虚拟化平台</li>
+<li>设计了基于虚拟化的检测算法，可发现四种类型的漏洞(UNPROBE,TOCTTOU,UAF,OOB)</li>
+<li>发现了45个windows的内核代码和驱动程序的0-day漏洞</li>
+</ul>
+<h2 id="3-概述"><a href="#3-概述" class="headerlink" title="3 概述"></a>3 概述</h2><p>Digtool的整体架构如figure 1所示，digtool的子系统和模块分别位于用户空间，内核空间以及hypervisor层。细的箭头代表直接的调用关系或者模块之间有传递消息的直接通道。粗的箭头表示通过事件触发机制间接地互相作用。</p>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/f1.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/f1.png" width="593"></a><br>    <figcaption></figcaption><br></figure>
+
+<h3 id="3-1-Hypervisor组成"><a href="#3-1-Hypervisor组成" class="headerlink" title="3.1 Hypervisor组成"></a>3.1 Hypervisor组成</h3><p> Hypervisor最重要的工作就是监控虚拟内存访问，这是接口检测和内存检测的基础。</p>
+<ul>
+<li>Tracing memory access outside guest OS：由于大多数工程运行在虚拟地址空间，因此要着重关注虚拟地址。<br>Xenpwn使用扩展页表EPT追踪物理地址是不适用的，尤其是在windows系统中，因为虚拟地址和物理地址的映射是非线性的。<br>Bochspwn使用了一个全栈的仿真器，效果不好，开销大。</li>
+<li>基于硬件虚拟化的SPT（shadow page table)技术可以用来监视虚拟内存访问与Xenpwn和Bochspwn从设计和实现都非常不同。</li>
+</ul>
+<p>Digtool不依赖现有的hypervisor(Xen or KVM),自主设计的hypervisor包含VMM infrastructure,接口检测和内存检测三个组成部分。</p>
+<h4 id="3-1-1-VMM-Infrastructure"><a href="#3-1-1-VMM-Infrastructure" class="headerlink" title="3.1.1 VMM Infrastructure"></a>3.1.1 VMM Infrastructure</h4><ul>
+<li>首先检查硬件环境和操作系统版本来保证兼容性；</li>
+<li>然后初始化hypervisor，将原先的操作系统加载到虚拟机中；初始化操作包括以下：<ul>
+<li>建立SPTs来监控客户操作系统中的虚拟机内存访问；</li>
+<li>初始化跟踪进程调度的模块；</li>
+<li>建立操作系统内核与hypervisor的通信</li>
+</ul>
+</li>
+</ul>
+<p>接口检测和内存检测都是基于VMM infrastructure.</p>
+<h4 id="3-1-2-接口检测"><a href="#3-1-2-接口检测" class="headerlink" title="3.1.2 接口检测"></a>3.1.2 接口检测</h4><p>监控系统调用执行时从用户态中传入的参数，跟踪参数的使用和检查来发现潜在的漏洞。</p>
+<p>因为系统调用总是在内核态被执行，所以不用监测处理器在用户态运行时的用户空间，SPTs只需用来监控在系统调用期间的用户内存空间。由于许多VMEXIT事件会被触发影响效果，所以接口检测可以通过相关的服务接口来配置待监测的系统调用的范围。</p>
+<h4 id="3-1-3-内存检测"><a href="#3-1-3-内存检测" class="headerlink" title="3.1.3 内存检测"></a>3.1.3 内存检测</h4><p>监控客户机操作系统中内核内存来检测非法内存访问。SPTs用来监控内核内存。</p>
+<p>为了检测具体类型的漏洞，内存检测可以通过相关服务接口，设置监控的内存区域，配置监测的对象，当截获到内存分配和释放的事件时动态调整监控的内存区域，从而在内存访问过程中得到潜在漏洞的准确特征。</p>
+<h3 id="3-2-内核空间组成"><a href="#3-2-内核空间组成" class="headerlink" title="3.2 内核空间组成"></a>3.2 内核空间组成</h3><p>在内核空间主要工作有：</p>
+<ul>
+<li>设置监控的内存区域：取决于待检测的漏洞类型，同时会随着一些内核事件的出现（如分配和释放）而改变，因此这些事件需要被跟踪。</li>
+<li>和hypervisor进行通信：内核代码调用digtool输出的服务接口向hypervisor请求服务；也可以通过共享内存传递消息。</li>
+<li>截获某些特定的内核函数：需要hook一些操作系统的内核函数来跟踪一些特殊的事件。</li>
+</ul>
+<p>中间件位于客户操作系统的内核空间，用来连接hypervisor子系统与用户空间的项目。流程如下：</p>
+<ol>
+<li>首先在加载fuzzer之前，通过配置文件来设置系统调用的检测范围；</li>
+<li>中间件将配置信息和从加载器那来的fuzzer进程信息传递给hypervisor；</li>
+<li>hypervisor可以检测在fuzzer进程中的漏洞。</li>
+</ol>
+<h4 id="3-2-1-中间件for接口检测"><a href="#3-2-1-中间件for接口检测" class="headerlink" title="3.2.1 中间件for接口检测"></a>3.2.1 中间件for接口检测</h4><p>中间件通过一个工作线程将所有的行为事件记录到日志文件中，记录的数据包括系统调用编号（仅检测范围内的系统调用），事件类型，事件时间，指令地址以及事件所访问的内存。<br>日志分析器可以通过日志文件来检测潜在的<strong>UNPROBE</strong>和<strong>TOCTTOU</strong>漏洞。</p>
+<h4 id="3-2-2-中间件for内存检测"><a href="#3-2-2-中间件for内存检测" class="headerlink" title="3.2.2 中间件for内存检测"></a>3.2.2 中间件for内存检测</h4><p>中间件通过hook一些特殊的内存函数来动态调整监测的内存区域。</p>
+<p>通过调用服务接口来限制监测的内存区域和内核代码。如果发现一个潜在漏洞，中间件会记录下来，通过单步调试的模式或者软中断来中断OS。客户操作系统与类似于windbg的调试工具连接，可以获取准确的上下文用于分析漏洞。</p>
+<h3 id="3-3-用户空间组成"><a href="#3-3-用户空间组成" class="headerlink" title="3.3 用户空间组成"></a>3.3 用户空间组成</h3><p>加载器loader，fuzzer,日志分析器放在用户空间，可以简化代码，使系统更稳定。加载器用来激活hypervisor，加载用来进行路径探索的fuzzer,在路径探索过程中的行为特征被记录下来，用于记录分析。</p>
+<h4 id="3-3-1-加载器"><a href="#3-3-1-加载器" class="headerlink" title="3.3.1 加载器"></a>3.3.1 加载器</h4><p>Loader 用于加载目标程序，digtool提供运行环境来检测漏洞。通过配置文件限制系统调用的检测范围，为ProbeAccess事件设置虚拟地址的边界。</p>
+<h4 id="3-3-2-Fuzzer"><a href="#3-3-2-Fuzzer" class="headerlink" title="3.3.2 Fuzzer"></a>3.3.2 Fuzzer</h4><p>Fuzzer用于发现代码分支，由加载器加载。在digtool中，fuzzer需要通过调整参数尽可能的调用检测范围内的系统调用，发现其分支。</p>
+<h4 id="3-3-3-日志分析器"><a href="#3-3-3-日志分析器" class="headerlink" title="3.3.3 日志分析器"></a>3.3.3 日志分析器</h4><p>分析器用于从大量的与漏洞特征相关的记录数据中提取有价值的信息。因为不同漏洞采用了不同的策略来检测，日志分析器的漏洞检测算法需要根据待检测漏洞的类型进行改变。</p>
+<h2 id="4-实现"><a href="#4-实现" class="headerlink" title="4 实现"></a>4 实现</h2><p>介绍digtool的实现细节。</p>
+<h3 id="4-1-VMM-Infrastructure"><a href="#4-1-VMM-Infrastructure" class="headerlink" title="4.1 VMM Infrastructure"></a>4.1 VMM Infrastructure</h3><p>主要是初始化hypervisor，提供基础设施。初始化过程如下：</p>
+<ul>
+<li>Digtool作为驱动被加载进OS内核，通过CPUID指令检查处理器是否支持硬件虚拟化。</li>
+<li>通过初始化一些数据结构（如VMCS）和寄存器（如CR4）为每个处理器启动hypervisor</li>
+<li>根据原先的操作系统状态设置客户操作系统的CPU状态，这样原先的操作系统就成为了运行在虚拟机上的客户操作系统。</li>
+</ul>
+<h4 id="4-1-1-虚拟页监视器"><a href="#4-1-1-虚拟页监视器" class="headerlink" title="4.1.1 虚拟页监视器"></a>4.1.1 虚拟页监视器</h4><p>Digtool用SPTs来监控虚拟内存访问，为了减小开销，SPTs只会被监视的线程使用，对于未监控的线程使用客户机操作系统原始的页表。<br>Figure 2展示了对一个监视的线程，虚拟页监视器的工作流程。</p>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/f2.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/f2.png" width="593"></a><br>    <figcaption></figcaption><br></figure>
+
+<ul>
+<li>采用一个稀疏位图Bitmap来跟踪进程空间的虚拟页，位值为1表示对应的页需要被监控，同时SPT页表中的P flag被清除；</li>
+<li>当要访问被监控的页时会触发一个#PF异常；</li>
+<li>当#PF异常被Hypervisor截获，hypervisor中的异常处理程序先去检查Bimap中对应位值是否为1：<ul>
+<li>若为0，说明这个页不需监控，SPT直接从GPT中更新对应的页，指令便继续执行</li>
+<li>若为1，异常处理模块将会处理异常：1&gt;记录异常；2&gt;向客户机操作系统注入一个中断，此中断处理程序会记录一些关于#PF异常的信息（如访问的内存地址，导致#PF的指令）；3&gt;通过触发另一个异常（软件中断）来连接客户机操作系统中的调试工具，digtool通过设置hypervisor中的MTF/TF单步调试客户机操作系统中的指令，同时SPT从GPT中更新页，使导致异常的指令再次执行。</li>
+</ul>
+</li>
+<li>由于MTF/TF，VMEXIT会在客户机操作系统每次指令执行后被触发，hypervisor重新拿到控制权，MTF/TF处理程序可以清除P flag，使虚拟页再次被监视。<br><br></li>
+</ul>
+<h4 id="4-1-2-进程调度监视器"><a href="#4-1-2-进程调度监视器" class="headerlink" title="4.1.2 进程调度监视器"></a>4.1.2 进程调度监视器</h4><p>Digtool只关注被监视的线程，因此需要跟踪线程调度来检测被监视的线程，不检测不需监视的进程。</p>
+<p>在windows操作系统中，_KPRCB结构提供了正在运行的线程信息给对应的处理器，而_KPRCB是通过_KPCR结构获得，_KPCR的地址又可以通过FS寄存器（64位系统中的GS寄存器）得到。故正在运行的线程可以通过以下的关系得到：</p>
+<blockquote>
+<p>FS–&gt;_KPCR–&gt;_KPRCB–&gt;CurrentThread.</p>
+</blockquote>
+<p>注意，关于如何获得_KPRCB，有其他的方法。在这里digtool使用了人工逆向和windows内核的知识来得到。</p>
+<p>获得_KPRCB后，在_KPRCB中的当前线程被监控，任何对当前线程的写操作意味着一个新的线程将会处于运行态，被hypervisor截获后激活虚拟页监视器，进行漏洞检测。</p>
+<h4 id="4-1-3-内核与Hypervisor间的通信"><a href="#4-1-3-内核与Hypervisor间的通信" class="headerlink" title="4.1.3 内核与Hypervisor间的通信"></a>4.1.3 内核与Hypervisor间的通信</h4><p>包含两个主要的方面：</p>
+<ul>
+<li>内核请求服务，hypervisor提供服务。通过服务接口来实现，而服务接口基于一个VMCALL指令，引发VMEXIT,hypervisor拿到控制权，处理请求。</li>
+<li>Hypervisor向内核组件发送消息，组件处理消息。通过共享内存实现，hypervisor将获得的行为信息写入共享内存并通知内核。</li>
+</ul>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/f3.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/f3.png" width="593"></a><br>    <figcaption></figcaption><br></figure>
+
+<p>根据Figure3中的箭头得到下面的指令流程：</p>
+<ol>
+<li>当被检测的目标模块触发一个被hypervisor监视的事件时，VMEXIT将会被hypervisor截获；</li>
+<li>Hypervisor将事件信息记录到共享内存。当共享内存满了，将会注入一段代码到客户机操作系统，通知工作线程处理共享内存的数据（读取共享内存中的信息并写入日志文件）；否则直接跳回目标模块；</li>
+<li>通知工作线程后，跳回目标程序，重新执行引起VMEXIT的指令。</li>
+</ol>
+<h3 id="4-2-通过系统调用接口检测漏洞"><a href="#4-2-通过系统调用接口检测漏洞" class="headerlink" title="4.2 通过系统调用接口检测漏洞"></a>4.2 通过系统调用接口检测漏洞</h3><p>接口检测需要追踪系统调用执行的过程，监控从用户态进程传入的参数，然后判断这些参数的检查和使用是否会产生潜在的漏洞：</p>
+<ul>
+<li>监控系统调用执行的整个过程，从进入内核态的point到返回用户态的point；</li>
+<li>监控内核代码对用户内存的处理；</li>
+<li>记录行为特征，用来分析潜在漏洞。</li>
+</ul>
+<h4 id="4-2-1-事件监视器"><a href="#4-2-1-事件监视器" class="headerlink" title="4.2.1 事件监视器"></a>4.2.1 事件监视器</h4><p>接口检测的实现是通过定义和截获系统调用过程中不同的行为事件，这些事件和截获其方法构成了事件监视器。</p>
+<p>事件监视器定义了十种行为事件：Syscall,Trap2b,Trap2e,RetUser,MemAccess, ProbeAccess,ProbeRead,ProbeWrite,GetPebTeb,AllocVirtualMemory.这些事件的结合可以定位一个潜在的漏洞。</p>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/f4.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/f4.png" width="593"></a><br>    <figcaption></figcaption><br></figure>
+
+<p>如Figure 4所示，在一个系统调用的执行过程中行为事件将会以这样的形式记录下来。方框上面的数字代表事件时间，只是记录了顺序，不代表实际的间隔。方框下面的Mi/Mj代表该事件访问的内存地址。</p>
+<ul>
+<li>Syscall/Trap2b/Trap2e:不同的从用户态进入内核态的系统调用方式，通过截获中断向量表中相应的入口来跟踪–监控系统调用</li>
+<li>RetUser：返回到用户空间，由于返回用户态之前，处理器会预先从用户内存提取指令，所以通过监控用户空间的页面访问来追踪 -SPT监控页面访问</li>
+<li>MemAccess: 内存访问 –SPT监控内存空间</li>
+<li>ProbeRead/ProbeWrite: 通过调用ProbeForRead/ProbeForWrite函数记录用户内存地址是否被内核检测过 –Hook内核函数</li>
+<li>ProbeAccess：通过指令直接对比检测用户内存地址是否合法（不能直接hook）-CPU模拟器</li>
+<li>AllocVirtualMemory/GetPebTeb: 确保用户内存地址合法，针对一些不需要检查的用户内存。 –Hook内核函数</li>
+</ul>
+<h4 id="4-2-2-CPU模拟器"><a href="#4-2-2-CPU模拟器" class="headerlink" title="4.2.2 CPU模拟器"></a>4.2.2 CPU模拟器</h4><p> ProbeAccess事件通过指令直接对比（比较待检测内存与用户内存空间的边界）检测用户内存地址是否合法，由于没有直接可以hook的内核函数，也没有访问用户内存空间的权限，提出了CPU模拟器。</p>
+<p> CPU模拟器放在hypervisor用来获取难以用一般方法获得的行为特征。通过解释并执行一段客户机操作系统的内核代码来实现。工作流程如Figure 5所示：<br> <figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/f5.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/f5.png" width="593"></a><br>    <figcaption></figcaption><br></figure></p>
+<ul>
+<li>#DR 寄存器中存储着目标内存，即用来检测用户内存地址的边界，这个值可以通过来自加载器的配置文件以及中间件与hypervisor的通信进行设置。</li>
+<li>当客户机操作系统访问目标内存时，hypervisor的DR处理程序会捕捉到异常，根据客户机的CPU更新CPU模拟器的状态</li>
+<li>CPU模拟器被激活，截获和执行客户机操作系统中导致调试异常的指令。CPU模拟器的起始地址就是客户机操作系统EIP寄存器中指令地址的的前一条指令。</li>
+<li>CPU模拟器主要关注cmp指令和执行客户机操作系统的代码。通过CMP指令捕获ProbAccess事件，记录到共享内存。</li>
+</ul>
+<h4 id="4-2-3-检测UNPROBE漏洞"><a href="#4-2-3-检测UNPROBE漏洞" class="headerlink" title="4.2.3 检测UNPROBE漏洞"></a>4.2.3 检测UNPROBE漏洞</h4><p>前面已经提到过，在使用从用户状态传来的指针之前，系统调用处理程序需要对其进行检查，确保该指针指向的是用户空间。所以这意味着在MemAccess事件之前会先触发ProbeRead/ProbeWrite/ProbeAccess.因此如果在MemAccess之前没有其他类型的检查事件，就说明可能有潜在的漏洞。</p>
+<p>检测UNPROBE漏洞主要关注两个方面： </p>
+<ul>
+<li>在系统调用执行过程中，MemAccess事件之前是否有检查事件；</li>
+<li>两个事件中的虚拟内存地址是否是同一个。</li>
+</ul>
+<p>从Figure 4可以看出，在n+3时刻，内核代码访问用户内存触发了MemAccess事件，而在这之前并没有任何ProbeRead/ProbeWrite/ProbeAccess事件，也没有AllocVirtualMemory/GetPebTeb事件表明该用户地址是合法的，说明该处可能有潜在的漏洞。</p>
+<h4 id="4-2-4-检测TOCTTOU漏洞"><a href="#4-2-4-检测TOCTTOU漏洞" class="headerlink" title="4.2.4 检测TOCTTOU漏洞"></a>4.2.4 检测TOCTTOU漏洞</h4><p>检测TOCTTOU漏洞也有两个关键点：</p>
+<ul>
+<li>一个是从用户态工程传来的参数应该是一个指针；</li>
+<li>同一系统调用处理程序不止一次地从用户内存取参数。</li>
+</ul>
+<p>从Figure 4可以看出，内核代码在n+2和n+3时刻访问了同一用户内存。</p>
+<p>当发现系统调用处理程序不止一次地从用户内存取参数时，通过比较Syscall/Trap2b/Trap2e和RetUser事件判断是否是同一个系统调用，从而判断是否存在TOCTTOU漏洞。</p>
+<h3 id="4-3-通过内存追踪检测漏洞"><a href="#4-3-通过内存追踪检测漏洞" class="headerlink" title="4.3 通过内存追踪检测漏洞"></a>4.3 通过内存追踪检测漏洞</h3><p>内存检测是通过跟踪内存分配，释放和访问等行为来检测内核内存的非法使用。主要关注两种内存的非法使用：</p>
+<ul>
+<li>越界访问分配的堆，会导致OOB漏洞；</li>
+<li>参考freed memory，会导致UAF漏洞。</li>
+</ul>
+<p>为了捕获漏洞的动态特征，需要监控已分配，未分配和已free的内存。Digtool通过虚拟页面监视器来监控内核内存。非法内存访问会产生page fault，hypervisor可以截获并记录下内存访问错误，然后提交到内核的调试工具进行调试，这样内核执行过程准确的上下文会被记录下来，用于漏洞检测。<br>为了跟踪已分配和已free的内存，digtool对由于分配内存和free内存的内存函数进行了hook，digtool可以通过内存分配函数的参数直接得到内存地址和内存大小。<br>注意，在digtool加载之前的内存分配是无法截获的，因此为了更准确的检测，digtool越早加载越好。</p>
+<h4 id="4-3-1-检测UAF漏洞"><a href="#4-3-1-检测UAF漏洞" class="headerlink" title="4.3.1 检测UAF漏洞"></a>4.3.1 检测UAF漏洞</h4><p>通过Hook ExAllocatePoolWithTag/ExFreePoolWithTag/ExAllocateHeap/InterlockedPushEntrySList/InterlockedPopEntrySList函数，任何在已free的内存上操作的指令都认为是UAF漏洞。</p>
+<p>同时digtool通过延迟释放freed内存来延长检测时间。（防止这种情况：用p指向已分配的内存block A–&gt;free A–&gt;另一个进程分配block B覆盖A（这样A那块区域是已分配状态）–&gt;仍然可以通过p指针操作blockA）</p>
+<h4 id="4-3-2-检测OOB漏洞"><a href="#4-3-2-检测OOB漏洞" class="headerlink" title="4.3.2 检测OOB漏洞"></a>4.3.2 检测OOB漏洞</h4><p>为了检测OOB漏洞，需要将监控的内存范围限制在未被分配的内存。任何对未分配内存的访问都会产生一个OOB漏洞。</p>
+<p>在检测过程中，digtool会搜索已分配和未分配内存区域的记录，并建立一个AVL树。如果内存区域被分配就会在AVL树中增加一个节点，如果内存被free，就会删除相应的节点。当被监视的页面被访问时，digtool会搜索AVL树来找到访问的区域，如果相关节点不存在，说明存在OOB漏洞。</p>
+<p>Digtool会在调用分配内存函数分配内存时多分配M字节，而这M字节不计入AVL的节点，这样可以避免内存块A,B相邻，而越界访问A的问题。</p>
+<h2 id="5-评估"><a href="#5-评估" class="headerlink" title="5 评估"></a>5 评估</h2><h3 id="5-1-效果"><a href="#5-1-效果" class="headerlink" title="5.1 效果"></a>5.1 效果</h3><h4 id="5-1-1-检测UNPROBE漏洞"><a href="#5-1-1-检测UNPROBE漏洞" class="headerlink" title="5.1.1 检测UNPROBE漏洞"></a>5.1.1 检测UNPROBE漏洞</h4><figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/f6.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/f6.png" width="593"></a><br>    <figcaption></figcaption><br></figure><br>#### 5.1.2 检测TOCTTOU漏洞<br><figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/f7.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/f7.png" width="593"></a><br>    <figcaption></figcaption><br></figure><br>#### 5.1.3 检测UAF漏洞<br><figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/f8.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/f8.png" width="593"></a><br>    <figcaption></figcaption><br></figure><br><figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/f9.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/f9.png" width="593"></a><br>    <figcaption></figcaption><br></figure><br>#### 5.1.4 检测OOB漏洞<br><figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/f10.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/f10.png" width="593"></a><br>    <figcaption></figcaption><br></figure>
+
+<h3 id="5-2-性能"><a href="#5-2-性能" class="headerlink" title="5.2 性能"></a>5.2 性能</h3><ul>
+<li>比Windows慢2.18-5.03倍</li>
+<li>比模拟器Boch快45.4-156.5倍</li>
+</ul>
+<hr>
+<h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><p><a href="https://www.usenix.org/system/files/conference/usenixsecurity17/sec17-pan.pdf" target="_blank" rel="external">Digtool:A Virtualization-Based Framwork for Detecting Kernel Vulnerabilities –Jianfeng Pan,Guanglu Yan,Xiaocao Fan-IceSword Lab,360 Internet Security Center</a></p>
+<p><a href="https://www.usenix.org/sites/default/files/conference/protected-files/usenixsecurity17_slides_guanglu_yan.pdf" target="_blank" rel="external">usenixsecurity17_slides_guanglu_yan.pdf</a></p>
+
+      
+    </div>
+    
+    
+      <footer class="article-footer">
+        
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Binary/">Binary</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Notes/">Notes</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Virtualization/">Virtualization</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Vulnerabilities/">Vulnerabilities</a></li></ul>
+
+      </footer>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+
+    
+      <article id="post-ever-papernote1" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/20171009/ever-papernote1/">详细解读：Secure and Efficient Multi-variant Execution Using Hardware-assisted Process Virtualization</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/20171009/ever-papernote1/" class="article-date">
+  <time datetime="2017-10-09T03:30:16.000Z" itemprop="datePublished">2017-10-09</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/曾经的论文笔记/">曾经的论文笔记</a>
+  </div>
+
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>曾经的论文笔记系列</p>
+<h2 id="使用硬件辅助进程虚拟化的安全高效的多变体执行"><a href="#使用硬件辅助进程虚拟化的安全高效的多变体执行" class="headerlink" title="使用硬件辅助进程虚拟化的安全高效的多变体执行"></a>使用硬件辅助进程虚拟化的安全高效的多变体执行</h2><p>—— Koen Koning [Vrije Universiteit Amsterdam] [koen.koning@vu.nl]</p>
+<h2 id="摘要"><a href="#摘要" class="headerlink" title="摘要"></a>摘要</h2><p>多变体执行（MVX）解决方案可以通过在并行运行的各种程序变体中观察到不同行为来潜在地检测任意内存错误利用。然而，之前的MVX由于其严重的性能限制，在安全性方面的没有实际适用性。</p>
+<p>本文将介绍<strong>MvArmor</strong>，这是一个MVX系统，它使用<strong>硬件辅助的进程虚拟化</strong>以高效但安全的方式监控变体的不同行为。为了提供针对内存错误利用的全面保护，MvArmor依靠一个<strong>新的MVX感知变体生成策略</strong>。该系统支持用户可配置的安全策略来调整性能和安全性之间的权衡。我们的分析表明，MvArmor即使在保守的检测策略下，仍然可以以适度的性能开销为代价抵御许多类型的现代攻击。</p>
+<hr>
+<h2 id="1-Introduction-介绍"><a href="#1-Introduction-介绍" class="headerlink" title="1.Introduction 介绍"></a>1.Introduction 介绍</h2><p>C和C ++程序中的内存错误仍然是今天最严重的安全问题之一。即使像Heartbleed这样一个不复杂的内存错误利用，也可以轻易地危及全球无数用户的私人数据，并带来严重的后果。</p>
+<p>现代操作系统部署了多种措施来防范内存错误利用：</p>
+<ul>
+<li>数据执行保护（DEP）</li>
+<li>地址空间布局随机化（ASLR）</li>
+<li>堆栈金丝雀</li>
+</ul>
+<p>以上广泛部署的安全防护都可以被现代的<strong>代码重用攻击</strong>绕过。</p>
+<p>研究界提出的更强大的安全防御要么需要<strong>重新编译程序和所有共享库</strong>（可部署性受限），要么<strong>只保护所有可能的内存攻击的子集</strong>（安全性受限）。例如，流行的防止控制流转移攻击的控制流完整性（CFI）解决方案，针对只有数据的攻击（如Heartbleed）和甚至针对依靠程序中合法控制流的控制流分流攻击是无效的。</p>
+<p>防御和防止任意攻击的需求导致需要更全面的解决方案。<strong>MVX系统最早由Cox等人在2006年提出，两种或更多的内存多样化，但在语义上同等的软件变体并行，并从语义上分歧的行为中检测内存攻击。这些变体运行在同一台机器上（利用多核CPU）并在系统调用级别上同步。</strong></p>
+<p><strong>传统MVX缺点</strong>：</p>
+<ul>
+<li>实现运行的实时性能不佳，<strong>系统调用监控机制</strong>开销太大使其在实践中不可用。</li>
+<li>有限的<strong>变体生成策略</strong>通常不能提供足够的保护来防止更复杂的内存攻击。</li>
+</ul>
+<p><strong>MvArmor的贡献</strong>：</p>
+<ul>
+<li><p>我们提出一个<strong>基于硬件辅助进程虚拟化的MVX设计</strong>。我们的设计高效地将MVX监控器的执行与运行的变体和底层内核分开，与之前的相比，提供了卓越的性能和安全设计。</p>
+</li>
+<li><p>我们提出了一种<strong>基于MVX感知分配器抽象的新型变体生成策略</strong>。我们的策略在我们的MVX设计中使用时被证明是有效的，可以提供强大的安全保证，防止传统和现代的内存错误利用。</p>
+</li>
+<li><p>我们提供了一个安全高效的MVX系统MvArmor.MvArmor在Dune之上实现了我们的设计，以保护商业Linux程序，并提供灵活的安全策略来鼓励部署。我们使用标准的基准测试和流行的真实世界的服务器程序评估MVArmor，显示MvArmor提供了强大的防御任意内存攻击的能力，同时比任何现有的安全相关的MVX解决方案性能都要好得多（SPEC CINT2006的开销是9％，服务器应用平均只有55％，即使是最保守的安全政策）。</p>
+</li>
+</ul>
+<hr>
+<h2 id="2-Background-背景知识"><a href="#2-Background-背景知识" class="headerlink" title="2.Background 背景知识"></a>2.Background 背景知识</h2><p>每个MVX系统都包含<strong>两个主要组件</strong>：运行并同步变体的<strong>监控器</strong>和<strong>变体生成策略</strong>，这两者对整个系统的安全性和性能都有很大的影响。</p>
+<h3 id="2-1监控器"><a href="#2-1监控器" class="headerlink" title="2.1监控器"></a>2.1监控器</h3><ul>
+<li><strong>MVX监控器负责比较和同步正在运行的进程变体的执行</strong>。这些变体都运行在同一个系统上，理想情况下每个变体都有专门分配的核-我们假设在现代多核架构中，许多核可以明确地专用于对安全敏感的应用程序。监控器本身可能由几个进程组成，例如每一个变体通过共享内存进行通信的进程。</li>
+<li>完整的MVX系统（包括监控器）被设计为<strong>用户透明</strong>的应用程序。例如，对于在MVX下运行的Web服务器，用户的请求将分发给所有变体。监控器还将组合所有Web服务器变体的响应，并让用户产生直接与单个Web服务器实例进行通信的错觉。</li>
+<li>每当这些响应（或其他操作）在各种变体之间不等同时，监控器就可立即检测到攻击企图（因为正常的操作应该不会触发分歧行为）并且在攻击者可以造成任何伤害之前停止变体。一般来说，MVX不会导致更多的文件系统和套接字I/O，<strong>因为是监控器而不是每个变体来有效地执行所有系统调用。</strong></li>
+</ul>
+<p>在大多数情况下，<strong>系统调用被用作同步点</strong>，因为它们通常是每个进程与环境交互的主要方式（例如文件系统操作或套接字操作）。在系统调用级别运行的监控器可以捕获和控制外部行为，同时仍然允许每个变体执行不同的内部行为。</p>
+<p><strong>监控器必须能够拦截系统调用和它们的参数来比较不同变体的进程行为。它还必须能够重写参数，阻止系统调用并修改返回值（或内存）</strong>，以确保所有变体之间的统一和无副作用的系统调用处理。总的来说，监控器需要<strong>确保所有的变体暴露于相同的环境视图和信息</strong>（例如，PID），以避免无意的分歧行为。</p>
+<p>以前的MVX系统中已经使用了几种策略来拦截系统调用，但是它们都受到重要的性能或安全性限制。为了深入分析这些限制，我们评估了由现有的系统调用插入策略引起的运行时间开销，通过重复发出<strong><em>getpid</em></strong> 系统调用的简单标记。图1给出了我们在<strong>传递（即将原始系统调用转发到底层OS内核）</strong>和<strong>仿真（即立即将结果返回到应用）</strong>模式中的结果。</p>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/mvxfig1" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/mvxfig1.png" width="593"></a><br>    <figcaption></figcaption><br></figure>
+
+<p>如图所示:</p>
+<ul>
+<li><p>基于<strong>可加载内核模块（LKM）</strong>的MVX监控器在两种操作模式下实现了最高效的系统调用插入策略，因为它不引入额外的上下文切换，并且可以直接访问进程状态。早期的MVX系统采用的这个策略的<strong>问题</strong>是监控器完全在内核中运行。这会导致可信计算基础（TCB）的大幅度增加和可部署性降低：监控器中的单个错误会影响整个系统，并且内部的内核API非常不稳定。</p>
+</li>
+<li><p>传统的基于<strong><em>ptrace</em></strong> 的MVX实现依赖于UNIX进程跟踪API来实现可部署但效率非常低的系统调用插入策略。这个策略引入了监控器和被跟踪进程之间在每一个系统调用上的多个上下文切换，从而导致在microbenchmark中的开销最高（高达〜217倍）。在64位系统上，使用<strong><em>ptrace</em></strong> 的监控器不能阻塞系统调用，使得仿真甚至比传递负荷更大。使用<strong><em>ptrace</em></strong> 进行系统调用监控也易受TOCTOU攻击的影响，这些攻击很难解决，因为操作之间的延迟很大，以及监控器与应用程序地址空间之间的访问受到限制。</p>
+</li>
+<li><p>最近的MVX监控器实现依靠<strong>静态二进制工具（SBI）</strong>来重写二进制文件，并用监控器调用替代任何系统调用指令（例如，int $ 0x80或syscall）。如图1所示，这种系统调用插入策略效率更高（基于Dyninst SBI框架，可达到约5倍的时间），因为它不需要上下文切换，甚至在仿真模式下不需要模式切换。不幸的是，这种策略通常不适用于安全应用程序，因为攻击者可以篡改进程内监控器状态，或者简单地运行未检查未对齐的系统调用指令（不是正常指令流的一部分，因为x86不强制对齐）来绕过系统调用插入和逃避检测。</p>
+</li>
+<li>基于<strong>动态二进制翻译（DBT）</strong>的实现将能够检测对齐和未对齐的指令并解决后一个问题，代价是稍高的系统调用插入开销（基于DynamoRIO DBT框架，开销高达9倍），而且在系统调用执行期间也是一个不小的影响。为了充分解决前一个问题，基于DBT的解决方案需要部署额外的工具（例如，基于软件的故障隔离[36]），但这也会进一步增加系统调用执行期间的开销。</li>
+</ul>
+<p>而<strong>MvArmor</strong>则依靠<strong>硬件级的进程虚拟化</strong>来实现系统调用介入。使用<strong>Dune将常规的Linux进程虚拟化</strong>，并将其置于自己的（硬件支持的）虚拟环境中。如图1所示，与其他技术相比，这种策略非常高效（getpid()），并且满足我们所有的安全需求：小型系统的TCB，无进程状态的完全隔离的监控器，不可绕过（基于陷阱）的系统调用介入机制。此外，仿真模式的优异性能和访问特权CPU特性的能力为libOS风格的优化提供了有趣的机会。</p>
+<h3 id="2-2变体生成"><a href="#2-2变体生成" class="headerlink" title="2.2变体生成"></a>2.2变体生成</h3><p>变体生成策略对MVX系统解决的攻击类型具有强大的影响。<strong>理想情况下，任何攻击最终都会导致变体之间的不同行为</strong>。例如，依赖ASLR进行变体生成，使得两个或多个变体共享代码页不太可能在相同的地址上，使得像ROP这样的代码重用攻击更加困难。通过扩展这个策略来使用MVX感知（即不重叠）的地址空间，可以完全防止传统的代码重用攻击。这是因为没有代码指针可能在多个变体中是有效的，因此除了其中一个变体以外，在对其进行解引用时会导致错误。虽然这种方法也将阻止完全依赖于绝对内存对象地址的任意内存读写攻击（例如，数据指针重写）），但它不能阻止仅依赖于内存对象之间的相对距离的攻击。例如，基于栈或堆的缓冲区越界读会揭露私人数据（例如，密钥），溢出破坏敏感的非指针数据（例如，UIDs）仍然无法避免，因为这些攻击只使用相对内存访问。</p>
+<p>可替代的变体生成策略包括颠倒栈的方向和随机化指令集。这些策略增加了一些额外的安全性（例如，分别只解决基于堆栈的和代码注入攻击），并且引入不小的开销。</p>
+<p>相比之下，<strong>MvArmor</strong>依赖于一种新的MVX感知的变体生成策略，该策略旨在尽量减少对运行时性能的影响，同时提供强大的安全保证，以<strong>抵御依赖于内存中绝对和相对访问的任意类别的攻击</strong>。安全策略允许用户在不断增加的保护级别（概率和确定性）之间进行选择，代价是更大的性能开销。</p>
+<p>最后，使用MVX系统的优势在于，它可以以更少的开销同时保护这些攻击类型中的多个（给予足够的备用CPU核心和资源），并且一般不需要访问系统的源或重新编译系统库函数。</p>
+<hr>
+<h2 id="3-威胁模型"><a href="#3-威胁模型" class="headerlink" title="3.威胁模型"></a>3.威胁模型</h2><p>假设一个强大的威胁模型，攻击者可以反复地与目标程序进行交互，利用漏洞从内存读取或写入任意数据。特别地，我们假设攻击者可以依靠<strong>相对</strong>的（如缓冲区读取/溢出和部分指针覆盖）和任意<strong>绝对</strong>的内存读/写原语（如指针覆盖）。我们还假设空间（如缓冲区溢出）和时间（如use-after-free）内存攻击。基于这些基本类型，我们假设攻击者可以追踪以下目标中的任何一个（符合现代特征攻击）：</p>
+<ul>
+<li><p><strong>任意代码执行</strong>：攻击者可以执行任意代码，例如使用ROP或其他代码重用技术发出系统调用。</p>
+</li>
+<li><p><strong>信息泄露</strong>：攻击者可能泄露目标程序中的敏感数据，例如Heartbleed中的加密密钥。</p>
+</li>
+<li><p><strong>信息篡改</strong>：攻击者可能篡改敏感数据，例如UID升级权限，或者装入其他非控制数据攻击。</p>
+</li>
+</ul>
+<hr>
+<h2 id="4-概述"><a href="#4-概述" class="headerlink" title="4.概述"></a>4.概述</h2><figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/mvxfig2.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/mvxfig2.png" width="593"></a><br>    <figcaption></figcaption><br></figure>
+
+<p>图2显示了MvArmor的主要组件，这些组件在虚拟环境中运行。</p>
+<ol>
+<li>在启动时，为了保护应用程序免受所有前面提到的攻击向量，<strong><em>变体生成器（V-A）</em></strong> 使用MVX感知变体生成策略为每个变体生成一个应用程序实例。</li>
+<li><strong><em>安全管理器（V-B）</em></strong>则生成安全策略，为其余组件提供安全性和性能之间的折衷。这些安全策略可以由用户定义，并取决于所考虑的攻击类别。</li>
+<li>当应用程序执行系统调用时，它将陷入<strong><em>系统调用前端（V-C）</em></strong>。这个组件是虚拟环境的监控器和“内核”（ring 0代码）的入口点。<strong><em>系统调用前端</em></strong>还管理应用程序状态的所有访问，如地址空间。</li>
+<li><strong><em>前端</em></strong>将所有系统调用事件转发给<strong><em>变体管理器（V-D）</em></strong>，它负责同步所有变体并执行安全策略。变体管理器使用与Hosek和Cadar提出的类似的<strong><em>环状缓存</em></strong>来相互通信。具体来说，其中一个变体（领导者）执行所有的实际的系统调用，并将相应的事件发送给其他变体（追随者），他们在自己的时间使用事件。追随者也只执行一小部分系统调用（如内存管理），因为大多数I/O应该只发生一次（例如通过套接字发送数据）。<strong>与传统的MVX系统不同，这些变体可以在大多数时间异步运行</strong>，从而消除了运行时变体一致的性能瓶颈。然而，不受约束的异步性并不安全。可以允许一个变体通过像exec这样的调用来实现任意的代码执行，或者像调用write来实现信息泄露。相反，我们使用<strong>安全敏感和非安全敏感的系统调用</strong>之间已知的区别，并<strong>选择性的强制执行同步执行</strong>，其中<strong>敏感调用的集合根据安全策略而变化</strong>。</li>
+<li><strong><em>变体管理器</em></strong> 还负责决定系统调用何时应该被真正执行（领导者），或者何时应该简单地复制结果（追随者）。当<strong><em>变体管理者</em></strong> 决定执行一个系统调用时，它将它发送到<strong><em>系统调用后端（V-E）</em></strong>。在一个初步的实现中，后端将简单地将所有的系统调用转发给真实的内核。但是，Dune中的每个系统调用都需要开销很大的VM exit。为了降低这些开销，我们直接在监控器上实现了一套（内存管理和getpid-like）系统调用。以后libOS风格的优化也是可能的 ，如通过使用用户空间网络栈（如IX），或通过配置系统调用。</li>
+<li><strong><em>变体管理器</em></strong> 使用<strong><em>命名空间管理器（V-F）</em></strong>来确保变体的所有可用信息是相同的（包括PID，文件描述符和时间信息），最后<strong><em>检测器（V-G）</em></strong>在语义上比较变体的执行分歧。</li>
+</ol>
+<hr>
+<h2 id="5-MvArmor-快速安全的MVX"><a href="#5-MvArmor-快速安全的MVX" class="headerlink" title="5.MvArmor: 快速安全的MVX"></a>5.MvArmor: 快速安全的MVX</h2><p>我们现在详细描述每个MvArmor的组件。</p>
+<h3 id="5-1变体生成器"><a href="#5-1变体生成器" class="headerlink" title="5.1变体生成器"></a>5.1变体生成器</h3><p>MVX中的一个<strong>基本问题</strong>是变体应该在多大程度上有所不同。不限制的变化将不可能从分歧中检测到攻击，因为一切都可能不同。相反，变化不足也是不希望的，因为可能没有攻击引起的任何分歧。</p>
+<p><strong>对于内存错误，直接的解决方案是改变地址空间布局，并保持其他所有内容相同</strong>，因为这些差异通常不会影响程序执行，但会对恶意的内存操作产生影响。在本节中，我们确定了对不同类别的内存错误利用提供强有力的保护和检测的技术，并详细说明了我们当前的MvArmor原型中相应的实现策略。为了进行分析，我们的设计基于常见的PIE(position independent execution地址无关执行)二进制组织，但是我们的设计在原则上，还可以通过将静态程序段标记为不可重定位并适当减少安全保证来处理非PIE二进制文件。</p>
+<ol>
+<li><p><strong>首先，通过在不同变体间使用不重叠的地址空间，使任何绝对空间的攻击（即依靠绝对代码/数据地址的攻击）无效</strong>。通过确保变体间内存页不覆盖，指针一次最多只能在一个变体中有效，这样一定会使除此以外的所有其他变体崩溃。这已经阻止了ROP等常见的代码重用攻击和JITROP等信息泄露攻击，因为它们依赖于内存页的绝对位置。<br>为了在不同变体之间实现不重叠的地址空间，我们<strong>使用ASLR随机化每个变体，然后限制ASLR不要在各种变体上重用地址范围</strong>。由于我们的MVX系统在虚拟化环境的ring0级别，因此它可以完全控制页表，从而简化了ASLR的修改。 MvArmor为每个变体中的所有内存区域（即代码，数据，堆栈等）实现这一技术。</p>
+</li>
+<li><p><strong>为了阻止相对空间攻击</strong>（即依赖于相对代码/数据地址的攻击），我们的变体生成策略必须能够提供有力的保证来防止缓冲区溢出/下溢和部分指针覆盖。例如，如果跟随者堆的大小与领导者中的整个（正常和紧凑）堆一样大，则指针加上任何偏移量只能在这些变体的某一个中有效。换句话说，这种设计可以确保不同变体之间的非重叠偏移空间，从而使所有相对空间攻击无效。 为此，<strong><em>策略必须确保内存对象之间的偏移不重叠 。MvArmor通过在领导者中使用标准的“紧凑”分配器和在追随者中使用“稀疏”分配器</em></strong> ，为所有<strong>堆对象</strong>实现了这种技术。原则上，将这种保证扩展到所有其他内存对象是可能的，但是通常需要源代码级的信息来准确地分离栈和数据对象 - 尽管二进制级别的逼近是可能的。？</p>
+</li>
+<li>到目前为止所描述的策略可以提供确定性的保护以抵御所有的<strong>空间攻击</strong>，但它们不足以阻止<strong>时间性的攻击</strong>（例use-after-free攻击）。在没有源代码级别信息的情况下，确保确定性的防范通用的时间攻击是不切实际的。一个实用的二进制级别的选择是<strong>确保概率时间内的安全</strong>。在我们的设计中，这是通过<strong>在不同的变体中使用不同的（随机化的）内存分配器来完成的</strong>，并且为了进一步限制攻击面，通过在二进制级别靠近类型安全的内存重用。？？？<br>MvArmor为所有<strong>堆对象</strong>强制执行概率时间安全性，随机化标准分配器和领导者中的随机对象间隙。另外，MvArmor还可以在追随者的定制分配器中使用persize内存池来进行类型安全的内存重用（但是基于分配时间回溯的更不保守的二进制级近似也是可能的）。？？？</li>
+</ol>
+<p>虽然在一个变体上实现所有提出的保护技术可能会引入大量的开销，但是在大多数情况下，它们的开销可以通过我们的MVX设计在各种变体之间被完全屏蔽。在MvArmor中，因为追随者不执行大部分系统调用，所以比领导者要快，因此会浪费几个周期等待领导者。我们的测量表明，对于我们基于I/O绑定的服务器应用程序的MvArmor实现（即没有启用任何保护），每个跟随者在系统调用期间平均花费约4000个周期等待领导者。特别是当系统调用不需要锁步行为时，空闲时间留给跟随者足够的时间在开销更大的分配器抽象中实现我们的保护技术。这一策略提供了强大的安全性保证，同时减少了端到端解决方案的运行时间开销。</p>
+<h3 id="5-2安全管理器"><a href="#5-2安全管理器" class="headerlink" title="5.2安全管理器"></a>5.2安全管理器</h3><p>安全管理器生成的策略允许用户在安全性和性能之间进行权衡。具体来说，一个策略可以指定<strong>每个系统调用是否被认为是非敏感的</strong>（事件流，意思是领导者可以在没有同步的情况下执行它），<strong>或者是敏感的</strong>（需要与其他变体一起执行锁步执行）。</p>
+<p>安全策略在整体系统级别，单个系统调用级别甚至特定参数级别（例如“如果权限标志中的执行位被设置，然后……”）指定行为。在MvArmor，我们针对上述每一类攻击提出以下策略（存在其他可能的策略）：</p>
+<ul>
+<li>代码执行：对执行权限设置的execve,mprotect/mmap执行全面检查。</li>
+<li>信息泄露：强制对能够泄露数据的I/O系统调用（例如写入）进行全面检查。</li>
+<li>全面：全面检查所有系统调用。</li>
+</ul>
+<p>在实践中，代码执行策略的执行效率与没有系统调用被认为是敏感的策略一样，因为代码执行策略考虑的系统调用在大多数应用程序中很少被执行。</p>
+<p>全面的安全策略对于提供一个通用的策略（以及性能下限）是有用的，但是考虑到目标威胁模型，可以为诸如代码执行和信息泄露等定制的更精简的策略提供可比较的安全性。关键是这样的安全策略可能会延迟检测到失败的攻击，但是它们的确可以确定并立即停止所有在威胁模型中考虑到的攻击的成功尝试。</p>
+<h3 id="5-3系统调用前端"><a href="#5-3系统调用前端" class="headerlink" title="5.3系统调用前端"></a>5.3系统调用前端</h3><p>当应用程序执行一条syscall指令时，执行将会从ring 3陷入到ring 0的内核空间。<strong>通过在虚拟化环境中运行应用程序和监视器，所有的系统调用都将陷入监视器而不是实际的内核</strong>。MvArmor基于<strong>Dune，它利用虚拟化以安全的方式为应用程序提供对特权CPU特性的访问</strong>。为此，Dune依靠Intel VT-x扩展来允许内核通过Dune管理程序临时从正常内核（VMX root）切换到<strong>虚拟化模式（VMX non-root）</strong>。 Dune为ring 0代码设置了VMX root 和非root模式，如图3所示。由于我们的监控器运行在特权模式下，因此它还可以访问其他功能，例如页表和中断。虽然内核模块直接修改内核可以达到同样的效果，但MvArmor将监控器与系统其他部分完全分开，而不增加系统范围内的TCB。</p>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/lares4.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/mvxfig3.png" width="493"></a><br>    <figcaption></figcaption><br></figure>
+
+<p><strong>系统调用前端从libDune接收系统调用陷阱并将其转发给变体管理器。另外，前端负责访问应用程序状态，例如读取和写入其地址空间。</strong></p>
+<p>并不是所有的系统调用都会在现代Linux系统上产生陷入;在每个应用程序中，内核都会建立一个共享库（虚拟动态共享对象，即vDSO），它包含执行挑选出的不会陷入内核的系统调用代码。使用Dune，我们仍然可以拦截vDSO调用，通过映射到我们自己的包含系统调用指令的代码来代替原始的vDSO。</p>
+<h3 id="5-4变体管理器"><a href="#5-4变体管理器" class="headerlink" title="5.4变体管理器"></a>5.4变体管理器</h3><p><strong>从前端收到系统调用事件后，变体管理器将与其他变体同步</strong>。每个进程都有一个<strong>环形缓冲区</strong>，<strong>与其他变体中的各个进程共享</strong>。系统调用完成后，领导者将系统调用连同其参数和返回值一起压入环形缓冲区。追随者比较他们的参数与领导者的，要么自己执行系统调用，要么使用领导者提供的返回值。具体来说，<strong>变体管理器有一个per-syscall表来确定适当的行为。某些系统调用应该只执行一次（例如，与套接字相关的系统调用），而另一些系统调用应该在不同的变体执行（例如，内存管理调用）。</strong>对于前者，追随者只是复制领导者的返回值。</p>
+<p>环形缓冲区提供了无需锁定的有效通信，我们使用原子操作来更新环形缓冲区入口并处于busy-waiting状态，直到消耗它们。由于像select和epoll_wait这样的系统调用可能会阻塞很长时间，所以追随者在一段时间后停止busy-waiting，然后进入睡眠状态。由于睡眠和唤醒呼叫所需VM exit，这样做开销很大。假设不缺少核，更高效的解决方案就是使用<strong>英特尔的监控器/等待指示来休眠</strong>，因为它们不会导致VM exit。由于我们的<strong>基于Dune的虚拟化环境以特权模式运行，因此它可以在普通应用程序无法使用的情况下轻松使用cpu特性</strong>。</p>
+<p><strong>安全策略确定每个系统调用是否应该以锁步方式运行，在这种情况下，领导者在将参数推入环形缓冲区后将等待所有的跟随者，然后跟随者比较系统调用，然后在系统调用完成时暂停</strong>。对于每个系统调用（最保守的安全策略）这样做都会有更高的性能影响。</p>
+<p>对于多线程应用程序，我们强制追随者去追随领导者系统调用的顺序。该策略旨在防止由于非确定性调度决策而产生的分歧行为。这种松散形式的确定性多线程（DMT）被证明对于以前的MVX系统是足够的。如果发生问题（例如由于良性数据竞争引起的分歧），则可以使用完整的DMT语义，代价是更大的开销。</p>
+<h3 id="5-5系统调用后端"><a href="#5-5系统调用后端" class="headerlink" title="5.5系统调用后端"></a>5.5系统调用后端</h3><p><strong>当一个变体需要执行一个系统调用时，它会将调用转发到系统调用后端。将系统调用转发到内核需要开销很大的VM exit，所以系统调用后端尽可能在本地执行系统调用</strong>。目前，这是为<strong>内存管理的系统调用</strong>而实现的，但是可以扩展到包括用户空间网络栈，比如IX  - 也是基于Dune的。除了消除VM exit，用户空间网络栈也提高了应用程序的整体性能。？？</p>
+<p>MVX监控器可能容易受到TOCTOU(time-of-check-to-time-of-use)攻击的影响，攻击者在监控器检查参数之后但在内核读取参数之前，从另一个线程更改内存中系统调用的参数。因为传递给系统调用的参数通常是指向应用程序地址空间中的缓冲区或结构的指针，由监控器（用于检查）和内核（用于执行）单独拷贝。我们<strong>通过将指针直接传递给复制的数据结构（在监控器中）来解决这个问题</strong>。由于不需要额外的复制，因此不会引起性能开销。</p>
+<h3 id="5-6命名空间管理器"><a href="#5-6命名空间管理器" class="headerlink" title="5.6命名空间管理器"></a>5.6命名空间管理器</h3><p>如果变体能够访问内核分配的PID或时间信息，它们可以（直接或间接）在条件变量中使用这些数据，导致不同的行为。因此<strong>命名空间管理器</strong>为了确保变体不会产生意外的偏离行为，<strong>使用分层结构为每个进程和线程分配虚拟PID和TID</strong>：当一个变体快速连续创建线程时，它们必须在所有变体中获得相同的虚拟TID，而不管它们实际出现在系统上的顺序，还是早期执行其克隆操作的线程。</p>
+<p>我们类似地<strong>虚拟文件描述符</strong>，因为只有领导者才能访问所有的文件描述符。例如，追随者无法访问打开可写的套接字或文件，由于内核在每个进程中以增量方式分配文件描述符，并且追随者比领导者打开更少的文件（例如，只读文件），所以这些数字开始偏离。因此，<strong>命名空间管理器维护虚拟化文件描述符到真实（每个变体）文件描述符的映射</strong>。对于与epoll相关的标识符（包括用户数据字段）也是如此。当套接字有I/O事件时，epoll_wait系统调用返回先前注册的用户定义的数据。由于这些值可以是指针（每个变体不同），因此必须将它们映射回套接字，然后映射到应该为该套接字返回的变体特定的用户数据。</p>
+<p><strong>时间信息在变体之间也不应该有差异</strong>，因为这通常用于记录或播种随机数发生器。由于MvArmor可以完全控制应用程序的页表，所以它可以很容易地拦截所有的vDSO系统调用。通过<strong>禁用了rdtsc指令，使其陷入监控器</strong>。</p>
+<p>通过只允许领导者打开像/dev/random这样的文件来确保随机数生成中的确定性。伪随机数生成器通常用已经由命名空间管理器虚拟化的信息播种，不需要额外的努力来正确地工作。我们类似地限制领导者对/ proc文件系统的访问。没有二进制检测，就没有简单的方法来插入rdrand指令。通过禁用管理程序的cpuid实现中的相应位，大多数正常的应用程序和库将不会使用它（例如，OpenSSL）。虽然我们没有观察到需要进一步检查，但我们也可以配置虚拟环境，以便在执行指令时（通过虚拟环境的控制结构中的一个位）陷入虚拟机管理程序。</p>
+<h3 id="5-7检测器"><a href="#5-7检测器" class="headerlink" title="5.7检测器"></a>5.7检测器</h3><p>由于系统调用的参数不能超过6个，因此很多调用都希望指向包含更多信息（例如缓冲区或结构）的数据结构。<strong>为了在变体之间进行全面比较，监控器因此对这些参数进行深层语义复制和比较。在MvArmor中，检测器组件执行这两个功能。</strong></p>
+<h3 id="5-8实现"><a href="#5-8实现" class="headerlink" title="5.8实现"></a>5.8实现</h3><p>除了前端和后端外，MvArmor还包含一个实现我们设计中所有组件的库。我们开发了这些组件的两个实现：使用Dune沙箱的高性能硬件虚拟化方法和用于开发和调试的ptrace实现。这些实现为每个系统调用调用我们的共享库，并公开了几个函数，如如何访问受监控的应用程序的地址空间以及如何分配变体之间的内存。库本身由大约5,000行C代码组成，而前端和后端则各包含大约500行C代码。</p>
+<p>用于实现MvArmor的默认前端和后端的Dune沙箱允许任意应用程序在Dune中运行。沙箱使用自己的加载程序加载给定的二进制文件。它还对传递给系统调用的任何指针执行边界检查，以防止沙箱应用程序访问ring 0的状态，例如沙箱本身，Dune库或监控器。我们稍微修改了Dune和沙箱，以满足我们对监控器的要求，比如安全修复和更多的回调。</p>
+<p>为了实现在5.1节中讨论的保护技术，我们使用了<strong>libumem的修改版本</strong>，它是Solaris slab分配器的Linux用户空间端口。这个实现作为我们自定义的<strong>“稀疏”分配器</strong>的基础。具体来说，<strong>通过限制每个slab允许的对象的数量（即1个对象），并向每个slab添加填充（即领导者最大堆的大小），我们实现了领导者和追随者之间的非重叠偏移空间</strong>。通过保留libumem每个尺寸原本的池化架构，我们使得类型安全的内存重用成为可能。此外，由于我们希望在领导者中保留标准（随机）分配器（为了保持安全性，还要在较慢领导者中保证性能），我们假设标准和我们的自定义分配器都是可信的，以防止监控器检测到由不同的分配器引起的分歧（例如，不同的系统调用来映射内存）。</p>
+<hr>
+<h2 id="6-限制"><a href="#6-限制" class="headerlink" title="6.限制"></a>6.限制</h2><p>在撰写本文时，我们的MvArmor原型有以下限制：</p>
+<ul>
+<li>MvArmor的自定义分配器受到Dune对每个进程最大虚拟内存大小的限制，目前要求在内存密集型应用程序中放宽slab间填充（以及安全性）的大小限制。</li>
+<li>虽然MvArmor可以保护通用堆对象，但没有源级信息，它不能解耦每个对象内部由自定义内存分配器管理的内部结构缓冲区或块，这是所有二进制级堆强化解决方案的基础限制。</li>
+<li>尽管MvArmor的MVX库支持类似于最近MVX解决方案的线程化，但它目前不能运行多线程应用程序。扩展我们当前的MVArmor原型以支持任意多线程应用程序面临两个挑战：（i）支持Dune（当前线程不安全）中的线程安全性，并且当良性数据竞态存在时（即线程同步而没有系统调用例如futex） （ii）用更严格的DMT形式保护正确的MVX语义。</li>
+</ul>
+<hr>
+<h2 id="7-评估"><a href="#7-评估" class="headerlink" title="7.评估"></a>7.评估</h2><hr>
+<h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><p><a href="https://github.com/vusec/mvarmor" target="_blank" rel="external">Secure and Efficient Multi-variant Execution Using Hardware-assisted Process Virtualization -DSN 2016-VUSec</a></p>
+
+      
+    </div>
+    
+    
+      <footer class="article-footer">
+        
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Notes/">Notes</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Virtualization/">Virtualization</a></li></ul>
+
+      </footer>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+
+    
       <article id="post-bypassaslr-end" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-inner">
     
