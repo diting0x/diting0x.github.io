@@ -458,6 +458,234 @@
 
 
     
+      <article id="post-ever-papernote3" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/20171109/ever-papernote3/">详细解读：kAFL Hardware-Assisted Feedback Fuzzing for OS Kernels</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/20171109/ever-papernote3/" class="article-date">
+  <time datetime="2017-11-09T03:37:20.000Z" itemprop="datePublished">2017-11-09</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/曾经的论文笔记/">曾经的论文笔记</a>
+  </div>
+
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="kAFL-针对OS内核的硬件辅助反馈模糊测试"><a href="#kAFL-针对OS内核的硬件辅助反馈模糊测试" class="headerlink" title="kAFL:针对OS内核的硬件辅助反馈模糊测试"></a>kAFL:针对OS内核的硬件辅助反馈模糊测试</h2><p>最新一代的反馈驱动的模糊方法已经被证明是一种以自动化和全面的方式发现漏洞的有效方法。然而，将反馈机制的模糊测试用于内核组件是比较难的，因为当一个进程对他自己的内核进行模糊测试时，会引起内核崩溃，从而影响模糊器的效果。但是最近的工作也证明了这样的技术可以应用到内核空间，虽然这些反馈驱动的内核模糊器在某些操作系统中能够发现大量的安全漏洞，但是由于CPU仿真性能不佳或者由于需要编译器工具而缺乏可移植性，其好处受到限制。</p>
+<p>本文提出了一种新颖的机制来利用最新CPU特性设计反馈驱动的内核模糊器。以独立于操作系统和硬件辅助的方式处理引导内核模糊的问题：使用虚拟机管理程序VMM和英特尔处理器跟踪（PT）技术。这使fuzzer可以独立于目标操作系统，只需要一个与目标操作系统交互的小型用户空间组件。并且即使在操作系统崩溃的情况下，也几乎不引入性能开销，并且可以在现有的笔记本电脑上每秒进行高达17,000次执行。并且开发了一个名为kernel-AFL（kAFL）的框架来评估Linux，macOS和Windows内核组件的安全性。在众多的崩溃中，我们发现了Linux的ext4驱动，macOS的HFS和APFS文件系统以及Windows的NTFS驱动存在的漏洞。</p>
+<hr>
+<h2 id="1-简单介绍"><a href="#1-简单介绍" class="headerlink" title="1.简单介绍"></a>1.简单介绍</h2><p>对内核进行模糊测试和用户态度模糊测试相比较而言，存在的难点：</p>
+<ul>
+<li>崩溃和超时要求使用虚拟化来捕捉故障并保持继续执行；</li>
+<li>内核级代码比普通的ring 3程序具有更多的非确定性 - 主要是由于中断，内核线程，状态和类似的机制；</li>
+<li>除了普通的中断或sysenter指令外，没有等同于命令行参数或标准输入与内核或驱动程序以通用方式进行交互；</li>
+<li>Windows内核以及许多相关的驱动程序和核心组件（对于Windows，MacOS甚至是Linux）都是封闭源代码。</li>
+</ul>
+<p>本文提出一个新的技术并将kernel-AFL实现，kAFL可以将反馈模糊测试应用于任意的基于x86-64的内核，不需要任何定制的内核态目标代码或者特定操作系统代码。主要的贡献点有：</p>
+<ul>
+<li>独立于操作系统：通过使用VMM技术来将反馈模糊测试应用于任何x86操作系统内核；</li>
+<li>基于硬件辅助的反馈：通过使用Intel-PT技术来进行反馈模糊测试，减小了开销，另外，自己实现了PT解码器比Intel的ptxed解码器快30倍。 因此，可以获得完整的跟踪信息，并用它来指导演化模糊算法，以最大化测试的覆盖率；</li>
+<li>可扩展和模块化设计：模块化设计将框架分为模糊器，追踪引擎和模糊测试目标三个部分。这允许支持额外的x86操作系统的内核空间和用户空间组件，而不需要为目标OS开发系统驱动程序；</li>
+<li>kernel-AFL：我们结合了我们的设计理念，开发了一个名为kernel-AFL的原型（kAFL），它能够在不同操作系统的内核组件中发现多个漏洞。</li>
+</ul>
+<hr>
+<h2 id="2-技术背景知识"><a href="#2-技术背景知识" class="headerlink" title="2.技术背景知识"></a>2.技术背景知识</h2><h3 id="2-1-x86-64虚拟内存布局"><a href="#2-1-x86-64虚拟内存布局" class="headerlink" title="2.1 x86-64虚拟内存布局"></a>2.1 x86-64虚拟内存布局</h3><p>每个常用的x86-64操作系统都使用拆分的虚拟内存布局：内核通常位于每个虚拟内存空间的上半部分，而每个用户模式进程内存位于下半部分。 例如，由于当前x86-64 CPU的48位虚拟地址限制，Linux的虚拟内存空间通常分为两个大小为2 ^ 47的内核空间（上半部分）和用户空间（下半部分）。因此，内核内存映射到任何虚拟地址空间，因此它总是位于相同的虚拟地址。如果用户模式进程执行用于内核交互的syscall/sysenter指令或导致必须由OS处理的异常，则OS将保持当前的<strong>CR3</strong>值，因此不切换虚拟存储器地址空间。当前的虚拟内存地址空间被重用，并且内核在相同的地址空间内处理当前用户模式进程相关的任务。</p>
+<h3 id="2-2-Intel-VT-x-硬件虚拟化技术"><a href="#2-2-Intel-VT-x-硬件虚拟化技术" class="headerlink" title="2.2 Intel VT-x 硬件虚拟化技术"></a>2.2 Intel VT-x 硬件虚拟化技术</h3><ul>
+<li>虚拟化角色模型分为两个部分：虚拟机监视器（VMM）和虚拟机。 VMM也称为虚拟机管理程序或主机，是具有完全控制物理CPU的特权软件，可为虚拟化客户端提供对物理资源的访问限制。 虚拟机也称为guest，是一个在VMM提供的虚拟化上下文中透明执行的软件。</li>
+<li>为了提供全面的硬件辅助虚拟化支持, Intel VT-x基于保护级的标准执行模式增加了两种执行模式，分别是VMX OFF和VMM ON.默认的执行模式叫做VMX OFF,没有实现任何硬件虚拟化支持。当使用硬件支持的虚拟化时，CPU切换到VMX ON状态并区分两种不同的执行模式：<ul>
+<li>管理程序的高权限模式(VMX root或VMM)</li>
+<li>虚拟机guest的低权限执行模式(VMX非root或VM)</li>
+<li>VM guest通过触发VM-Exit事件将控制权交给hypervisor</li>
+</ul>
+</li>
+<li>通过这种方式，可以在虚拟机内运行期望访问硬件的任意软件（例如操作系统）。与此同时，一个较高的权威可以用一个小的性能开销来控制所执行的操作。</li>
+<li><strong>VMCS</strong>：为了创建，启动和控制VM，VMM为每个vCPU使用一个虚拟机控制结构。VMCS包含有关当前状态的所有基本信息以及如何执行vCPU的VMX转换。</li>
+</ul>
+<h3 id="2-3-Intel-PT-处理器跟踪技术"><a href="#2-3-Intel-PT-处理器跟踪技术" class="headerlink" title="2.3 Intel PT 处理器跟踪技术"></a>2.3 Intel PT 处理器跟踪技术</h3><p>Intel第五代酷睿处理器(Broadwell架构)，推出了称为Intel处理器追踪(Intel PT)的新处理器功能，以提供执行和分支追踪信息。与其他分支跟踪技术（如Intel Last Branch Record(LBR))不同，输出缓冲区的大小不再受专用寄存器的严格限制。相反，它只受主存大小的限制。如果输出目标被反复及时地清空，我们可以创建任意长度的痕迹。</p>
+<p>处理器的输出格式是面向分组的，分为两种不同的类型：通用执行信息和控制流信息分组。Intel PT在运行时产生各种类型的与控制流相关的数据包类型。为了<strong>从跟踪数据中获得控制流信息</strong>，我们需要一个解码器。解码器需要跟踪软件来解释包含条件分支地址的数据包。</p>
+<ol>
+<li>Intel规定了五种影响指令的控制流程，称为流程指令更改（CoFI）。不同的CoFI类型的执行导致不同的流信息分组序列。与本文工作相关的三种CoFI类型是：</li>
+</ol>
+<ul>
+<li><strong>Taken-Not-Taken (TNT)</strong>：如果处理器执行任何条件跳转，则判断是否执行了该跳转，将被编码在TNT数据包中；</li>
+<li><strong>Target IP (TIP)</strong>：如果处理器执行间接跳转或转移指令，解码器将不能恢复控制流。 因此处理器在ret或远转附近执行间接分支类型的指令时，产生TIP分组。这些TIP包在转移或跳转发生之后存储由处理器执行的相应的目标指令指针。</li>
+<li><strong>Flow Update Packets (FUP)</strong>：另一种情况是产生异步事件处理器，例如中断或陷阱时，必须为软件解码器的提示包，并且通常接着TIP包，暗示接下来的指令。</li>
+</ul>
+<ol>
+<li>为了限制跟踪数据产生的数量，Intel PT为运行时<strong>过滤</strong>提供了多个选项。</li>
+</ol>
+<ul>
+<li><strong>指令指针过滤(IP Filter)</strong>：根据给定的处理器可以为指令指针过滤（IP Filter）配置多个范围。通常情况下，如果启用了分页，这些过滤范围只影响虚拟地址。因此可以将轨迹生成限制在选定范围内，从而避免大量的多余轨迹数据；</li>
+<li><strong>CPL过滤</strong>：通过ring0或ring3当前特权级(CPL)过滤踪迹，这个过滤器允许我们只选择用户模式（CPL&gt; 0）或内核模式（CPL = 0）活动。kAFL利用这个过滤器选项来显式限制跟踪内核模式执行。</li>
+<li><strong>CR3 过滤</strong>：限制跟踪数据生成到一个特定的虚拟内存地址空间，软件可以使用CR3 Filter。如果CR3值与配置的过滤器值相匹配，Intel PT将生成跟踪数据。CR3寄存器包含指向当前页表的指针，因此CR3寄存器的值可用于过滤代表某个ring3进程执行的代码，即使在ring0模式下也是如此。</li>
+</ul>
+<ol>
+<li>Intel PT 支持输出数据的各种可配置目标域。<ul>
+<li>kAFL着重于物理地址表<strong>(ToPA)机制</strong>，该机制使我们能够指定多个输出区域：每个ToPA表包含多个ToPA条目，其中包含用于存储跟踪数据的关联内存块的物理地址。每个ToPA条目都包含物理地址，物理内存中引用内存块的大小说明符以及多个类型位。这些类型位指定了CPU在访问ToPA条目时的行为以及如何处理填充的输出区域。</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2 id="3-系统总览"><a href="#3-系统总览" class="headerlink" title="3.系统总览"></a>3.系统总览</h2><h3 id="3-1-系统组成"><a href="#3-1-系统组成" class="headerlink" title="3.1 系统组成"></a>3.1 系统组成</h3><p>系统分为三个组成部分：模糊逻辑，虚拟机基础架构（用QEMU-PT和KVM-PT表示的QEMU和KVM的修改版本）以及用户模式代理。图1中可以看到高层的总体架构。</p>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/kAFL1.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/kAFL1.png" width="593"></a><br>    <figcaption></figcaption><br></figure>
+
+<ul>
+<li>模糊逻辑在主机OS上作为ring3进程运行，这个逻辑也被称为kAFL。 </li>
+<li>VM基础架构由一个ring3组件（<strong>QEMU-PT</strong>）和一个ring0组件（<strong>KVM-PT</strong>）组成。这有利于其他两个组件之间的通信，并使Intel-PT跟踪数据可用于模糊逻辑。 </li>
+<li>客户机只通过<strong>hypercalls</strong>与主机通信，然后主机可以读写guest虚拟机内存，并在请求处理后继续执行VM。 </li>
+</ul>
+<h3 id="3-2-事件和通信"><a href="#3-2-事件和通信" class="headerlink" title="3.2 事件和通信"></a>3.2 事件和通信</h3><p>概述在模糊运行期间发生的事件和通信，如图2所示。</p>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/kAFL2.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/kAFL2.png" width="793"></a><br>    <figcaption></figcaption><br></figure>
+
+<ol>
+<li>当VM启动时，用户模式的第一部分代理（加载器）使用hypercall HC_SUBMIT_PANIC提交内核恐慌处理程序的地址（或<br>在Windows中的BugCheck内核地址）到QEMU-PT；<br>QEMU-PT然后安装在恐慌处理程序的地址处调用例程的hypercall, 使我们能够得到通知，并快速响应VM中的崩溃（而不是等待超时/重新启动）</li>
+<li>然后加载器使用hypercall HC_GET_PROGRAM来请求实际的用户模式代理并启动它。现在加载程序设置完成，模糊器开始初始化；</li>
+<li>代理会触发HC_SUBMIT_CR3 hypercall,然后由KVM-PT处理。hypervisor提取当前正在运行的进程的CR3值，并将其交给QEMU-PT进行过滤；<br>最后，代理使用hypercall HC_SUBMIT_BUFFER来通知主机在哪个地址期望它的输入。该fuzzer设置现在已经完成，主要的模糊循环开始。</li>
+<li>在主循环中，代理使用hypercall HC_GET_INPUT请求一个新的输入;</li>
+<li>模糊逻辑产生一个新的输入并将其发送到QEMU-PT。 由于QEMU-PT可以完全访问guest虚拟机的内存空间，因此可以简单地将输入复制到代理指定的缓冲区中。然后执行VM-Entry以继续执行VM。同时，这个VM-Entry事件启用PT跟踪机制。</li>
+<li>该代理现在使用输入与内核交互（例如，它将输入解释为文件系统映像，并尝试挂载它）。当内核被模糊测试时，QEMU-PT解码跟踪数据并按需更新位图；</li>
+<li>一旦交互完成，内核将控制交还给代理，代理通过HC_FINISHED hypercall通知管理程序。VM-Exit停止跟踪，QEMU-PT解码剩余的跟踪数据；</li>
+<li>得到的位图被传递给模糊逻辑进行进一步处理。之后代理可以继续运行任何未跟踪的清理例程，然后发出另一个HC_GET_INPUT来启动下一个循环迭代。</li>
+</ol>
+<h3 id="3-3-系统各组件及功能"><a href="#3-3-系统各组件及功能" class="headerlink" title="3.3 系统各组件及功能"></a>3.3 系统各组件及功能</h3><h4 id="3-3-1-Fuzzing-Logic-模糊逻辑"><a href="#3-3-1-Fuzzing-Logic-模糊逻辑" class="headerlink" title="3.3.1 Fuzzing Logic 模糊逻辑"></a>3.3.1 Fuzzing Logic 模糊逻辑</h4><p>模糊逻辑是kAFL的命令和控制组件。<strong>它管理有趣的输入队列，创建突变的输入，并安排它们进行评估</strong>。在大多数方面，它是基于AFL使用的算法。与AFL类似，我们使用位图来存储基本块转换。我们从虚拟机通过一个接口收集<strong>AFL位图</strong>到QEMU-PT，并决定哪些输入触发有趣的行为。模糊逻辑还协调并行产生的虚拟机的数量。</p>
+<p>与AFL更大的设计差异之一是kAFL广泛使用多处理和并行性，AFL只是产生多个独立的模糊器，它们偶尔同步输入队列。相比之下，kAFL并行执行确定性阶段，所有线程都处理最有趣的输入。大量的时间花在没有CPU限制的任务上（如客户机延迟执行）。因此，使用许多并行进程（每个CPU内核最多5-6个）可以显著提高模糊进程的性能，因为每个内核的CPU负载较高。最后，模糊逻辑与用户界面进行通信以定期显示当前的统计数据。</p>
+<h4 id="3-3-2-User-Mode-Agent-用户模式代理"><a href="#3-3-2-User-Mode-Agent-用户模式代理" class="headerlink" title="3.3.2 User Mode Agent 用户模式代理"></a>3.3.2 User Mode Agent 用户模式代理</h4><p>我们期望用户模式代理在虚拟化目标OS内部运行。 原则上，<strong>这个组件只需要通过hypercall接口通过模糊逻辑来同步和收集新的输入，并使用它来与客户的内核进行交互</strong>。 例如，代理是试图将输入作为文件系统映像加载的程序，将诸如证书的特定文件传递给内核解析器，甚至执行各种系统调用的链。 </p>
+<p>实际上，我们使用两个不同的组件：第一个程序是加载程序组件Loader。 它的工作是通过hypercall接口接受一个任意的二进制文件。 该二进制代表第二个组件，即用户模式代理user mode agent，由加载程序组件执行。此外，加载程序组件将检查代理程序是否已经崩溃（在系统调用模糊的情况下经常发生），并在必要时重新启动它。 这种设置的优点是我们可以将任何二进制文件传递给虚拟机，并将虚拟机快照用于不同的模糊组件。</p>
+<h4 id="3-3-3-Virtualization-Infrastructure-虚拟化基础设施"><a href="#3-3-3-Virtualization-Infrastructure-虚拟化基础设施" class="headerlink" title="3.3.3 Virtualization Infrastructure 虚拟化基础设施"></a>3.3.3 Virtualization Infrastructure 虚拟化基础设施</h4><p>模糊逻辑使用QEMU-PT与KVM-PT进行交互来产生目标虚拟机。</p>
+<p><strong>KVM-PT允许跟踪各个vCPU而不是逻辑CPU</strong>。此组件在CPU切换到客户机执行之前在相应的逻辑CPU上配置并启用Intel PT，并在VM退出转换期间禁用跟踪。这样，关联的CPU将只提供虚拟化内核本身的跟踪数据。</p>
+<p><strong>QEMU-PT用于与KVM-PT接口进行交互，以便从用户空间配置和切换Intel PT，并访问输出缓冲区以解码跟踪数据</strong>。解码的跟踪数据被直接转换成所执行的条件分支指令的地址流。此外，QEMU-PT还根据以前对非确定性基本块的了解，对执行地址流进行过滤，以防止假阳性模糊结果，并将这些结果作为AFL兼容位图提供给模糊逻辑。我们使用我们自己开发的PT解码器来缓存反汇编结果，与Intel提供的现成解决方案相比，这会显著提高性能。</p>
+<h4 id="3-3-4-Stateful-and-Non-Deterministic-Code-有状态和非确定性代码"><a href="#3-3-4-Stateful-and-Non-Deterministic-Code-有状态和非确定性代码" class="headerlink" title="3.3.4 Stateful and Non-Deterministic Code 有状态和非确定性代码"></a>3.3.4 Stateful and Non-Deterministic Code 有状态和非确定性代码</h4><p>跟踪操作系统会导致大量的非确定性。非确定性基本块转换的最大来源是中断，这可能发生在任何时间点。此外，由于从内存快照重新加载虚拟机成本高昂，我们的实现在每次执行后都不会重置整个状态。因此我们必须处理关于内核的状态和异步方面。有状态代码的一个例子是对kmalloc（）的一个简单的调用：根据以前的分配数量，kmalloc（）可能只是返回一个新的指针或映射整个范围页面并更新大量的元数据。我们使用两种技术来应对这些挑战。</p>
+<ul>
+<li>第一个是在<strong>处理中断时过滤掉中断和转换</strong>。这可以使用Intel PT跟踪数据。<strong>如果发生中断，处理器将发出TIP指令</strong>，因为在代码中传输不可见。为了避免在间接控制流程指令中发生中断期间的混淆<strong>，TIP数据包被标记为FUP（流更新数据包）以指示异步事件</strong>。在识别这样一个签名之后，<strong>解码器将丢弃所有访问的基本块，直到遇到相应的iret指令</strong>。为了将中断与其对应的iret连接起来，我们在一个简单的调用堆栈上跟踪所有的中断。 这种机制是必要的，因为中断处理程序本身可能被另一个中断中断。</li>
+<li>第二种机制是<strong>将非确定性发生的任何基本块列入黑名单</strong>。 每当我们在AFL位图中遇到一个新的位，我们就连续多次重新运行输入。 <strong>每一个没有出现在所有试验中的基本区块都将被标记为不确定的，并且被进一步处理过滤掉</strong>。为了快速访问，结果存储在黑名单基本块地址的位图中。在AFL位图转换期间，将跳过结合当前基本块地址和之前基本块地址（涉及黑名单块）的转换哈希值。</li>
+</ul>
+<h4 id="3-3-5-Hypercalls-超级调用"><a href="#3-3-5-Hypercalls-超级调用" class="headerlink" title="3.3.5 Hypercalls 超级调用"></a>3.3.5 Hypercalls 超级调用</h4><p>hypercall是虚拟化引入的功能。在Intel平台上，<strong>hypercall由vmcall指令触发</strong>。hypercall于VMM相当于syscall于kernel。<strong>如果VM中任何ring3的进程或内核执行vmcall指令，则会触发VM-Exit事件，然后VMM可以决定如何处理hypercall</strong>。如果在rax中传递一个magic value并且在rbx中设置适当的hypercall-ID，我们通过<strong>修改KVM-PT让它通过我们自己的对于模糊逻辑的hypercalls集合</strong>。此外，我们还<strong>修改了KVM-PT接受来自ring3的hypercall</strong>。对于特定的hypercall的参数是<br>通过rcx。我们使用这种机制来定义用户模式代理可以用来与模糊逻辑通信的接口。例如，hypercall是HC_SUBMIT_BUFFER。它的参数是一个存储在rcx中的客户机指针。执行vmcall指令后，会触发一个VM-Exit，并且QEMU-PT存储传递的缓冲区指针。稍后将把新的输入数据复制到此缓冲区中（请参阅图2中的步骤5）。最后，VM的执行继续。</p>
+<p>此接口的另一个用例是在目标OS内核发生崩溃时通知模糊逻辑。 为了做到这一点，我们用一个简单的hypercall例程来覆盖操作系统的内核崩溃处理程序。注入的代码如list1所示，揭示了hypercall接口如何在汇编级别被使用。cli指令禁止所有中断，以避免在hypercall过程中出现任何类型的异步干扰。</p>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/kAFL1.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/list1.png" width="493"></a><br>    <figcaption></figcaption><br></figure>
+
+<hr>
+<h2 id="4-实现细节"><a href="#4-实现细节" class="headerlink" title="4 实现细节"></a>4 实现细节</h2><h3 id="4-1-KVM-PT"><a href="#4-1-KVM-PT" class="headerlink" title="4.1 KVM-PT"></a>4.1 KVM-PT</h3><p>KVM-PT功能及优点：</p>
+<ul>
+<li>跟踪特定的vCPU且不受时间限制；</li>
+<li>无额外开销，也不会因为输出区溢出而丢失追踪数据；</li>
+<li>扩展的用户态接口允许QEMU-PT从用户空间拿到跟踪数据并进行处理。</li>
+</ul>
+<h4 id="4-1-1-vCPU特定的跟踪"><a href="#4-1-1-vCPU特定的跟踪" class="headerlink" title="4.1.1 vCPU特定的跟踪"></a>4.1.1 vCPU特定的跟踪</h4><ul>
+<li>启用Intel PT，运行在<strong>ring0（在我们的情况下为KVM-PT）的软件必须设置模型专用寄存器（MSR）的相应位（IA32_RTIT_CTL_MSR.TraceEn）</strong>。</li>
+<li>跟踪启用后，如果满足配置的过滤器选项,逻辑CPU将跟踪任何执行的代码。修改必须在CPU从主机上下文切换到VM操作之前完成，否则CPU将执行guest代码，并在技术上无法修改任何主机MSR。在CPU离开guest上下文之后，需要相反的过程。但是，为防止在VMM中收集不需要的跟踪数据（手动启用或禁用Intel PT产生的包含手动MSR修改的跟踪），我们使用<strong>Intel VT-x的MSR自动加载功能</strong>。可以通过修改<strong>VMCS</strong>中的相应条目来<strong>启用MSR自动加载</strong>（例如，用于VM条目的VM_ENTRY_CONTROL_MSR）。这会强制CPU在发生VM入口或VM出口后加载已定义MSR的预配置值列表。通过启用MSR自动加载追踪，我们<strong>只收集一个特定vCPU的Intel PT跟踪数据</strong>。</li>
+</ul>
+<h4 id="4-1-2-持续的跟踪"><a href="#4-1-2-持续的跟踪" class="headerlink" title="4.1.2 持续的跟踪"></a>4.1.2 持续的跟踪</h4><p>一旦我们启用了Intel PT，CPU就会将生成的跟踪数据写入内存缓冲区，直到它已满。这个缓冲区的物理地址以及如何处理完整的缓冲区由一系列称为<strong>物理地址表（ToPA）</strong>条目的数据结构指定，该数组可以包含多个条目，并且必须由单个END条目③终止。 <strong>CPU有两种不同的方式可以处理溢出</strong>：它可以<strong>停止跟踪</strong>（继续执行 - 因此导致不完整的跟踪），也可能<strong>引发中断</strong>。中断导致一个虚拟机退出，因为它是不可屏蔽的。捕捉主机上的中断并使用跟踪数据，最后重置缓冲区并继续执行虚拟机，然而中断可能会在缓冲区填满之后的某个特定时间引发②。</p>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/kAFL3.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/kAFL3.png" width="493"></a><br>    <figcaption></figcaption><br></figure>
+
+<p>ToPA条目的配置可以在图3中看到，为了避免丢失跟踪数据，我们使用了两个不同的ToPA条目：</p>
+<ul>
+<li>第一个是主要缓冲区①，其溢出行为是触发中断。一旦主缓冲区被填满，第二个入口被使用，直到中断被实际传送。</li>
+<li>ToPA指定另一个较小的缓冲区②，溢出第二个缓冲区将导致跟踪停止。为了避免由此造成的数据丢失，我们选择的第二个缓冲区，比我们在测试中看到的最大的溢出轨迹大4倍（4 KB）。如果第二个缓冲区也溢出，则接下来的跟踪将包含一个数据包，指示某些数据丢失。在这种情况下，可以简单地增加第二缓冲区的大小，这样就可以获得任何数量的跟踪数据的精确跟踪。</li>
+</ul>
+<h3 id="4-2-QEMU-PT"><a href="#4-2-QEMU-PT" class="headerlink" title="4.2 QEMU-PT"></a>4.2 QEMU-PT</h3><p>要使用KVM扩展KVM-PT，需要一个用户空间对象。QEMU-PT是QEMU的扩展，全面<strong>支持KVM-PT的用户空间接口</strong>。此接口提供了在运行时启用，禁用和配置Intel PT的机制，以及定期ToPA状态检查以避免超限。KVM-PT可通过ioctl()命令和mmap()接口从用户模式访问。除了作为KVM-PT的用户级接口之外，QEMU-PT还<strong>包含一个将跟踪数据解码为更适合模糊逻辑的组件</strong>：将Intel PT数据包解码并将其转换为类似AFL的位图。</p>
+<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/kAFL4.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/kAFL4.png" width="593"></a><br>    <figcaption></figcaption><br></figure>
+
+<h4 id="4-2-1-PT-Decoder"><a href="#4-2-1-PT-Decoder" class="headerlink" title="4.2.1 PT Decoder"></a>4.2.1 PT Decoder</h4><p>广泛的内核模糊可能会产生每秒数百兆字节的跟踪数据。为了处理如此大量的输入数据，<strong>解码器</strong>必须以<strong>效率</strong>为重点来实现。否则，解码器可能成为模糊过程中的主要瓶颈。然而，解码器也必须是<strong>精确</strong>的，因为解码过程是连续的，并受先前解码的数据包的影响，不准确会导致更多的错误。</p>
+<p>为了简化实施Intel PT软件解码器的工作，Intel提供了自己的解码引擎libipt。libipt是一个通用的Intel PT解码引擎。但是它并不适合我们的目的，因为libipt解码跟踪数据以提供执行数据和流信息。此外，libipt不会缓存反汇编的指令，并且在我们的用例中表现不佳。</p>
+<p>由于kAFL仅依赖于流信息，并且将模糊过程重复应用于相同的代码，所以可以优化解码过程。我们的Intel-PT软件解码器就像一个<strong>即时解码器</strong>，这意味着根据解码的跟踪数据,<strong>只有代码段在执行时才被考虑</strong>。为了进一步优化查找，<strong>所有反汇编的代码段都被缓存</strong>。另外，我们简单地忽略与用例无关的数据分组。</p>
+<p>由于我们的PT解码器是QEMU-PT的一部分，因此如果ToPA基本区域被填充，则直接处理跟踪数据。因为缓冲区可以通过mmap（）从用户空间直接访问,解码过程在原位置进行。与其他Intel PT驱动程序不同，<strong>无需将大量跟踪数据存储在内存或存储设备上之后再进行解码</strong>。最终，<strong>解码的轨迹数据被转换成AFL位图格式</strong>。</p>
+<h3 id="4-3-AFL-Fuzzing-Logic"><a href="#4-3-AFL-Fuzzing-Logic" class="headerlink" title="4.3 AFL Fuzzing Logic"></a>4.3 AFL Fuzzing Logic</h3><p>简要描述AFL的模糊部分，因为我们用于执行调度和突变的逻辑与AFL紧密相关。AFL最重要的方面是用于跟踪遇到的基本块转换的位图。<strong>每个基本块都有一个随机分配的ID，并且从基本块A到另一个基本块B的每个转换被分配一个偏移量，按照下面的公式进入位图</strong>：</p>
+<blockquote>
+<p>(id(A)/2⊕id(B)) % SIZE_OF_BITMAP</p>
+</blockquote>
+<p><strong>kAFL使用基本块的地址</strong>而不是编译时间随机。</p>
+<ul>
+<li>每次观察到转换时，位图中的相应字节都会增加，在完成模糊迭代之后，位图的每个条目被四舍五入，使得只有最高位保持设置；</li>
+<li>然后将位图与全局静态位图进行比较，以查看是否找到新的位。如果找到新位，则将其添加到全局位图，并将触发新位的输入添加到队列中；</li>
+<li>当一个新的感兴趣的输入被发现，先执行一个确定的阶段，试图单独变异每个字节；</li>
+<li>一旦确定阶段结束，非确定阶段就开始了。在这个非确定性阶段，多个突变在随机位置进行。如果确定性阶段找到新的输入，则非确定性阶段将被延迟，直到所有感兴趣的输入的所有确定性阶段都被执行；</li>
+<li>如果一个输入触发了一个全新的转换（而不是转换的次数的变化），那么它将被优先考虑，并被模糊化。</li>
+</ul>
+<hr>
+<h2 id="5-评估"><a href="#5-评估" class="headerlink" title="5 评估"></a>5 评估</h2><p>基于实现的kAFL，评估跨平台的kAFL的模糊性能。如果没有另外说明，基准测试是在一台配备英特尔i7-6700处理器和32GB DDR4内存的台式机上进行的。为了避免I/O性能差导致的失真，所有的基准测试都在RAM磁盘上执行。与AFL类似，我们认为如果crashing输入触发了至少一个没有被任何先前的crash触发的基本块转换（即，位图至少包含一个新位），则它是唯一的。请注意，这并不意味着底层的错误是真正独特的。</p>
+<ul>
+<li><p><strong>kAFL开发过程中发现的所有报告的漏洞，崩溃和错误</strong></p>
+<p>在评估期间，kAFL发现了一千多个独特的崩溃。我们对一些进行了手动评估，发现Linux，Windows和MacOS等所有测试操作系统存在多个安全漏洞。到目前为止，已经有八个漏洞被报告，其中三个漏洞被维护人员证实。</p>
+<ul>
+<li>Linux: keyctl Null Pointer Dereference5(CVE-2016-8650)</li>
+<li>Linux: ext4 Memory Corruption</li>
+<li>Linux: ext4 Error Handling</li>
+<li>Windows: NTFS Div-by-Zero</li>
+<li>macOS: HFS Div-by-Zero</li>
+<li>macOS: HFS Assertion Fail</li>
+<li>macOS: HFS Use-After-Free</li>
+<li>macOS: APFS Memory Corruption</li>
+</ul>
+</li>
+</ul>
+<p>红帽已经为第一个报告的安全漏洞分配了一个CVE号码：如果<strong>一个指数为零的RSA证书被提交</strong>，会触发内核ASN.1解析器中的空指针和部分内存损坏。对于<strong>在ext4文件系统中触发内存损坏</strong>的第二个漏洞，提出了一个主线补丁。最后报告的Linux漏洞在<strong>调用ext4错误处理例程panic()时因此导致内核恐慌</strong>，在编写本文时还没有进一步调查。Windows 10中的NTFS错误是导致蓝屏的不可恢复的错误情况，这个bug已经报告给微软，但还没有被证实。同样，苹果还没有证实或确认我们报告的macOS错误</p>
+<ul>
+<li><p><strong>评估kAFL找到以前已知的漏洞的能力</strong><br>在keyctl接口上评估kAFL，keyctl允许用户空间程序存储和管理内核中的各种密钥材料，具有一个DER（请参阅RFC5280）解析器来加载证书,此功能有一个已知的错误（CVE-2016-07583）。<br>我们在易受攻击的内核（版本4.3.2）上针对相同的接口测试kAFL。kAFL能够发现同样的问题，另外还有一个以前未知的CVE-2016-86504的错误。</p>
+</li>
+<li><p><strong>kAFL的整体模糊性能与ProjectTriforce进行比较</strong><br>ProjectTriforce是唯一可用的与操作系统无关的反馈模糊器。TriforceAFL基于QEMU的仿真后端，而不是硬件辅助虚拟化和Intel PT。与TriforceAFL的QEMU CPU仿真相比，kAFL的性能提高了54倍。 单进程执行的性能（性能提升48倍）略有下降。</p>
+</li>
+<li><p><strong>KVM-PT的性能开销</strong></p>
+<ul>
+<li>KVM-PT增加了KVM原始执行的开销,将几个KVM-PT设置的性能开销进行了比较。这包括与PT解码器组合的KVM-PT，不具有PT解码器但频繁处理的ToPA状态检查的KVM-PT以及没有任何ToPA考虑的KVM-PT<br>-测量了三种不同的开销：wall-clock，用户和内核。总体时间的差别由wall-clock开销表示。另外测量了在内核和用户空间分别花费的时间。<br>-第一个实验没有进一步分析（KVM-PT）丢弃踪迹；第二个实验（KVM-PT和ToPA检查）启用了ToPA缓冲区的重复检查和清除；最后的实验（KVM-PT＆PT解码器）测试了整个流水线，包括我们自己的解码器，并转换成AFL位图。</li>
+<li>在我们的基准测试中，1％-4％的开销是凭经验衡量的。由于产生的开销很小，不会对整体模糊性能有重大影响。</li>
+</ul>
+</li>
+<li><p><strong>PT解码器和Intel软件解码器的性能比较</strong><br>我们的PT解码器比Intel解码器性能好很多，当我们解码越来越多的相同的跟踪副本时，解码器变得越来越快（仅使用56倍的时间来解码250倍的数据量）。<strong>缓存</strong>方法优于Intel的实施，速度高达25到30倍。</p>
+</li>
+</ul>
+<h2 id="6-缺陷与不足"><a href="#6-缺陷与不足" class="headerlink" title="6 缺陷与不足"></a>6 缺陷与不足</h2><ul>
+<li>OS-Specific Code</li>
+<li>Supported CPUs</li>
+<li>Just-In-Time Code</li>
+<li>Multibyte Compares</li>
+<li>Ring3 Fuzzing</li>
+</ul>
+<hr>
+<h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><ul>
+<li><p><a href="https://www.usenix.org/system/files/conference/usenixsecurity17/sec17-schumilo.pdf" target="_blank" rel="external">kAFL: Hardware-Assisted Feedback Fuzzing for OS Kernels </a></p>
+</li>
+<li><p><a href="https://www.usenix.org/sites/default/files/conference/protected-files/usenixsecurity17_slides_schumilo.pdf" target="_blank" rel="external">usenixsecurity17_slides_schumilo</a></p>
+</li>
+<li><p><a href="https://github.com/RUB-SysSec/kAFL" target="_blank" rel="external">https://github.com/RUB-SysSec/kAFL</a></p>
+</li>
+</ul>
+
+      
+    </div>
+    
+    
+      <footer class="article-footer">
+        
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Fuzzing/">Fuzzing</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Intel/">Intel</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Virtualization/">Virtualization</a></li></ul>
+
+      </footer>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+
+    
       <article id="post-ever-papernote2" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-inner">
     
