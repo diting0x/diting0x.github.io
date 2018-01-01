@@ -5,17 +5,17 @@
   
   <title>BE A GOOD GUY - 善守者</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="&amp;gt;&amp;gt; 2018-01-01 11:21 AM 凡是过往，皆为序章。再见2017，你好2018！ &amp;gt;&amp;gt; 2017-12-30 21:34 PM APT依赖rootkit,内核利用与0day，一般以控制用户程序，如浏览器，文件编辑器等开始，最终控制整个操作系统。bitdegender提出一种内存自省方式： Zero-Footprint Guest MemoryIntrospection W">
+  <meta name="description" content="Timeline标签（空格分隔）： 时间线 &amp;gt;&amp;gt; 2018-01-01 12:12 PM  现有开源hypervisor为每个guest虚拟机配置一个EPT来处理guest物理地址到机器地址的翻译，Xen altp2m为每个guest虚拟机配置多个EPT。有趣的是，Intel处理器从Haswell开始允许从VMCS中配置512个EPT指针，至今为止，没有hypervisor利用这个特性。从X">
 <meta property="og:type" content="website">
 <meta property="og:title" content="BE A GOOD GUY">
 <meta property="og:url" content="https://diting0x.github.io/timeline/index.html">
 <meta property="og:site_name" content="善守者">
-<meta property="og:description" content="&amp;gt;&amp;gt; 2018-01-01 11:21 AM 凡是过往，皆为序章。再见2017，你好2018！ &amp;gt;&amp;gt; 2017-12-30 21:34 PM APT依赖rootkit,内核利用与0day，一般以控制用户程序，如浏览器，文件编辑器等开始，最终控制整个操作系统。bitdegender提出一种内存自省方式： Zero-Footprint Guest MemoryIntrospection W">
+<meta property="og:description" content="Timeline标签（空格分隔）： 时间线 &amp;gt;&amp;gt; 2018-01-01 12:12 PM  现有开源hypervisor为每个guest虚拟机配置一个EPT来处理guest物理地址到机器地址的翻译，Xen altp2m为每个guest虚拟机配置多个EPT。有趣的是，Intel处理器从Haswell开始允许从VMCS中配置512个EPT指针，至今为止，没有hypervisor利用这个特性。从X">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2018-01-01T03:22:25.000Z">
+<meta property="og:updated_time" content="2018-01-01T04:53:12.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="BE A GOOD GUY">
-<meta name="twitter:description" content="&amp;gt;&amp;gt; 2018-01-01 11:21 AM 凡是过往，皆为序章。再见2017，你好2018！ &amp;gt;&amp;gt; 2017-12-30 21:34 PM APT依赖rootkit,内核利用与0day，一般以控制用户程序，如浏览器，文件编辑器等开始，最终控制整个操作系统。bitdegender提出一种内存自省方式： Zero-Footprint Guest MemoryIntrospection W">
+<meta name="twitter:description" content="Timeline标签（空格分隔）： 时间线 &amp;gt;&amp;gt; 2018-01-01 12:12 PM  现有开源hypervisor为每个guest虚拟机配置一个EPT来处理guest物理地址到机器地址的翻译，Xen altp2m为每个guest虚拟机配置多个EPT。有趣的是，Intel处理器从Haswell开始允许从VMCS中配置512个EPT指针，至今为止，没有hypervisor利用这个特性。从X">
   
   
   <link href="/webfonts/ptserif/main.css" rel='stylesheet' type='text/css'>
@@ -67,32 +67,63 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>>&gt; 2018-01-01 11:21 AM</p>
-<p>凡是过往，皆为序章。再见2017，你好2018！</p>
+        <h1 id="Timeline"><a href="#Timeline" class="headerlink" title="Timeline"></a>Timeline</h1><p>标签（空格分隔）： 时间线</p>
+<p>>&gt; 2018-01-01 12:12 PM</p>
+<ul>
+<li>现有开源hypervisor为每个guest虚拟机配置一个EPT来处理guest物理地址到机器地址的翻译，Xen altp2m为每个guest虚拟机配置多个EPT。有趣的是，Intel处理器从Haswell开始允许从VMCS中配置512个EPT指针，至今为止，没有hypervisor利用这个特性。从XEN 4.6开始，可以为每个guest虚拟机配置10个EPT，此特性的主要原因是可以利用#VE与VMFUNC扩展。</li>
+</ul>
+<p>>&gt; 2018-01-01 11:21 AM</p>
+<ul>
+<li>凡是过往，皆为序章。再见2017，你好2018！</li>
+</ul>
 <p>>&gt; 2017-12-30 21:34 PM</p>
-<p>APT依赖rootkit,内核利用与0day，一般以控制用户程序，如浏览器，文件编辑器等开始，最终控制整个操作系统。bitdegender提出一种内存自省方式： <a href="https://1drv.ms/b/s!Aqrx-k-UzWOJgy8XRTShlW8K5bCF" target="_blank" rel="external">Zero-Footprint Guest Memory<br>Introspection With Xen</a> <a href="https://github.com/razvan-cojocaru/libbdvmi" target="_blank" rel="external">github</a><br><a href="https://www.usenix.org/sites/default/files/conference/protected-files/atc15_slides_lutas.pdf" target="_blank" rel="external">Hypervisor memory introspection at the next level<br>User-mode introspection and protection of live VMs</a> <a href="https://blog.xenproject.org/2015/08/04/the-bitdefender-virtual-machine-introspection-library-is-now-on-github/" target="_blank" rel="external">Blog</a> <a href="https://blog.xenproject.org/2016/04/13/stealthy-monitoring-with-xen-altp2m/" target="_blank" rel="external">Stealthy monitoring with Xen altp2m</a></p>
-<p>>&gt; 2017-12-20 8:00PM</p>
-<p>参加了一周的渗透测试与相关二进制安全培训，多了解一些具体场景</p>
+<ul>
+<li>APT依赖rootkit,内核利用与0day，一般以控制用户程序，如浏览器，文件编辑器等开始，最终控制整个操作系统。bitdegender提出一种内存自省方式： <a href="https://1drv.ms/b/s!Aqrx-k-UzWOJgy8XRTShlW8K5bCF" target="_blank" rel="external">Zero-Footprint Guest Memory<br>Introspection With Xen</a> <a href="https://github.com/razvan-cojocaru/libbdvmi" target="_blank" rel="external">github</a><br><a href="https://www.usenix.org/sites/default/files/conference/protected-files/atc15_slides_lutas.pdf" target="_blank" rel="external">Hypervisor memory introspection at the next level<br>User-mode introspection and protection of live VMs</a> <a href="https://blog.xenproject.org/2015/08/04/the-bitdefender-virtual-machine-introspection-library-is-now-on-github/" target="_blank" rel="external">Blog</a> <a href="https://blog.xenproject.org/2016/04/13/stealthy-monitoring-with-xen-altp2m/" target="_blank" rel="external">Stealthy monitoring with Xen altp2m</a></li>
+</ul>
+<p>>&gt; 2017-12-20 8:00 PM</p>
+<ul>
+<li>参加了一周的渗透测试与二进制安全相关的培训，多了解一些场景</li>
+</ul>
 <p>>&gt; 2017-12-17 13:29PM</p>
-<p>introspect内存页面，找出free，设置EPT事件，</p>
+<ul>
+<li>introspect内存页面，找出free，设置EPT事件，</li>
+</ul>
 <p>>&gt; 2017-12-15 20:52 PM</p>
-<p><a href="https://www.blackhat.com/docs/eu-17/materials/eu-17-Polino-Hiding-Pins-Artifacts-To-Defeat-Evasive-Malware.pdf" target="_blank" rel="external">Hiding PIN’s Artifacts<br>to Defeat Evasive Malware</a></p>
+<ul>
+<li><a href="https://www.blackhat.com/docs/eu-17/materials/eu-17-Polino-Hiding-Pins-Artifacts-To-Defeat-Evasive-Malware.pdf" target="_blank" rel="external">Hiding PIN’s Artifacts<br>to Defeat Evasive Malware</a></li>
+</ul>
 <p>>&gt; 2017-12-15 15:33 PM</p>
-<p>Flashguard -CCS 2017: 一个对抗ransomware病毒的SSD，拥有固件级的恢复系统，能够在不需要额外备份的情况下，快速恢复Encryption ransomware的破坏。<a href="https://zhuanlan.zhihu.com/p/31129885" target="_blank" rel="external">一个中文介绍</a><br>Bolt-ACSAC 2017 Best paper: 提出一种bare-metal环境多次恶意代码分析间的数据恢复系统（备份内存与ssd），<br>保证在不重启手机的情况下进行下一次恶意代码分析前数据是干净的。</p>
+<ul>
+<li>Flashguard -CCS 2017: 一个对抗ransomware病毒的SSD，拥有固件级的恢复系统，能够在不需要额外备份的情况下，快速恢复Encryption ransomware的破坏。<a href="https://zhuanlan.zhihu.com/p/31129885" target="_blank" rel="external">一个中文介绍</a><br>Bolt-ACSAC 2017 Best paper: 提出一种bare-metal环境多次恶意代码分析间的数据恢复系统（备份内存与ssd），<br>保证在不重启手机的情况下进行下一次恶意代码分析前数据是干净的。</li>
+</ul>
 <p>>&gt; 2017-12-14 13:44 PM</p>
-<p><a href="https://www.fireeye.com/blog/threat-research/2017/09/rvmi-full-system-analysis.html" target="_blank" rel="external">rVMI</a>: rVMI利用VMI与Memory Forensics技术实现了一个在Hypervisor层的调试器</p>
+<ul>
+<li><a href="https://www.fireeye.com/blog/threat-research/2017/09/rvmi-full-system-analysis.html" target="_blank" rel="external">rVMI</a>: rVMI利用VMI与Memory Forensics技术实现了一个在Hypervisor层的调试器</li>
+</ul>
 <p>>&gt; 2017-12-14 13:00 PM</p>
-<p>上午去清华参加网安国际的活动，听了<a href="https://www.longlu.org/" target="_blank" rel="external">Long Lu</a>的talk.</p>
+<ul>
+<li>上午去清华参加网安国际的活动，听了<a href="https://www.longlu.org/" target="_blank" rel="external">Long Lu</a>的talk.</li>
+</ul>
 <p>>&gt; 2017-12-11 7:00PM</p>
-<p>12月2日至12月10日在美国奥兰多参加ACSAC会议。<br>行程：北京-芝加哥-奥兰多；奥兰多-达拉斯-北京。</p>
+<ul>
+<li>12月2日至12月10日在美国奥兰多参加ACSAC会议。<br>行程：北京-芝加哥-奥兰多；奥兰多-达拉斯-北京。</li>
+</ul>
 <p>>&gt; 2017-12-09 8:00 PM</p>
-<p>Data-Oriented Attack不改变程序的基本控制流。这类攻击可以造成敏感数据泄露或非法提权。Memory Discloure 属于Data-Oriented Attack一种。<br>具体可以参考<a href="https://www.cc.gatech.edu/~hhu86/" target="_blank" rel="external">Hong Hu</a>的Automatic Generation of Data-Oriented Exploits. 以及Data-Oriented Programming: On the Expressiveness of Non-Control Data Attacks. </p>
+<ul>
+<li>Data-Oriented Attack不改变程序的基本控制流。这类攻击可以造成敏感数据泄露或非法提权。Memory Discloure 属于Data-Oriented Attack一种。<br>具体可以参考<a href="https://www.cc.gatech.edu/~hhu86/" target="_blank" rel="external">Hong Hu</a>的Automatic Generation of Data-Oriented Exploits. 以及Data-Oriented Programming: On the Expressiveness of Non-Control Data Attacks. </li>
+</ul>
 <p>>&gt; 2017-11-21 10:45 AM</p>
-<p>一种新的侧信道攻击：云平台下的内存页面共享机制（Memory Deduplication）,两台虚拟机中的页面内容如果相同，则只存储一份，若其中一台机器要更新页面则会拷贝一个新页面再写入新的内容(COW机制)，利用访问共享页面与新页面的时间差来实施侧信道攻击。可参考文章:<br><a href="https://www.usenix.org/system/files/conference/woot15/woot15-paper-barresi.pdf" target="_blank" rel="external">CAIN: Silently Breaking ASLR in the Cloud-WOOT’15</a><br><a href="https://www.blackhat.com/docs/eu-15/materials/eu-15-Barresi-Silently-Breaking-ASLR-In-The-Cloud.pdf" target="_blank" rel="external">BLACKHATEU’15</a><br><a href="https://www.youtube.com/watch?v=lxXQxYFHTbA" target="_blank" rel="external">BLACKHATEU’15-YOUTUBE</a><br><a href="https://www.eecis.udel.edu/~hnw/paper/memdedup.pdf" target="_blank" rel="external">Security Implications of Memory Deduplication in a VirtualizedEnvironment</a><br><a href="https://www.vusec.net/projects/dedup-est-machina/" target="_blank" rel="external">DEDUP EST MACHINA</a></p>
+<ul>
+<li>一种新的侧信道攻击：云平台下的内存页面共享机制（Memory Deduplication）,两台虚拟机中的页面内容如果相同，则只存储一份，若其中一台机器要更新页面则会拷贝一个新页面再写入新的内容(COW机制)，利用访问共享页面与新页面的时间差来实施侧信道攻击。可参考文章:<br><a href="https://www.usenix.org/system/files/conference/woot15/woot15-paper-barresi.pdf" target="_blank" rel="external">CAIN: Silently Breaking ASLR in the Cloud-WOOT’15</a><br><a href="https://www.blackhat.com/docs/eu-15/materials/eu-15-Barresi-Silently-Breaking-ASLR-In-The-Cloud.pdf" target="_blank" rel="external">BLACKHATEU’15</a><br><a href="https://www.youtube.com/watch?v=lxXQxYFHTbA" target="_blank" rel="external">BLACKHATEU’15-YOUTUBE</a><br><a href="https://www.eecis.udel.edu/~hnw/paper/memdedup.pdf" target="_blank" rel="external">Security Implications of Memory Deduplication in a VirtualizedEnvironment</a><br><a href="https://www.vusec.net/projects/dedup-est-machina/" target="_blank" rel="external">DEDUP EST MACHINA</a></li>
+</ul>
 <p>>&gt; 2017-11-19 9:00 PM</p>
-<p>这两天参加了阿里云安全举办的先知创新大会。一开始是抱着去凑凑热闹的心态去听听，结果却出乎意料之外，干货还是不少，见到了清华的段老师，王小云教授，浙大的徐文渊教授，阿里云的施尧耘老师，肖力老师，吴瀚清老师。肖力一开场说明办这个大会的意义所在，指出现在国内许多安全从业者极其关注怎么挖漏洞怎么打比赛，这些技术固然重要，而对整个安全行业的推动影响力却不大，我们应当更加关注如何从整个系统上去做检测，防御与溯源形成一个闭环。具体大会内容见：<a href="https://mp.weixin.qq.com/s?__biz=MzA4MTQ2MjI5OA==&amp;mid=2664077000&amp;idx=1&amp;sn=96b929869de51ca1cc943ee4f2318351&amp;chksm=84aaa3bdb3dd2aab54e0b7dd079921c9a448d310b0ec0d3308e7f1f3f9403e681f8d42035e43&amp;mpshare=1&amp;scene=1&amp;srcid=1119Mbaz9FzwST03JRS16iyR#rd" target="_blank" rel="external">2017 先知创新大会现场盘点</a></p>
+<ul>
+<li>这两天参加了阿里云安全举办的先知创新大会。一开始是抱着去凑凑热闹的心态去听听，结果却出乎意料之外，干货还是不少，见到了清华的段老师，王小云教授，浙大的徐文渊教授，阿里云的施尧耘老师，肖力老师，吴瀚清老师。肖力一开场说明办这个大会的意义所在，指出现在国内许多安全从业者极其关注怎么挖漏洞怎么打比赛，这些技术固然重要，而对整个安全行业的推动影响力却不大，我们应当更加关注如何从整个系统上去做检测，防御与溯源形成一个闭环。具体大会内容见：<a href="https://mp.weixin.qq.com/s?__biz=MzA4MTQ2MjI5OA==&amp;mid=2664077000&amp;idx=1&amp;sn=96b929869de51ca1cc943ee4f2318351&amp;chksm=84aaa3bdb3dd2aab54e0b7dd079921c9a448d310b0ec0d3308e7f1f3f9403e681f8d42035e43&amp;mpshare=1&amp;scene=1&amp;srcid=1119Mbaz9FzwST03JRS16iyR#rd" target="_blank" rel="external">2017 先知创新大会现场盘点</a></li>
+</ul>
 <p>>&gt; 2017-11-05 10:00 PM</p>
-<p>西安参加第13届信息安全与密码会议Inscrypt</p>
+<ul>
+<li>西安参加第13届信息安全与密码会议Inscrypt</li>
+</ul>
 <p>>&gt; 2017-10-29 8:15 PM</p>
 <ul>
 <li>Yinqian Zhang教授关于cache side channel 的一个tutorial <a href="http://web.cse.ohio-state.edu/~zhang.834/" target="_blank" rel="external">Cache Side Channels:State of the Art and Research Opportunities </a></li>
