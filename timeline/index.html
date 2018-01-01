@@ -5,17 +5,17 @@
   
   <title>BE A GOOD GUY - 善守者</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="Timeline标签（空格分隔）： 时间线 &amp;gt;&amp;gt; 2018-01-01 12:12 PM  现有开源hypervisor为每个guest虚拟机配置一个EPT来处理guest物理地址到机器地址的翻译，Xen altp2m为每个guest虚拟机配置多个EPT。有趣的是，Intel处理器从Haswell开始允许从VMCS中配置512个EPT指针，至今为止，没有hypervisor利用这个特性。从X">
+  <meta name="description" content="&amp;gt;&amp;gt; 20181-01-01 13:50 PM  altp2m: 要监控的粒度是一个内存页面（4KB），EPT violation带来的开销很大。如果监控程序感兴趣的只是函数入口被调用的时候，当在一个页面中访问函数其它的代码时，基于EPT监控会生成许多“false”事件。这可以通过debug指令陷入来解决，将断点指令写入到感兴趣代码的内存中。然而这样的代价是，断点对guest是可见的。为了隐">
 <meta property="og:type" content="website">
 <meta property="og:title" content="BE A GOOD GUY">
 <meta property="og:url" content="https://diting0x.github.io/timeline/index.html">
 <meta property="og:site_name" content="善守者">
-<meta property="og:description" content="Timeline标签（空格分隔）： 时间线 &amp;gt;&amp;gt; 2018-01-01 12:12 PM  现有开源hypervisor为每个guest虚拟机配置一个EPT来处理guest物理地址到机器地址的翻译，Xen altp2m为每个guest虚拟机配置多个EPT。有趣的是，Intel处理器从Haswell开始允许从VMCS中配置512个EPT指针，至今为止，没有hypervisor利用这个特性。从X">
+<meta property="og:description" content="&amp;gt;&amp;gt; 20181-01-01 13:50 PM  altp2m: 要监控的粒度是一个内存页面（4KB），EPT violation带来的开销很大。如果监控程序感兴趣的只是函数入口被调用的时候，当在一个页面中访问函数其它的代码时，基于EPT监控会生成许多“false”事件。这可以通过debug指令陷入来解决，将断点指令写入到感兴趣代码的内存中。然而这样的代价是，断点对guest是可见的。为了隐">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2018-01-01T04:53:12.000Z">
+<meta property="og:updated_time" content="2018-01-01T06:25:57.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="BE A GOOD GUY">
-<meta name="twitter:description" content="Timeline标签（空格分隔）： 时间线 &amp;gt;&amp;gt; 2018-01-01 12:12 PM  现有开源hypervisor为每个guest虚拟机配置一个EPT来处理guest物理地址到机器地址的翻译，Xen altp2m为每个guest虚拟机配置多个EPT。有趣的是，Intel处理器从Haswell开始允许从VMCS中配置512个EPT指针，至今为止，没有hypervisor利用这个特性。从X">
+<meta name="twitter:description" content="&amp;gt;&amp;gt; 20181-01-01 13:50 PM  altp2m: 要监控的粒度是一个内存页面（4KB），EPT violation带来的开销很大。如果监控程序感兴趣的只是函数入口被调用的时候，当在一个页面中访问函数其它的代码时，基于EPT监控会生成许多“false”事件。这可以通过debug指令陷入来解决，将断点指令写入到感兴趣代码的内存中。然而这样的代价是，断点对guest是可见的。为了隐">
   
   
   <link href="/webfonts/ptserif/main.css" rel='stylesheet' type='text/css'>
@@ -67,10 +67,21 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h1 id="Timeline"><a href="#Timeline" class="headerlink" title="Timeline"></a>Timeline</h1><p>标签（空格分隔）： 时间线</p>
+        <p>>&gt; 20181-01-01 13:50 PM</p>
+<ul>
+<li>altp2m: 要监控的粒度是一个内存页面（4KB），EPT violation带来的开销很大。如果监控程序感兴趣的只是函数入口被调用的时候，当在一个页面中访问函数其它的代码时，基于EPT监控会生成许多“false”事件。这可以通过debug指令陷入来解决，将断点指令写入到感兴趣代码的内存中。然而这样的代价是，断点对guest是可见的。为了隐藏断点，这些页面需要作进一步保护，在EPT中将这些页面设置为execute-only.<br><a href="https://blog.xenproject.org/2016/04/13/stealthy-monitoring-with-xen-altp2m/" target="_blank" rel="external">Stealthy monitoring with Xen altp2m</a></li>
+</ul>
+<p>>&gt; 2018-01-01 13:39 PM</p>
+<ul>
+<li>通过限制内存页面访问权限来追踪内存页面的R/W/X访问类型<br>，EPT权限violation会陷入到hypervisor,这是虚拟机不会有任何感知。捕获到虚拟机内存访问类型后，内存访问权限需要重新释放才能继续执行。由于单个EPT在多个vCPU中共享，释放内存权限来允许其中一个vCPU执行无意中允许另一个vCPU访问内存（另一个需要追踪的内存页面）。这种情况将会带来竞争，恶意代码将从监控程序中隐藏自身行为。altp2m为每个guest设置多个EPT，当guest对监控的内存进行访问时，altp2m将切换到另一个EPT，而这个EPT允许操作继续执行。</li>
+</ul>
 <p>>&gt; 2018-01-01 12:12 PM</p>
 <ul>
 <li>现有开源hypervisor为每个guest虚拟机配置一个EPT来处理guest物理地址到机器地址的翻译，Xen altp2m为每个guest虚拟机配置多个EPT。有趣的是，Intel处理器从Haswell开始允许从VMCS中配置512个EPT指针，至今为止，没有hypervisor利用这个特性。从XEN 4.6开始，可以为每个guest虚拟机配置10个EPT，此特性的主要原因是可以利用#VE与VMFUNC扩展。</li>
+</ul>
+<p>>&gt; 2018-01-01 12:08 PM</p>
+<ul>
+<li>2017年，共发表四篇论文，参加了四次正式会议（VEE,ASPLOS,ACSAC,INSCRYPT），参加三次正式学术报告（软件所软件智能分析，清华网安国际intel sgx workshop, Long Lu’ talk），去了美国、西安两次、南昌、福州、武汉，共飞行了三次，参加了两次婚礼</li>
 </ul>
 <p>>&gt; 2018-01-01 11:21 AM</p>
 <ul>
