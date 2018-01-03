@@ -5,18 +5,18 @@
   
   <title>BE A GOOD GUY - 善守者</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="&amp;gt;&amp;gt; 20181-01-01 13:50 PM  altp2m: 要监控的粒度是一个内存页面（4KB），EPT violation带来的开销很大。如果监控程序感兴趣的只是函数入口被调用的时候，当在一个页面中访问函数其它的代码时，基于EPT监控会生成许多“false”事件。这可以通过debug指令陷入来解决，将断点指令写入到感兴趣代码的内存中。然而这样的代价是，断点对guest是可见的。为了隐">
+  <meta name="description" content="&amp;gt;&amp;gt; 2018-01-03 14:42 PM  如何分析hypervisor的vmcs结构，hypervisor memory forensicactaeon  &amp;gt;&amp;gt; 2018-01-02 20:10 PM  UAF: 记录内存分配函数地址如分配malloc, free, realloc， 追踪分配的堆对象（内存访问记录），当一个被释放的对象重新被访问时，则可能发生UAF。但可能存在这">
 <meta property="og:type" content="website">
 <meta property="og:title" content="BE A GOOD GUY">
 <meta property="og:url" content="https://diting0x.github.io/timeline/index.html">
 <meta property="og:site_name" content="善守者">
-<meta property="og:description" content="&amp;gt;&amp;gt; 20181-01-01 13:50 PM  altp2m: 要监控的粒度是一个内存页面（4KB），EPT violation带来的开销很大。如果监控程序感兴趣的只是函数入口被调用的时候，当在一个页面中访问函数其它的代码时，基于EPT监控会生成许多“false”事件。这可以通过debug指令陷入来解决，将断点指令写入到感兴趣代码的内存中。然而这样的代价是，断点对guest是可见的。为了隐">
+<meta property="og:description" content="&amp;gt;&amp;gt; 2018-01-03 14:42 PM  如何分析hypervisor的vmcs结构，hypervisor memory forensicactaeon  &amp;gt;&amp;gt; 2018-01-02 20:10 PM  UAF: 记录内存分配函数地址如分配malloc, free, realloc， 追踪分配的堆对象（内存访问记录），当一个被释放的对象重新被访问时，则可能发生UAF。但可能存在这">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/2018.jpeg">
-<meta property="og:updated_time" content="2018-01-01T06:40:24.000Z">
+<meta property="og:updated_time" content="2018-01-03T08:44:36.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="BE A GOOD GUY">
-<meta name="twitter:description" content="&amp;gt;&amp;gt; 20181-01-01 13:50 PM  altp2m: 要监控的粒度是一个内存页面（4KB），EPT violation带来的开销很大。如果监控程序感兴趣的只是函数入口被调用的时候，当在一个页面中访问函数其它的代码时，基于EPT监控会生成许多“false”事件。这可以通过debug指令陷入来解决，将断点指令写入到感兴趣代码的内存中。然而这样的代价是，断点对guest是可见的。为了隐">
+<meta name="twitter:description" content="&amp;gt;&amp;gt; 2018-01-03 14:42 PM  如何分析hypervisor的vmcs结构，hypervisor memory forensicactaeon  &amp;gt;&amp;gt; 2018-01-02 20:10 PM  UAF: 记录内存分配函数地址如分配malloc, free, realloc， 追踪分配的堆对象（内存访问记录），当一个被释放的对象重新被访问时，则可能发生UAF。但可能存在这">
 <meta name="twitter:image" content="http://oij0laovn.bkt.clouddn.com/2018.jpeg">
   
   
@@ -69,7 +69,15 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>>&gt; 20181-01-01 13:50 PM</p>
+        <p>>&gt; 2018-01-03 14:42 PM</p>
+<ul>
+<li><a href="http://s3.eurecom.fr/~emdel/talks/grazianolanzi_hitb.pdf" target="_blank" rel="external">如何分析hypervisor的vmcs结构，hypervisor memory forensic</a><br><a href="http://s3.eurecom.fr/tools/actaeon/" target="_blank" rel="external">actaeon</a></li>
+</ul>
+<p>>&gt; 2018-01-02 20:10 PM</p>
+<ul>
+<li>UAF: 记录内存分配函数地址如分配malloc, free, realloc， 追踪分配的堆对象（内存访问记录），当一个被释放的对象重新被访问时，则可能发生UAF。但可能存在这种情况，在被释放的对象解引用之前，另一个对象被分配到此被释放的内存地址上，所以存在误报。</li>
+</ul>
+<p>>&gt; 2018-01-01 13:50 PM</p>
 <ul>
 <li>altp2m: 要监控的粒度是一个内存页面（4KB），EPT violation带来的开销很大。如果监控程序感兴趣的只是函数入口被调用的时候，当在一个页面中访问函数其它的代码时，基于EPT监控会生成许多“false”事件。这可以通过debug指令陷入来解决，将断点指令写入到感兴趣代码的内存中。然而这样的代价是，断点对guest是可见的。为了隐藏断点，这些页面需要作进一步保护，在EPT中将这些页面设置为execute-only.<br><a href="https://blog.xenproject.org/2016/04/13/stealthy-monitoring-with-xen-altp2m/" target="_blank" rel="external">Stealthy monitoring with Xen altp2m</a></li>
 </ul>
@@ -91,9 +99,11 @@
 </ul>
 <figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/2018.jpeg" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/2018.jpeg" width="350"></a><br>    <figcaption></figcaption><br></figure>
 
+
+
 <p>>&gt; 2017-12-30 21:34 PM</p>
 <ul>
-<li>APT依赖rootkit,内核利用与0day，一般以控制用户程序，如浏览器，文件编辑器等开始，最终控制整个操作系统。bitdegender提出一种内存自省方式： <a href="https://1drv.ms/b/s!Aqrx-k-UzWOJgy8XRTShlW8K5bCF" target="_blank" rel="external">Zero-Footprint Guest Memory<br>Introspection With Xen</a> <a href="https://github.com/razvan-cojocaru/libbdvmi" target="_blank" rel="external">github</a><br><a href="https://www.usenix.org/sites/default/files/conference/protected-files/atc15_slides_lutas.pdf" target="_blank" rel="external">Hypervisor memory introspection at the next level<br>User-mode introspection and protection of live VMs</a> <a href="https://blog.xenproject.org/2015/08/04/the-bitdefender-virtual-machine-introspection-library-is-now-on-github/" target="_blank" rel="external">Blog</a> <a href="https://blog.xenproject.org/2016/04/13/stealthy-monitoring-with-xen-altp2m/" target="_blank" rel="external">Stealthy monitoring with Xen altp2m</a></li>
+<li>APT依赖rootkit,内核利用与0day，一般以控制用户程序，如浏览器，文件编辑器等开始，最终控制整个操作系统。bitdegender提出一种内存自省方式： <a href="https://1drv.ms/b/s!Aqrx-k-UzWOJgy8XRTShlW8K5bCF" target="_blank" rel="external">Zero-Footprint Guest Memory<br>Introspection With Xen</a> <a href="https://github.com/razvan-cojocaru/libbdvmi" target="_blank" rel="external">github</a><br><a href="https://www.usenix.org/sites/default/files/conference/protected-files/atc15_slides_lutas.pdf" target="_blank" rel="external">Hypervisor memory introspection at the next level<br>User-mode introspection and protection of live VMs</a> <a href="https://blog.xenproject.org/2015/08/04/the-bitdefender-virtual-machine-introspection-library-is-now-on-github/" target="_blank" rel="external">Blog</a> <a href="https://blog.xenproject.org/2016/04/13/stealthy-monitoring-with-xen-altp2m/" target="_blank" rel="external">Stealthy monitoring with Xen altp2m</a><br><a href="http://oij0laovn.bkt.clouddn.com/HVMI%20Presentation%20C-Cure.pptx" target="_blank" rel="external">ppt</a></li>
 </ul>
 <p>>&gt; 2017-12-20 8:00 PM</p>
 <ul>
@@ -135,6 +145,31 @@
 <ul>
 <li>这两天参加了阿里云安全举办的先知创新大会。一开始是抱着去凑凑热闹的心态去听听，结果却出乎意料之外，干货还是不少，见到了清华的段老师，王小云教授，浙大的徐文渊教授，阿里云的施尧耘老师，肖力老师，吴瀚清老师。肖力一开场说明办这个大会的意义所在，指出现在国内许多安全从业者极其关注怎么挖漏洞怎么打比赛，这些技术固然重要，而对整个安全行业的推动影响力却不大，我们应当更加关注如何从整个系统上去做检测，防御与溯源形成一个闭环。具体大会内容见：<a href="https://mp.weixin.qq.com/s?__biz=MzA4MTQ2MjI5OA==&amp;mid=2664077000&amp;idx=1&amp;sn=96b929869de51ca1cc943ee4f2318351&amp;chksm=84aaa3bdb3dd2aab54e0b7dd079921c9a448d310b0ec0d3308e7f1f3f9403e681f8d42035e43&amp;mpshare=1&amp;scene=1&amp;srcid=1119Mbaz9FzwST03JRS16iyR#rd" target="_blank" rel="external">2017 先知创新大会现场盘点</a></li>
 </ul>
+<p>>&gt; 2017-11-10 19:00 PM</p>
+<ul>
+<li>有关侧信道介绍：<a href="https://mp.weixin.qq.com/s?__biz=MzIxMzI4ODI1MA==&amp;mid=2247483923&amp;idx=1&amp;sn=89db4f18fa16531b5056a1b884211cc7&amp;chksm=97b85646a0cfdf50cedd9b9ddad8e8d83e58a1a9c1697a50c1d22e68391c6f8c293036bb32e2&amp;mpshare=1&amp;scene=1&amp;srcid=0901TBeifzbGMp2kQRP3BVQP#rd" target="_blank" rel="external">小心，Cache 侧信道攻击</a><br><a href="https://www.usenix.org/system/files/conference/usenixsecurity14/sec14-paper-yarom.pdf" target="_blank" rel="external">sec14</a><br><a href="https://cseweb.ucsd.edu/~hovav/dist/cloudsec.pdf" target="_blank" rel="external">Hey, You, Get Off of My Cloud:Exploring Information Leakage in Third-Party Compute Clouds</a><br><a href="https://www.blackhat.com/docs/eu-16/materials/eu-16-Lipp-ARMageddon-How-Your-Smartphone-CPU-Breaks-Software-Level-Security-And-Privacy.pdf" target="_blank" rel="external">ARMageddon How Your Smartphone CPU Breaks Software-Level Security And Privacy</a><br><a href="https://www.blackhat.com/docs/us-16/materials/us-16-Hornby-Side-Channel-Attacks-On-Everyday-Applications.pdf" target="_blank" rel="external">Side-Channel Attacks on Everyday Applications</a> </li>
+</ul>
+<p>>&gt; 2017-11-09 16:20 PM</p>
+<ul>
+<li>在密码学中，与暴力破解或算法本身的脆弱性不同的是，侧信道攻击是一种通过密码系统中的物理设施获取信息的一种攻击法师。侧信道攻击基本分类：<br>cache attack-在虚拟化环境或云服务环境下，攻击者监控受害者的cache访问<br>timing attack-攻击者测量多次计算(比如对比攻击者提供的密码与受害者未知的密码)需要消耗的时间<br>power-monitoring attack-攻击者利用硬件在计算过程中不同的能量消耗<br>electromagnetic attack-攻击者利用泄露的电磁辐射直接获取明文或者其它信息<br>acoustic cryptanalysis-攻击者利用一次计算中的产生的声音来获取信息<br>differential fault analysis-攻击者在计算过程中引入错误来发现秘密信息<br>data remanence-攻击者在敏感数据被删除后读取数据<br>software-initiated fault attacks-这种攻击极少， Row hammer是一种<br>optical-利用高清相机或其它设备进行视觉记录来读取敏感数据</li>
+</ul>
+<p>>&gt; 2017-11-07 10:00 PM</p>
+<ul>
+<li><a href="http://www.mysmu.edu/faculty/xhding/publications/imee-usenix17.pdf" target="_blank" rel="external">IMEE PDF</a> <a href="https://www.usenix.org/sites/default/files/conference/protected-files/usenixsecurity17_slides_siqi_.pdf" target="_blank" rel="external">IMEE SLIDES</a>The most recent work \cite{imee} proposes the immersive execution environment (ImEE) with which the guest memory is accessed at native speed. Even if the guest kernel is compromised, it is capable of introspecting the live kernel states in the targets without modifying or suspending them. However, it onlt serves as the guest access engine for the VMI applications without involving kernel semantics, which could be integrated with our system to retrieve the higher semantics.<br>in-vm：需要修改guest内核,必须信任guest kernel.<br>out-of-vm：内存状态不一致性</li>
+</ul>
+<p>同时解决这些问题。<br>native speed, mapping consistency, defend kernel-level attacks.</p>
+<p>gva-hpa-hva read. &gt; ova read</p>
+<p>cat and mouse实验 -&gt;<br>libvmi读取task-&gt;cred指针，同时一个guest kernel thread周期性修改指针的值<br>libvmi八次，每次十秒<br>只有在重复60此后，才捕获到修改</p>
+<p>malware可以本地速度遍历页面结构，自省工具则不能。<br>libvmi引入cache，但是还不能</p>
+<p>scope: minitor vm introspect live kernel state 不修改guest，不暂停guest<br>trust model：不信任guest,以及其内核。trust hardware firmware, hypervisor monitor vm</p>
+<p>adversary:目标是给VMI application提供一个fake kernel address space.</p>
+<p>不考虑vmi程序本身的安全性</p>
+<p>basic idea: IMEE的cr3与guest的cr3同步，这样mmu可以直接使用guest的 gva-gpa的映射。<br>维护两个gva-gpa的转换，guest的page table的更新可以同步到 introspection中的<br>gva-gpa.</p>
+<p>functionality challenge:将gpa分成两个独立的空间，一个给local,一个给guest for introspection<br>security challenge:<br>performance challenge: </p>
+<p>IMEE:特殊的vm， 有vcpu,一块物理内存，没有操作系统<br>only software 读取guest内存</p>
+<p>local地址空间：gptl eptl映射imee的整个空间， gptl仅仅有两个页面<br>GPTl只有一页映射data frame，其它全部映射code frame。<br>agent code只能从一个页面中执行。<br>target地址空间：gpa-hpa的映射被EPTt 和EPTc控制</p>
+<p>所有的GPA都通过EPTt映射，除了一页通过EPTc重定向到IMEE的code frame.<br>EPTt与vm的EPT通过，但只能read-only 防止agent修改target的内存，也防止攻击者注入代码<br>EPTc只能可执行，不可读写防止其读取target地址空间。</p>
+<p>imee agent: agent在local地址空间运行，从data frame中读取introspectionqingqiu ,<br>切换到target 地址空间，从target内存中读取内存数据到register中<br>最后，切换回到local地址空间等待下一个请求</p>
 <p>>&gt; 2017-11-05 10:00 PM</p>
 <ul>
 <li>西安参加第13届信息安全与密码会议Inscrypt</li>
@@ -151,6 +186,14 @@
 <ul>
 <li>提前汇报了毕业论文，准备预答辩</li>
 </ul>
+<p>>&gt; 2017-09-21 9:21 PM</p>
+<ul>
+<li>SECPOD-paging delegating:内核将页面操作委托给安全空间来执行，包括页表，页表更新，进程切换。这样，内核包括内核利用都无法修改页表，所有的更新必须委派给安全空间。但是内核仍然可以执行特权指令，如果使用不当仍然可以破坏系统了。比如，内核可以使用mov to cr3指令加载一个crafted页表来绕过安全空间。这时可以利用execution trapping来避免。<br>hypervisor拦截内核对敏感特权指令的执行，将捕获到的事件传递给安全空间。安全空间决定如何响应这些事件。比如发出警告，忽略它们或者终止执行。</li>
+</ul>
+<p>为了委派操作，可以将内核中所有的页面操作替换为安全空间中对相应服务的调用。内核可以运行在半虚拟化的虚拟机中，这些hooks已经被嵌入到内核中。linux的pvops框架可以</p>
+<p>pvops框架中pv_cpu_ops, pv_mmu_ops,<br>可以将内核中的本地操作替换为相应的pv操作。<br>本地x86的mov to cr3指令用来加载页表，pvops将其替换为pv_mmu_ops -&gt;write_cr3。<br>pvops已经将所有的必要函数委派分页到安全空间，只需要实现write_cr3等函数。<br>entry gate和exit gate： 正常空间调用安全空间的唯一入口(比如说更新页表)。<br>正常空间：含有用户层和内核空间；内核在安全空间的映射和正常空间一样，会被映射在同一个位置。这样一来，secpod中的安全工具就可以访问内核，而避免了语义鸿沟问题。<br>安全空间中的内核代码设置为不可执行，以防止安全工具执行不可信的内核代码。</p>
+<p>安全空间只有一张页表，secpod页表，但是正常空间为每个用户进程都配备了一个页表。</p>
+<p>为了防止内核加载一个crafted页表来破坏安全空间，需要hypervisor拦截guest的每一个对cr3的写操作。让每个cr3的写操作陷入到hypervisor性能开销很大，cr3 target-list。<br>安全空间维护内核的shadow page table。 任何对内核页表的更新都会同步到SPT中。</p>
 <p>>&gt; 2017-09-18 10:59 AM</p>
 <ul>
 <li>1992年图领奖颁奖演讲中,David Wheeler与Butler Lampson所说：计算机科学中的任何问题都可以通过增加一层映射而解决。</li>
