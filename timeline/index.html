@@ -5,18 +5,18 @@
   
   <title>BE A GOOD GUY - 善守者</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="&amp;gt;&amp;gt; 2018-01-03 14:42 PM  如何分析hypervisor的vmcs结构，hypervisor memory forensicactaeon  &amp;gt;&amp;gt; 2018-01-02 20:10 PM  UAF: 记录内存分配函数地址如分配malloc, free, realloc， 追踪分配的堆对象（内存访问记录），当一个被释放的对象重新被访问时，则可能发生UAF。但可能存在这">
+  <meta name="description" content="&amp;gt;&amp;gt; 2018-01-04 18:59 PM  Xenpwn执行流：1.目标L1 hypervisor启动，然后开始执行L2管理域（dom0）。 这时L2 domU仍然停止，不能进行域间通信。2.追踪收集器已启动并使用VMI接口来识别L2 dom0与其他域之间共享的内存页面。由于没有guest运行，这将不会返回任何结果。追踪收集器在目标hypervisor中设置断点，当新的共享页面被配置时得">
 <meta property="og:type" content="website">
 <meta property="og:title" content="BE A GOOD GUY">
 <meta property="og:url" content="https://diting0x.github.io/timeline/index.html">
 <meta property="og:site_name" content="善守者">
-<meta property="og:description" content="&amp;gt;&amp;gt; 2018-01-03 14:42 PM  如何分析hypervisor的vmcs结构，hypervisor memory forensicactaeon  &amp;gt;&amp;gt; 2018-01-02 20:10 PM  UAF: 记录内存分配函数地址如分配malloc, free, realloc， 追踪分配的堆对象（内存访问记录），当一个被释放的对象重新被访问时，则可能发生UAF。但可能存在这">
+<meta property="og:description" content="&amp;gt;&amp;gt; 2018-01-04 18:59 PM  Xenpwn执行流：1.目标L1 hypervisor启动，然后开始执行L2管理域（dom0）。 这时L2 domU仍然停止，不能进行域间通信。2.追踪收集器已启动并使用VMI接口来识别L2 dom0与其他域之间共享的内存页面。由于没有guest运行，这将不会返回任何结果。追踪收集器在目标hypervisor中设置断点，当新的共享页面被配置时得">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/2018.jpeg">
-<meta property="og:updated_time" content="2018-01-03T08:44:36.000Z">
+<meta property="og:updated_time" content="2018-01-04T12:58:33.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="BE A GOOD GUY">
-<meta name="twitter:description" content="&amp;gt;&amp;gt; 2018-01-03 14:42 PM  如何分析hypervisor的vmcs结构，hypervisor memory forensicactaeon  &amp;gt;&amp;gt; 2018-01-02 20:10 PM  UAF: 记录内存分配函数地址如分配malloc, free, realloc， 追踪分配的堆对象（内存访问记录），当一个被释放的对象重新被访问时，则可能发生UAF。但可能存在这">
+<meta name="twitter:description" content="&amp;gt;&amp;gt; 2018-01-04 18:59 PM  Xenpwn执行流：1.目标L1 hypervisor启动，然后开始执行L2管理域（dom0）。 这时L2 domU仍然停止，不能进行域间通信。2.追踪收集器已启动并使用VMI接口来识别L2 dom0与其他域之间共享的内存页面。由于没有guest运行，这将不会返回任何结果。追踪收集器在目标hypervisor中设置断点，当新的共享页面被配置时得">
 <meta name="twitter:image" content="http://oij0laovn.bkt.clouddn.com/2018.jpeg">
   
   
@@ -69,7 +69,23 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>>&gt; 2018-01-03 14:42 PM</p>
+        <p>>&gt; 2018-01-04 18:59 PM</p>
+<ul>
+<li>Xenpwn执行流：1.目标L1 hypervisor启动，然后开始执行L2<br>管理域（dom0）。 这时L2 domU仍然停止，不能进行域间通信。2.追踪收集器已启动并使用VMI接口来识别L2 dom0与其他域之间共享的内存页面。由于没有guest运行，这将不会返回任何结果。追踪收集器在目标hypervisor中设置断点，当新的共享页面被配置时得到通知。3. L2 domU已启动。当操作系统启动时，para-virtualized<br>设备被初始化。这时触发domU、dom0和共享内存页面配置的初次握手。4.触发步骤2中注册的断点和追踪收集器<br>提取共享页面的（L1）物理地址。将这些页面读写访问权限移除以触发EPT violation。5. L2 domU中的系统行为触发para-virtualized设备的使用。根据设备类型的不同，这个过程可能会自动或手动发生，例如触发网络连接。6. domU中的前端驱动程序和dom0中的后端驱动程序尝试通过共享内存交换数据。当虚拟CPU尝试访问其中一个内存页面时，会引发EPT violation，并将控制权转交给L0 hypervisor。 L1 hypervisor及其所有虚拟机都停止。7. L0 hypervisor通知追踪收集器EPT violation行为。追踪收集器使用VMI库从暂停的VM中提取所有必需的信息，并将追踪的条目存储在追踪存储器中。8.通过释放EPT权限，单步执行触发指令并再次移除权限，追踪收集器确保目标系统不会一次又一次触发相同的EPT violation。而是继续执行下一个正常的指令，直到下一个内存访问发生。9. 步骤5.至8.重复，直到目标系统关闭或手动关闭追踪收集器。无论何时配置新的共享内存页面，都会触发步骤4。10.在最后一步，分析算法开始迭代遍历追踪的内存访问信息。输出可用于手动分析或作为其他工具的输入。<br>这种设计的一个重要优点是可以在任何时候追踪结束时执行步骤10。只要追踪存储不被删除，改进的分析算法就可以直接在已经收集的数据上进行测试。</li>
+</ul>
+<p>>&gt; 2018-01-04 18:04 PM</p>
+<ul>
+<li><a href="https://www.anquanke.com/post/id/93466" target="_blank" rel="external">Intel CPU严重设计缺陷/Meltdown/Spectre漏洞</a>  <a href="http://www.freebuf.com/news/159135.html" target="_blank" rel="external">芯片级安全漏洞后续：谷歌表示不止Intel，每个1995年后的处理器都可能受影响</a> <a href="https://www.anquanke.com/post/id/93599" target="_blank" rel="external">Meltdown与Spectre：近期CPU特性漏洞安全公告</a><br><a href="https://weibo.com/ttarticle/p/show?id=2309404192549521743410" target="_blank" rel="external">微博蒸米的芯片漏洞分析系列</a></li>
+</ul>
+<p>>&gt; 2018-01-04 15:00 PM</p>
+<ul>
+<li>把几个概念整理一下。Double fetch: 系统中的竞争不只会发生在线程间，还可能发生在内核与用户线程间，Serna[1]将这一特殊的竞争称之为double fetch。如图1所示，用户通常会通过调用内核函数完成特定功能，当内核函数两次从同一用户内存地址读取同一数据时，通常第一次读取用来验证数据或建立联系，第二次则用来使用该数据。与此同时，用户空间并发运行的恶意线程可以在两次内核读取操作之间，利用竞争条件对该数据进行篡改，从而造成内核使用数据的不一致。Double fetch漏洞可造成包括缓冲区溢出、信息泄露、空指针引用等后果，最终造成内核崩溃或者恶意提权。</li>
+</ul>
+<p>>&gt; 2018-01-04 09:24 AM</p>
+<ul>
+<li>paravirtualization设备：paravirtualization为客户虚拟机使用宿主机上的设备提供了一种更快更有效的通信方式。KVM在hypervisor于guset之间提供了virtio API层来实现paravirtualization设备。相比bare-metal设备，一些paravirtualized设备能降低I/O延迟并增加I/O吞吐量，一些paravirtualized设备能为虚拟机提供额外的功能。</li>
+</ul>
+<p>>&gt; 2018-01-03 14:42 PM</p>
 <ul>
 <li><a href="http://s3.eurecom.fr/~emdel/talks/grazianolanzi_hitb.pdf" target="_blank" rel="external">如何分析hypervisor的vmcs结构，hypervisor memory forensic</a><br><a href="http://s3.eurecom.fr/tools/actaeon/" target="_blank" rel="external">actaeon</a></li>
 </ul>
