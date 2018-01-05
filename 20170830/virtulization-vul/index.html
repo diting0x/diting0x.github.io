@@ -5,18 +5,18 @@
   
   <title>虚拟化漏洞总结 - 善守者</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="diting0x 在这里收集虚拟化相关漏洞，持续更新。 CVE-2015-7504 By 360云安全  QEMU中pcnet网卡模拟组件中的一个缓冲区溢出漏洞  漏洞发生在pcnet网卡使用loopback/looptest模式接收数据时，会在接收到的数据尾部增加一个CRC校验码(长度4个字节)，当发送包的大小刚好符合接收包设定的最大缓冲区大小(4096字节)时。在intel X86-64体系下">
+  <meta name="description" content="diting0x 在这里收集虚拟化相关漏洞，持续更新。 CVE‐2015‐3456   CrowdStrike的Jason Geffner发现开源计算机仿真器QEMU中存在一个和虚拟软盘控制器相关的安全漏洞，代号VENOM，CVE编号为CVE-2015-3456。利用此漏洞攻击者可以在有问题的虚拟机中进行逃逸,并且可以在宿主机中获得代码执行的权限链接-VENOM “毒液”漏洞分析（qemu kvm">
 <meta name="keywords" content="Security,Virtulization,Vulnerability">
 <meta property="og:type" content="article">
 <meta property="og:title" content="虚拟化漏洞总结">
 <meta property="og:url" content="https://diting0x.github.io/20170830/virtulization-vul/index.html">
 <meta property="og:site_name" content="善守者">
-<meta property="og:description" content="diting0x 在这里收集虚拟化相关漏洞，持续更新。 CVE-2015-7504 By 360云安全  QEMU中pcnet网卡模拟组件中的一个缓冲区溢出漏洞  漏洞发生在pcnet网卡使用loopback/looptest模式接收数据时，会在接收到的数据尾部增加一个CRC校验码(长度4个字节)，当发送包的大小刚好符合接收包设定的最大缓冲区大小(4096字节)时。在intel X86-64体系下">
+<meta property="og:description" content="diting0x 在这里收集虚拟化相关漏洞，持续更新。 CVE‐2015‐3456   CrowdStrike的Jason Geffner发现开源计算机仿真器QEMU中存在一个和虚拟软盘控制器相关的安全漏洞，代号VENOM，CVE编号为CVE-2015-3456。利用此漏洞攻击者可以在有问题的虚拟机中进行逃逸,并且可以在宿主机中获得代码执行的权限链接-VENOM “毒液”漏洞分析（qemu kvm">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2017-08-30T11:07:28.000Z">
+<meta property="og:updated_time" content="2018-01-05T07:53:07.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="虚拟化漏洞总结">
-<meta name="twitter:description" content="diting0x 在这里收集虚拟化相关漏洞，持续更新。 CVE-2015-7504 By 360云安全  QEMU中pcnet网卡模拟组件中的一个缓冲区溢出漏洞  漏洞发生在pcnet网卡使用loopback/looptest模式接收数据时，会在接收到的数据尾部增加一个CRC校验码(长度4个字节)，当发送包的大小刚好符合接收包设定的最大缓冲区大小(4096字节)时。在intel X86-64体系下">
+<meta name="twitter:description" content="diting0x 在这里收集虚拟化相关漏洞，持续更新。 CVE‐2015‐3456   CrowdStrike的Jason Geffner发现开源计算机仿真器QEMU中存在一个和虚拟软盘控制器相关的安全漏洞，代号VENOM，CVE编号为CVE-2015-3456。利用此漏洞攻击者可以在有问题的虚拟机中进行逃逸,并且可以在宿主机中获得代码执行的权限链接-VENOM “毒液”漏洞分析（qemu kvm">
   
   
   <link href="/webfonts/ptserif/main.css" rel='stylesheet' type='text/css'>
@@ -81,6 +81,10 @@
       
         <p><a href="http://weibo.com/diting0x" target="_blank" rel="external">diting0x</a></p>
 <p>在这里收集虚拟化相关漏洞，持续更新。</p>
+<p>CVE‐2015‐3456 </p>
+<ul>
+<li>CrowdStrike的Jason Geffner发现开源计算机仿真器QEMU中存在一个和虚拟软盘控制器相关的安全漏洞，代号VENOM，CVE编号为CVE-2015-3456。利用此漏洞攻击者可以在有问题的虚拟机中进行逃逸,并且可以在宿主机中获得代码执行的权限<br><a href="http://blogs.360.cn/blog/venom-%E6%AF%92%E6%B6%B2%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%EF%BC%88qemu-kvm-cve%E2%80%902015%E2%80%903456%EF%BC%89/" target="_blank" rel="external">链接-VENOM “毒液”漏洞分析（qemu kvm CVE‐2015‐3456）</a></li>
+</ul>
 <p>CVE-2015-7504 By 360云安全</p>
 <ul>
 <li>QEMU中pcnet网卡模拟组件中的一个缓冲区溢出漏洞 </li>
