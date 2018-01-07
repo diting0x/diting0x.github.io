@@ -5,18 +5,18 @@
   
   <title>BE A GOOD GUY - 善守者</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="&amp;gt;&amp;gt; 2018-01-04 18:59 PM  Xenpwn执行流：1.目标L1 hypervisor启动，然后开始执行L2管理域（dom0）。 这时L2 domU仍然停止，不能进行域间通信。2.追踪收集器已启动并使用VMI接口来识别L2 dom0与其他域之间共享的内存页面。由于没有guest运行，这将不会返回任何结果。追踪收集器在目标hypervisor中设置断点，当新的共享页面被配置时得">
+  <meta name="description" content="&amp;gt;&amp;gt; 2018-01-05 13:10 PM  某爱好者对侧信道文章的整理： https://www.peerlyst.com/posts/a-collection-of-links-to-pdfs-of-papers-on-micro-architectural-side-channel-attacks-sorted-by-date-paul-harvey  &amp;gt;&amp;gt; 2018-01-0">
 <meta property="og:type" content="website">
 <meta property="og:title" content="BE A GOOD GUY">
 <meta property="og:url" content="https://diting0x.github.io/timeline/index.html">
 <meta property="og:site_name" content="善守者">
-<meta property="og:description" content="&amp;gt;&amp;gt; 2018-01-04 18:59 PM  Xenpwn执行流：1.目标L1 hypervisor启动，然后开始执行L2管理域（dom0）。 这时L2 domU仍然停止，不能进行域间通信。2.追踪收集器已启动并使用VMI接口来识别L2 dom0与其他域之间共享的内存页面。由于没有guest运行，这将不会返回任何结果。追踪收集器在目标hypervisor中设置断点，当新的共享页面被配置时得">
+<meta property="og:description" content="&amp;gt;&amp;gt; 2018-01-05 13:10 PM  某爱好者对侧信道文章的整理： https://www.peerlyst.com/posts/a-collection-of-links-to-pdfs-of-papers-on-micro-architectural-side-channel-attacks-sorted-by-date-paul-harvey  &amp;gt;&amp;gt; 2018-01-0">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/2018.jpeg">
-<meta property="og:updated_time" content="2018-01-04T12:58:33.000Z">
+<meta property="og:updated_time" content="2018-01-07T07:54:58.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="BE A GOOD GUY">
-<meta name="twitter:description" content="&amp;gt;&amp;gt; 2018-01-04 18:59 PM  Xenpwn执行流：1.目标L1 hypervisor启动，然后开始执行L2管理域（dom0）。 这时L2 domU仍然停止，不能进行域间通信。2.追踪收集器已启动并使用VMI接口来识别L2 dom0与其他域之间共享的内存页面。由于没有guest运行，这将不会返回任何结果。追踪收集器在目标hypervisor中设置断点，当新的共享页面被配置时得">
+<meta name="twitter:description" content="&amp;gt;&amp;gt; 2018-01-05 13:10 PM  某爱好者对侧信道文章的整理： https://www.peerlyst.com/posts/a-collection-of-links-to-pdfs-of-papers-on-micro-architectural-side-channel-attacks-sorted-by-date-paul-harvey  &amp;gt;&amp;gt; 2018-01-0">
 <meta name="twitter:image" content="http://oij0laovn.bkt.clouddn.com/2018.jpeg">
   
   
@@ -69,13 +69,17 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>>&gt; 2018-01-04 18:59 PM</p>
+        <p>>&gt; 2018-01-05 13:10 PM</p>
+<ul>
+<li>某爱好者对侧信道文章的整理： <a href="https://www.peerlyst.com/posts/a-collection-of-links-to-pdfs-of-papers-on-micro-architectural-side-channel-attacks-sorted-by-date-paul-harvey" target="_blank" rel="external">https://www.peerlyst.com/posts/a-collection-of-links-to-pdfs-of-papers-on-micro-architectural-side-channel-attacks-sorted-by-date-paul-harvey</a></li>
+</ul>
+<p>>&gt; 2018-01-04 18:59 PM</p>
 <ul>
 <li>Xenpwn执行流：1.目标L1 hypervisor启动，然后开始执行L2<br>管理域（dom0）。 这时L2 domU仍然停止，不能进行域间通信。2.追踪收集器已启动并使用VMI接口来识别L2 dom0与其他域之间共享的内存页面。由于没有guest运行，这将不会返回任何结果。追踪收集器在目标hypervisor中设置断点，当新的共享页面被配置时得到通知。3. L2 domU已启动。当操作系统启动时，para-virtualized<br>设备被初始化。这时触发domU、dom0和共享内存页面配置的初次握手。4.触发步骤2中注册的断点和追踪收集器<br>提取共享页面的（L1）物理地址。将这些页面读写访问权限移除以触发EPT violation。5. L2 domU中的系统行为触发para-virtualized设备的使用。根据设备类型的不同，这个过程可能会自动或手动发生，例如触发网络连接。6. domU中的前端驱动程序和dom0中的后端驱动程序尝试通过共享内存交换数据。当虚拟CPU尝试访问其中一个内存页面时，会引发EPT violation，并将控制权转交给L0 hypervisor。 L1 hypervisor及其所有虚拟机都停止。7. L0 hypervisor通知追踪收集器EPT violation行为。追踪收集器使用VMI库从暂停的VM中提取所有必需的信息，并将追踪的条目存储在追踪存储器中。8.通过释放EPT权限，单步执行触发指令并再次移除权限，追踪收集器确保目标系统不会一次又一次触发相同的EPT violation。而是继续执行下一个正常的指令，直到下一个内存访问发生。9. 步骤5.至8.重复，直到目标系统关闭或手动关闭追踪收集器。无论何时配置新的共享内存页面，都会触发步骤4。10.在最后一步，分析算法开始迭代遍历追踪的内存访问信息。输出可用于手动分析或作为其他工具的输入。<br>这种设计的一个重要优点是可以在任何时候追踪结束时执行步骤10。只要追踪存储不被删除，改进的分析算法就可以直接在已经收集的数据上进行测试。</li>
 </ul>
 <p>>&gt; 2018-01-04 18:04 PM</p>
 <ul>
-<li><a href="https://www.anquanke.com/post/id/93466" target="_blank" rel="external">Intel CPU严重设计缺陷/Meltdown/Spectre漏洞</a>  <a href="http://www.freebuf.com/news/159135.html" target="_blank" rel="external">芯片级安全漏洞后续：谷歌表示不止Intel，每个1995年后的处理器都可能受影响</a> <a href="https://www.anquanke.com/post/id/93599" target="_blank" rel="external">Meltdown与Spectre：近期CPU特性漏洞安全公告</a><br><a href="https://weibo.com/ttarticle/p/show?id=2309404192549521743410" target="_blank" rel="external">微博蒸米的芯片漏洞分析系列</a></li>
+<li><a href="https://www.anquanke.com/post/id/93466" target="_blank" rel="external">Intel CPU严重设计缺陷/Meltdown/Spectre漏洞</a>  <a href="http://www.freebuf.com/news/159135.html" target="_blank" rel="external">芯片级安全漏洞后续：谷歌表示不止Intel，每个1995年后的处理器都可能受影响</a> <a href="https://www.anquanke.com/post/id/93599" target="_blank" rel="external">Meltdown与Spectre：近期CPU特性漏洞安全公告</a><br><a href="https://weibo.com/ttarticle/p/show?id=2309404192549521743410" target="_blank" rel="external">微博蒸米的芯片漏洞分析系列一</a><br><a href="https://weibo.com/ttarticle/p/show?id=2309404192925885035405" target="_blank" rel="external">微博蒸米的芯片漏洞分析系列二</a><br><a href="http://www.antiy.com/response/Meltdown.html" target="_blank" rel="external">安天-处理器A级漏洞Meltdown(熔毁)和Spectre(幽灵)分析报告</a> <a href="https://security.googleblog.com/2018/01/more-details-about-mitigations-for-cpu_4.html" target="_blank" rel="external">google mitigation</a> <a href="http://oij0laovn.bkt.clouddn.com/Meltdown%E6%94%BB%E5%87%BB%5B%E9%9D%9E%E5%AE%98%E6%96%B9%E4%B8%AD%E6%96%87%E9%80%9F%E8%AF%91V0.2%E7%89%88_%E5%AE%89%E5%A4%A9%E6%8A%80%E6%9C%AF%E5%85%AC%E7%9B%8A%E7%BF%BB%E8%AF%91%E7%BB%84%E8%AF%91%E6%B3%A8%5D.pdf" target="_blank" rel="external">meltdown中文译稿</a><br><a href="https://mp.weixin.qq.com/s?__biz=MzI1NzM0MTMzMg==&amp;mid=2247484968&amp;idx=1&amp;sn=18e1e97b7c7a9820b68b14464bb657db&amp;chksm=ea19a4d3dd6e2dc5c09e94883f9b437d4513ff20e723600886bef2be6089536fbe6af887c8d2&amp;mpshare=1&amp;scene=1&amp;srcid=0106FizJA2Gvp7nMqhBh3QSc#rd" target="_blank" rel="external">腾讯安全联合实验室：影响全球的CPU漏洞深度解读：熔断与幽灵</a><br><a href="https://mp.weixin.qq.com/s?__biz=MzI2MDc2MDA4OA==&amp;mid=2247484395&amp;idx=1&amp;sn=86cd1f9e4d611b1d9d09fb7c0c5fc494" target="_blank" rel="external">360-现代CPU中的预测执行和乱序执行相关机制漏洞通告</a><br>明确几个概念：Meltdown (CVE-2017-5754) - 恶意数据缓存加载 ；<br>Spectre漏洞（CVE-2017-5715，CVE-2017-5753）分支目标注入与边界检查绕过</li>
 </ul>
 <p>>&gt; 2018-01-04 15:00 PM</p>
 <ul>
