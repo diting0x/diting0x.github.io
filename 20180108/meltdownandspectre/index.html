@@ -16,7 +16,7 @@
 <meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/linux_proc_banner.png">
 <meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/gdb.png">
 <meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/attack-result.png">
-<meta property="og:updated_time" content="2018-01-09T05:26:07.000Z">
+<meta property="og:updated_time" content="2018-01-09T06:20:53.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="一步一步理解CPU芯片漏洞：Meltdown与Spectre">
 <meta name="twitter:description" content="作者：@Diting0x 0X00 历史之日2018年1月3日，Google Project Zero（GPZ）团队安全研究员Jann Horn在其团队博客[1]中爆出CPU芯片的两组漏洞，分别是Meltdown与Spectre。 Meltdown对应CVE-2017-5754（乱序执行缓存污染），Spectre对于CVE-2017-5753（边界检查绕过）与CVE-2017-5715（分支目标注">
@@ -91,7 +91,8 @@
 <h3 id="乱序执行与预测执行"><a href="#乱序执行与预测执行" class="headerlink" title="乱序执行与预测执行"></a>乱序执行与预测执行</h3><p>早期的处理器依次顺序执行既定的处理器指令，而现代处理器为了提高性能并不严格按照指令的顺序串行执行，而是对执行进行相关性分析后并行处理乱序执行。比如当处理器中的某些指令需要等待某些资源，处理器不会真的在这里等待而停止指令的执行，而是利用等待资源的时间继续执行后续的指令。在支持乱序执行的CPU中，后面的指令可能在前面指令执行结束前就开始执行了。为了保证程序运行的正确性，处理器会对指令执行安全检查，只有当前用户权限符合指令权限时才能被执行，比如用户空间的指令访问内核内存处理器就会抛出异常。然而安全检查这个操作只有在指令退休（retirement-一条指令退休只有当它的执行的结果真正被提交并对系统可见时才会发生）时才会进行。也就是说，如果在乱序执行中，指令并没有真正执行完成而只是加载到缓存中（下文会提）是不会执行安全检查的。而此时由于乱序执行而被提前执行的指令会被处理器丢弃，但由于乱序执行的指令对缓存的操作在这些指令被丢弃时不会被重置。正是安全检查与乱序执行的空窗期才会让Meltdown有机可乘。</p>
 <p>预测执行涉及到程序的控制流，现在处理器不是去解析所有分支指令后然后决定执行哪个操作，而是预测哪个控制流会更有可能被运行再提取相应的指令代码执行。如果预测正确的话，会带来很高的性能提升并提高处理器的并行性。如果预测错误，那些被预测执行的不正确结果会被丢弃，处理器会将状态恢复到预测执行行前的正确状态，再重新跳转到正确执行的分支或指令中运行。与乱序执行类似，预测执行对处理器缓存的操作会被保留。</p>
 <p>这种机制从宏观上看似乎没什么问题，但由于处理器的缓存（cache）机制，那些被预测执行或乱序执行的指令会被先加载到缓存中，但在处理器恢复状态时并不会恢复处理器缓存的内容。而最新的研究表明攻击者可以利用缓存进行侧信道攻击，而Meltdown与Spectre从本质上来看属于利用处理器的乱序执行或预测执行漏洞进行的缓存侧信道攻击。</p>
-<h3 id="缓存侧信道攻击"><a href="#缓存侧信道攻击" class="headerlink" title="缓存侧信道攻击"></a>缓存侧信道攻击</h3><p>基于缓存的侧信道攻击目前在学术界研究中非常流行，比如俄亥俄州立大学的Yinqian Zhang教授[10]在此领域做了许多非常杰出的工作。缓存通过数据共享来加快数据访问，也就是说缓存命中与失效对应的响应时间是有差别的，攻击者正是利用这种时间的差异性来推测缓存中的信息，从而获得隐私数据。缓存侧信道攻击主要有Evict+Time[7]、Prime+Probe[6])与Flush+Reload[5]等攻击方式，这里主要简单介绍一下Flush+Reload，也是下文exploit中利用的方法。假设攻击者和目标程序共享物理内存（也可以是云中不同虚拟机共享内存），攻击者可以反复利用处理器指令将监控的内存块（某些地址）从缓存中驱逐出去，然后在等待目标程序访问共享内存（Flush阶段）。然后攻击者重新加载监控的内存块并测量读取时间(Reload阶段)，如果该内存块被目标程序访问过，其对应的内存会被导入到处理器缓存中，则攻击者对该内存的访问时间将会较短。通过测量加载时间的长短，攻击者可以清楚地知道该内存块是否被目标程序读取过。</p>
+<h3 id="缓存侧信道攻击"><a href="#缓存侧信道攻击" class="headerlink" title="缓存侧信道攻击"></a>缓存侧信道攻击</h3><p>基于缓存的侧信道攻击目前在学术界研究中非常流行，比如俄亥俄州立大学的Yinqian Zhang教授[10]在此领域做了许多非常杰出的工作。缓存通过数据共享来加快数据访问，也就是说缓存命中与失效对应的响应时间是有差别的，攻击者正是利用这种时间的差异性来推测缓存中的信息，从而获得隐私数据。</p>
+<p>缓存侧信道攻击主要有Evict+Time[7]、Prime+Probe[6])与Flush+Reload[5]等攻击方式，这里主要简单介绍一下Flush+Reload，也是下文exploit中利用的方法。假设攻击者和目标程序共享物理内存（也可以是云中不同虚拟机共享内存），攻击者可以反复利用处理器指令将监控的内存块（某些地址）从缓存中驱逐出去，然后在等待目标程序访问共享内存（Flush阶段）。然后攻击者重新加载监控的内存块并测量读取时间(Reload阶段)，如果该内存块被目标程序访问过，其对应的内存会被导入到处理器缓存中，则攻击者对该内存的访问时间将会较短。通过测量加载时间的长短，攻击者可以清楚地知道该内存块是否被目标程序读取过。</p>
 <p>Meltdown与Spectre利用这种侧信道可以进行越权内存访问，甚至读取整个内核的内存数据。</p>
 <h3 id="Meltdown攻击指令序列"><a href="#Meltdown攻击指令序列" class="headerlink" title="Meltdown攻击指令序列"></a>Meltdown攻击指令序列</h3><p>以一个简化的Meltdown攻击指令序列为例：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">; rcx = kernel address</div><div class="line">; rbx = probe_array</div><div class="line">mov al, byte [rcx]</div><div class="line">shl rax, 0xc</div><div class="line">mov rbx, qword [rbx + rax]</div></pre></td></tr></table></figure>
