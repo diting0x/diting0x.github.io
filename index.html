@@ -121,10 +121,7 @@
       
         <p>作者：<a href="http://weibo.com/diting0x" target="_blank" rel="external">@Diting0x</a></p>
 <h2 id="0X00-历史之日"><a href="#0X00-历史之日" class="headerlink" title="0X00 历史之日"></a>0X00 历史之日</h2><p>2018年1月3日，Google Project Zero（GPZ）团队安全研究员Jann Horn在其团队博客[1]中爆出CPU芯片的两组漏洞，分别是Meltdown与Spectre。</p>
-<p>Meltdown对应CVE-2017-5754（恶意数据缓存加载），Spectre对于CVE-2017-5753（边界检查绕过）与CVE-2017-5715（分支目标注入）。看CVE编号就能知道，这两组漏洞早在2017年6月就已经由GPZ团队向英特尔提交，而在差不多时间由Lipp等人发布的论文Meltdown[2]与Spectre Attacks[3]也详细描述了这一攻击，从文中的声明来看，Lipp等人与GPZ团队似乎是独立发现了这两组漏洞。为什么去年6月就提交的漏洞到现在才正式公布呢？更有趣的是下图：</p>
-<figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/anquanke.jpeg" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/anquanke.jpeg" width="450"></a><br>    <figcaption></figcaption><br></figure>
-
-<p>原因不得而知，得问Intel去了。</p>
+<p>Meltdown对应CVE-2017-5754（恶意数据缓存加载），Spectre对于CVE-2017-5753（边界检查绕过）与CVE-2017-5715（分支目标注入）。看CVE编号就能知道，这两组漏洞早在2017年6月就已经由GPZ团队向英特尔提交，而在差不多时间由Lipp等人发布的论文Meltdown[2]与Spectre Attacks[3]也详细描述了这一攻击，从文中的声明来看，Lipp等人与GPZ团队似乎是独立发现了这两组漏洞。为什么去年6月就提交的漏洞到现在才正式公布呢？原因不得而知，得问Intel去了。</p>
 <p>Meltdown漏洞影响几乎所有的Intel CPU和部分ARM CPU，而Spectre则影响所有的Intel CPU和AMD CPU，以及主流的ARM CPU。从个人电脑、服务器、云计算机服务器到移动端的智能手机，都受到这两组硬件漏洞的影响。这必将是要在安全界乃至整个计算机界载入史册的重要日子，各种报道与公告乃至技术细节充斥着整个朋友圈、微博与媒体，可以说是路人皆知了。为何这两个漏洞如此特别，引起大家如此重视呢？ 请往下看。</p>
 <h2 id="0X01-漏洞原理"><a href="#0X01-漏洞原理" class="headerlink" title="0X01 漏洞原理"></a>0X01 漏洞原理</h2><p>这两组漏洞来源于芯片厂商为了提高CPU性能而引入的两种特性：乱序执行（Out-of-Order Execution）和预测执行(Speculative Execution)。</p>
 <h3 id="乱序执行与预测执行"><a href="#乱序执行与预测执行" class="headerlink" title="乱序执行与预测执行"></a>乱序执行与预测执行</h3><p>早期的处理器依次顺序执行既定的处理器指令，而现代处理器为了提高性能并不严格按照指令的顺序串行执行，而是对执行进行相关性分析后并行处理乱序执行。比如当处理器中的某些指令需要等待某些资源，处理器不会真的在这里等待而停止指令的执行，而是利用等待资源的时间继续执行后续的指令。在支持乱序执行的CPU中，后面的指令可能在前面指令执行结束前就开始执行了。为了保证程序运行的正确性，处理器会对指令执行安全检查，只有当前用户权限符合指令权限时才能被执行，比如用户空间的指令访问内核内存处理器就会抛出异常。然而安全检查这个操作只有在指令退休（retirement-一条指令退休只有当它的执行的结果真正被提交并对系统可见时才会发生）时才会进行。也就是说，如果在乱序执行中，指令并没有真正执行完成而只是加载到缓存中（下文会提）是不会执行安全检查的。而此时由于乱序执行而被提前执行的指令会被处理器丢弃，但由于乱序执行的指令对缓存的操作在这些指令被丢弃时不会被重置。正是安全检查与乱序执行的空窗期才会让Meltdown有机可乘。</p>
