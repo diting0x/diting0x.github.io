@@ -16,7 +16,7 @@
 <meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/linux_proc_banner.png">
 <meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/gdb.png">
 <meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/attack-result.png">
-<meta property="og:updated_time" content="2018-01-09T06:37:41.000Z">
+<meta property="og:updated_time" content="2018-01-09T07:08:30.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="一步一步理解CPU芯片漏洞：Meltdown与Spectre">
 <meta name="twitter:description" content="作者：@Diting0x 0X00 历史之日2018年1月3日，Google Project Zero（GPZ）团队安全研究员Jann Horn在其团队博客[1]中爆出CPU芯片的两组漏洞，分别是Meltdown与Spectre。 Meltdown对应CVE-2017-5754（乱序执行缓存污染），Spectre对应CVE-2017-5753（边界检查绕过）与CVE-2017-5715（分支目标注">
@@ -147,7 +147,7 @@
 <p>该利用程序是一个一个字节读取linux_proc_banner地址中的内容，可以运行cat /proc/version命令对比结果，只要利用Meltdown窃取的数据足够多，窃取的数据和该命令的运行结果是一致的。可见攻击者成功执行攻击。</p>
 <h3 id="值得进一步思考的问题"><a href="#值得进一步思考的问题" class="headerlink" title="值得进一步思考的问题"></a>值得进一步思考的问题</h3><ol>
 <li>该利用代码一次只能探测一个字节的数据，如果在内核数据还没读取完整之前处理器已经处理异常了该怎么办？</li>
-<li>探测数组target_array是否可以不用设置成256<em>4KB，设置成512</em>2KB，1024*1KB效果会如何？</li>
+<li>探测数组target_array是否可以不用设置成256*4KB，设置成512*2KB，1024*1KB效果会如何？</li>
 <li>探测数组target_array是个大数组，占用多个内存页面，是否容易被检测到？</li>
 </ol>
 <h2 id="0X03-漏洞危害"><a href="#0X03-漏洞危害" class="headerlink" title="0X03 漏洞危害"></a>0X03 漏洞危害</h2><p>Meltdown与Spectre本质上都是基于缓存侧信道的攻击。</p>
