@@ -16,7 +16,7 @@
 <meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/linux_proc_banner.png">
 <meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/gdb.png">
 <meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/attack-result.png">
-<meta property="og:updated_time" content="2018-01-09T07:08:30.000Z">
+<meta property="og:updated_time" content="2018-01-09T07:21:34.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="一步一步理解CPU芯片漏洞：Meltdown与Spectre">
 <meta name="twitter:description" content="作者：@Diting0x 0X00 历史之日2018年1月3日，Google Project Zero（GPZ）团队安全研究员Jann Horn在其团队博客[1]中爆出CPU芯片的两组漏洞，分别是Meltdown与Spectre。 Meltdown对应CVE-2017-5754（乱序执行缓存污染），Spectre对应CVE-2017-5753（边界检查绕过）与CVE-2017-5715（分支目标注">
@@ -114,7 +114,7 @@
 <figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/linux_proc_banner.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/linux_proc_banner.png" width="550"></a><br>    <figcaption></figcaption><br></figure>
 
 
-<p>总的来说，攻击者要窃取内核数据，包括三个过程：Flush阶段，Speculate阶段，Reload阶段以及Probe阶段。值得注意的是，Reload阶段包含在Speculate阶段中，但由于Reload阶段与Flush阶段是一个完整的缓存侧信道攻击过程，不得不把它单独列出来。整个执行顺序是Flush阶段-Speculate阶段（包含Reload阶段）-Probe阶段，这四个过程我们会在下文一一提到。为便于理解，先讲Speculate阶段。</p>
+<p>总的来说，攻击者要窃取内核数据，包括四个过程：Flush阶段，Speculate阶段，Reload阶段以及Probe阶段。值得注意的是，Reload阶段包含在Speculate阶段中，但由于Reload阶段与Flush阶段是一个完整的缓存侧信道攻击过程，不得不把它单独列出来。整个执行顺序是Flush阶段-Speculate阶段（包含Reload阶段）-Probe阶段，这四个过程我们会在下文一一提到。为便于理解，先讲Speculate阶段。</p>
 <h3 id="Speculate阶段"><a href="#Speculate阶段" class="headerlink" title="Speculate阶段"></a>Speculate阶段</h3><p>Speculate阶段执行上一章节的代码序列过程，利用乱序执行将目标内核地址以索引的形式访问探测数组并加载到缓存中。由speculate函数实现。</p>
 <p>为了解该过程，首先用gdb调试meltdown可执行程序了解下该exploit的执行过程</p>
 <figure><br>    <a href="http://oij0laovn.bkt.clouddn.com/gdb.png" target="_blank" rel="external"><img src="http://oij0laovn.bkt.clouddn.com/gdb.png" width="550"></a><br>    <figcaption></figcaption><br></figure>
