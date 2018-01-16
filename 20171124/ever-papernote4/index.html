@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8">
   
-  <title>Thwarting Memory Disclosure with Efficient Hypervisor-enforced Intra-domain Isolation - 善守者</title>
+  <title>SeCage - 善守者</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="description" content="通过有效的强制虚拟机管理程序的域内隔离来防止内存泄漏 SeCage 摘要内存泄漏 -&amp;gt; 内存任意读 主要问题：所有的数据都驻留在同一块内存区域  攻击者可以读被攻击进程的内存 Rootkit可以读整个系统的内存  提出对策:隔离处理关键秘密的代码到一个隔离的执行环境中去执行。  为关键数据创建一个分区 将这个分区与其他分区隔离  现有方法：  当内核受到攻击后，不能进行保护 提供的粗粒度保护">
 <meta name="keywords" content="Virtualization,Infoleak">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Thwarting Memory Disclosure with Efficient Hypervisor-enforced Intra-domain Isolation">
+<meta property="og:title" content="SeCage">
 <meta property="og:url" content="https://diting0x.github.io/20171124/ever-papernote4/index.html">
 <meta property="og:site_name" content="善守者">
 <meta property="og:description" content="通过有效的强制虚拟机管理程序的域内隔离来防止内存泄漏 SeCage 摘要内存泄漏 -&amp;gt; 内存任意读 主要问题：所有的数据都驻留在同一块内存区域  攻击者可以读被攻击进程的内存 Rootkit可以读整个系统的内存  提出对策:隔离处理关键秘密的代码到一个隔离的执行环境中去执行。  为关键数据创建一个分区 将这个分区与其他分区隔离  现有方法：  当内核受到攻击后，不能进行保护 提供的粗粒度保护">
@@ -36,9 +36,9 @@
 <meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/secage21.png">
 <meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/secage22.png">
 <meta property="og:image" content="http://oij0laovn.bkt.clouddn.com/secage24.png">
-<meta property="og:updated_time" content="2018-01-02T09:34:00.000Z">
+<meta property="og:updated_time" content="2018-01-16T12:06:13.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Thwarting Memory Disclosure with Efficient Hypervisor-enforced Intra-domain Isolation">
+<meta name="twitter:title" content="SeCage">
 <meta name="twitter:description" content="通过有效的强制虚拟机管理程序的域内隔离来防止内存泄漏 SeCage 摘要内存泄漏 -&amp;gt; 内存任意读 主要问题：所有的数据都驻留在同一块内存区域  攻击者可以读被攻击进程的内存 Rootkit可以读整个系统的内存  提出对策:隔离处理关键秘密的代码到一个隔离的执行环境中去执行。  为关键数据创建一个分区 将这个分区与其他分区隔离  现有方法：  当内核受到攻击后，不能进行保护 提供的粗粒度保护">
 <meta name="twitter:image" content="http://oij0laovn.bkt.clouddn.com/secage1.png">
   
@@ -84,7 +84,7 @@
         
   
     <h1 class="article-title" itemprop="name">
-      Thwarting Memory Disclosure with Efficient Hypervisor-enforced Intra-domain Isolation
+      SeCage
     </h1>
   
 
@@ -445,7 +445,7 @@
   
   
     <a href="/20171109/ever-papernote3/" id="article-nav-older" class="article-nav-link-wrap">
-      <div class="article-nav-title">kAFL Hardware-Assisted Feedback Fuzzing for OS Kernels&nbsp;<span>&gt;</span></div>
+      <div class="article-nav-title">kAFL&nbsp;<span>&gt;</span></div>
     </a>
   
 </nav>
